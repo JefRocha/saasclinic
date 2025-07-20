@@ -18,10 +18,18 @@ import { Logo } from '@/templates/Logo';
 import { getI18nPath } from '@/utils/Helpers';
 
 export const DashboardHeader = (props: {
-  menu: {
-    href: string;
-    label: string;
-  }[];
+  menu: (
+    | {
+        href: string;
+        label: string;
+        icon?: React.ReactNode;
+      }
+    | {
+        label: string;
+        icon?: React.ReactNode;
+        subItems: { href: string; label: string }[];
+      }
+  )[];
 }) => {
   const locale = useLocale();
 
@@ -55,7 +63,11 @@ export const DashboardHeader = (props: {
           skipInvitationScreen
           appearance={{
             elements: {
-              organizationSwitcherTrigger: 'max-w-28 sm:max-w-52',
+              organizationSwitcherTrigger: 'max-w-28 sm:max-w-52 text-foreground overflow-visible',
+              organizationPreviewMainIdentifier: { color: 'var(--foreground)', __css: { color: 'var(--foreground) !important' } },
+            },
+            variables: {
+              colorText: 'var(--foreground)',
             },
           }}
         />
@@ -63,8 +75,10 @@ export const DashboardHeader = (props: {
         <nav className="ml-3 max-lg:hidden">
           <ul className="flex flex-row items-center gap-x-3 text-lg font-medium [&_a:hover]:opacity-100 [&_a]:opacity-75">
             {props.menu.map(item => (
-              <li key={item.href}>
-                <ActiveLink href={item.href}>{item.label}</ActiveLink>
+              <li key={item.label}>
+                {'href' in item && (
+                  <ActiveLink href={item.href}>{item.label}</ActiveLink>
+                )}
               </li>
             ))}
           </ul>
@@ -81,9 +95,17 @@ export const DashboardHeader = (props: {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   {props.menu.map(item => (
-                    <DropdownMenuItem key={item.href} asChild>
-                      <Link href={item.href}>{item.label}</Link>
-                    </DropdownMenuItem>
+                    'href' in item ? (
+                      <DropdownMenuItem key={item.href} asChild>
+                        <Link href={item.href}>{item.label}</Link>
+                      </DropdownMenuItem>
+                    ) : (
+                      item.subItems.map(subItem => (
+                        <DropdownMenuItem key={subItem.href} asChild>
+                          <Link href={subItem.href}>{subItem.label}</Link>
+                        </DropdownMenuItem>
+                      ))
+                    )
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>

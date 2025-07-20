@@ -91,7 +91,9 @@
     "todos": "Tarefas",
     "members": "Membros",
     "billing": "Cobrança",
-    "settings": "Configurações"
+    "settings": "Configurações",
+    "clients": "Clientes",
+    "registrations": "Cadastros"
   },
   "Dashboard": {
     "meta_title": "Dashboard – SaaS Template",

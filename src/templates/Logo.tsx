@@ -1,17 +1,16 @@
 import { AppConfig } from '@/utils/AppConfig';
+import Image from 'next/image';
 
-export const Logo = (props: {
-  isTextHidden?: boolean;
-}) => (
+const Logo = () => (
   <div className="flex items-center text-xl font-semibold">
-    <svg
-      className="mr-1 size-8 stroke-current stroke-2"
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-    >
-      <rect x="5" y="5" width="14" height="14" fill="green" />
-    </svg>
-    {!props.isTextHidden && AppConfig.name}
-  </div>
+  <Image
+    src="/assets/images/logo.png"
+    alt="Logo"
+    width={134}
+    height={43}
+    className="mr-1"
+  />
+</div>
 );
+
+export { Logo };

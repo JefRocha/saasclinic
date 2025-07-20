@@ -1,25 +1,31 @@
+import type { LocalizationResource } from '@clerk/types';
 import type { LocalePrefix } from 'next-intl/routing';
+import { enUS, frFR, ptBR } from '@clerk/localizations';
 
 import { BILLING_INTERVAL, type PricingPlan } from '@/types/Subscription';
 
-const localePrefix: LocalePrefix = 'always';
+const localePrefix: LocalePrefix = 'as-needed';
 
 // FIXME: Update this configuration file based on your project information
 export const AppConfig = {
-  name: 'SaaS Template',
-  locales: [
-    {
-      id: 'en',
-      name: 'English',
-    },
-    { id: 'fr', name: 'Français' },
-    { id: 'pt-BR', name: 'Português (Brasil)' },
-  ],
+  name: 'CS Solutions',
+  locales: ['en', 'fr', 'pt-BR'],
   defaultLocale: 'pt-BR',
   localePrefix,
 };
 
-export const AllLocales = AppConfig.locales.map(locale => locale.id);
+const supportedLocales: Record<string, LocalizationResource> = {
+  en: enUS,
+  fr: frFR,
+  'pt-BR': ptBR,
+};
+
+export const ClerkLocalizations = {
+  defaultLocale: ptBR, // Defina um padrão
+  supportedLocales,
+};
+
+export const AllLocales = AppConfig.locales;
 
 export const PLAN_ID = {
   FREE: 'free',
@@ -46,8 +52,7 @@ export const PricingPlanList: Record<string, PricingPlan> = {
     id: PLAN_ID.PREMIUM,
     price: 79,
     interval: BILLING_INTERVAL.MONTH,
-    testPriceId: 'price_premium_test', // Use for testing
-    // FIXME: Update the price ID, you can create it after running `npm run stripe:setup-price`
+    testPriceId: 'price_premium_test',
     devPriceId: 'price_1PNksvKOp3DEwzQlGOXO7YBK',
     prodPriceId: '',
     features: {
@@ -61,8 +66,7 @@ export const PricingPlanList: Record<string, PricingPlan> = {
     id: PLAN_ID.ENTERPRISE,
     price: 199,
     interval: BILLING_INTERVAL.MONTH,
-    testPriceId: 'price_enterprise_test', // Use for testing
-    // FIXME: Update the price ID, you can create it after running `npm run stripe:setup-price`
+    testPriceId: 'price_enterprise_test',
     devPriceId: 'price_1PNksvKOp3DEwzQli9IvXzgb',
     prodPriceId: 'price_123',
     features: {

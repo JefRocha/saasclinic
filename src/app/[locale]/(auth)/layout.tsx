@@ -1,41 +1,41 @@
-// src/app/[locale]/(auth)/layout.tsx
+import { ClerkProvider } from '@clerk/nextjs';
+import { setRequestLocale } from 'next-intl/server';
+import { routing } from '@/libs/I18nRouting';
+import { ClerkLocalizations } from '@/utils/AppConfig';
 
-
-
-import { AppConfig } from '@/utils/AppConfig';
-
-export default async function AuthLayout({
-  children,
-  params,
-}: {
+export default async function AuthLayout(props: {
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
 }) {
-  const { locale } = await params;
+  const { locale } = await props.params;
+  setRequestLocale(locale);
 
-  // 2️⃣ defina o locale do Clerk
-  // let clerkLocale = enUS;
-  // if (locale === 'fr') {
-  //   clerkLocale = frFR;
-  // }
-  
-  // 3️⃣ monte as URLs de sign-in / sign-up / dashboard
+  const clerkLocale = ClerkLocalizations.supportedLocales[locale] ?? ClerkLocalizations.defaultLocale;
   let signInUrl = '/sign-in';
   let signUpUrl = '/sign-up';
   let dashboardUrl = '/dashboard';
   let afterSignOutUrl = '/';
 
-  if (locale !== AppConfig.defaultLocale) {
+  if (locale !== routing.defaultLocale) {
     signInUrl = `/${locale}${signInUrl}`;
     signUpUrl = `/${locale}${signUpUrl}`;
     dashboardUrl = `/${locale}${dashboardUrl}`;
     afterSignOutUrl = `/${locale}${afterSignOutUrl}`;
   }
 
-  // 4️⃣ retorne o ClerkProvider (server component)
   return (
-    <>
-      {children}
-    </>
+    <ClerkProvider
+      localization={clerkLocale}
+      signInUrl={signInUrl}
+      signUpUrl={signUpUrl}
+      signInFallbackRedirectUrl={dashboardUrl}
+      signUpFallbackRedirectUrl={dashboardUrl}
+      afterSignOutUrl={afterSignOutUrl}
+      appearance={{
+        cssLayerName: 'clerk', // Ensure Clerk is compatible with Tailwind CSS v4
+      }}
+    >
+      {props.children}
+    </ClerkProvider>
   );
 }

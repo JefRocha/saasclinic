@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getRequestConfig, type RequestConfig } from 'next-intl/server';
 
-import { AllLocales } from '@/utils/AppConfig';
+import { AppConfig } from '@/utils/AppConfig';
 
 // -----------------------------------------------------------------------------
 // Configuração de i18n para Server Components
@@ -11,7 +11,7 @@ export default getRequestConfig(async ({ locale }): Promise<RequestConfig> => {
   const effectiveLocale = locale ?? 'pt-BR';
 
   // 2) Valida o locale recebido
-  if (!AllLocales.includes(effectiveLocale)) {
+  if (!AppConfig.locales.includes(effectiveLocale)) {
     notFound(); // gera 404 para idiomas não suportados
   }
 

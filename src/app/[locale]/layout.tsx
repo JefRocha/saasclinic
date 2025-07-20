@@ -1,9 +1,10 @@
 // src/app/[locale]/layout.tsx  (Server Component)
-import '@/styles/global.css'
+import '../globals.css';
 import type { Metadata } from 'next'
 import { getMessages } from 'next-intl/server'
-import { AllLocales } from '@/utils/AppConfig'
+import { AppConfig } from '@/utils/AppConfig'
 import ClientIntlProvider from '@/components/ClientIntlProvider'
+import ReactQueryProvider from '@/components/providers/react-query-provider'
 
 export const metadata: Metadata = {
   icons: [
@@ -31,7 +32,7 @@ export const metadata: Metadata = {
 }
 
 export function generateStaticParams() {
-  return AllLocales.map((locale) => ({ locale }))
+  return AppConfig.locales.map((locale) => ({ locale }))
 }
 
 export default async function LocaleLayout({
@@ -44,7 +45,7 @@ export default async function LocaleLayout({
   const { locale } = await params
 
   // valida locale
-  if (!AllLocales.includes(locale)) {
+  if (!AppConfig.locales.includes(locale)) {
     // your 404 logic
   }
 
@@ -54,7 +55,7 @@ export default async function LocaleLayout({
 
   return (
     <ClientIntlProvider locale={locale} messages={messages} timeZone={timeZone}>
-      {children}
+      <ReactQueryProvider>{children}</ReactQueryProvider>
     </ClientIntlProvider>
   )
 }

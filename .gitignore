@@ -4,6 +4,7 @@
 /node_modules
 /OldProjeto
 /ProjetoOriginal
+/ProjetoAuth
 /.pnp
 .pnp.*
 .yarn/*

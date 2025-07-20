@@ -20,6 +20,12 @@ import {
 type DataTableProps<TData, TValue> = {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  pagination?: { // Adicionado a prop pagination
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 };
 
 export function DataTable<TData, TValue>({
