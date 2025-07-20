@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request, { params }: { params: { cnpj: string } }) {
-  const { cnpj } = await params;
+  const { cnpj } = params;
 
   if (!cnpj) {
     return NextResponse.json({ error: "CNPJ é obrigatório" }, { status: 400 });

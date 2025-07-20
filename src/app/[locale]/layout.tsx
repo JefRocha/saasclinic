@@ -1,5 +1,5 @@
 // src/app/[locale]/layout.tsx  (Server Component)
-import '../globals.css';
+import '@/styles/global.css'
 import type { Metadata } from 'next'
 import { getMessages } from 'next-intl/server'
 import { AppConfig } from '@/utils/AppConfig'

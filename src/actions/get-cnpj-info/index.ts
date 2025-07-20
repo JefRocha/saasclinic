@@ -12,7 +12,9 @@ async function getCnpjData({ parsedInput }: { parsedInput: { cnpj: string } }) {
   const { cnpj } = parsedInput;
   try {
     const cleanedCnpj = cnpj.replace(/\D/g, '').padStart(14, '0');
-    const apiUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/cnpj/${cleanedCnpj}`;
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.replace(/\/(pt|en)$/, '') || "http://localhost:3000";
+    const apiUrl = `${baseUrl}/api/cnpj/${cleanedCnpj}`;
+
     console.log("Server Action - Calling internal API URL:", apiUrl);
     const response = await fetch(apiUrl);
     const data = await response.json();
