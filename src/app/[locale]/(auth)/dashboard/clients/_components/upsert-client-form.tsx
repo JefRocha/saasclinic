@@ -532,7 +532,7 @@ const UpsertClientForm = ({
   }, [debouncedCorrespCep, form, correspEnderecoValue]);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onSuccess}>
+    <Dialog open={isOpen}>
       <DialogContent
         hideCloseButton
         className="max-h-[90vh] w-full max-w-5xl overflow-y-auto"

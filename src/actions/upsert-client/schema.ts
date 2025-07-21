@@ -5,7 +5,6 @@ import { Client } from "@/models/Schema";
 
 export const upsertClientSchema = z.object({
   id: z.number().optional(),
-  organizationId: z.string(),
   razaoSocial: z.string().optional().nullable(),
   cpf: z.string().optional().nullable(),
   fantasia: z.string().optional().nullable(),

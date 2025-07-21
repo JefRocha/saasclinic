@@ -1,11 +1,16 @@
-
-
 import { auth } from "@clerk/nextjs/server";
+
 import { createSafeActionClient } from "next-safe-action";
 
-import { ActionError } from "./action-error";
+export class ActionError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ActionError";
+  }
+}
 
 const handleReturnedServerError = (e: Error) => {
+  console.error("Erro bruto no handleReturnedServerError:", e);
   if (e instanceof ActionError) {
     return e.message;
   }
@@ -16,17 +21,13 @@ export const action = createSafeActionClient({
   handleReturnedServerError: handleReturnedServerError,
 });
 
-export const protectedAction = action.use(async ({ next }) => {
-  const { userId, orgId } = auth();
-
-  if (!userId || !orgId) {
-    throw new ActionError("Acesso não autorizado.");
-  }
-
-  return next({
-    ctx: {
-      userId,
-      orgId,
-    },
-  });
+export const protectedAction = createSafeActionClient({
+  handleReturnedServerError: handleReturnedServerError,
+  getAuthData: async () => {
+    const { userId, orgId } = auth();
+    if (!userId || !orgId) {
+      throw new ActionError("Acesso não autorizado.");
+    }
+    return { userId, orgId };
+  },
 });

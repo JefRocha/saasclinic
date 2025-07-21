@@ -76,9 +76,7 @@ export const clientsTable = pgTable('clients', {
     .notNull()
     .references(() => organizationSchema.id, { onDelete: 'cascade' }),
 
-  clinicId: uuid('clinic_id')
-    .notNull()
-    .references(() => clinicsTable.id, { onDelete: 'cascade' }),
+  
 
   razaoSocial: text('razao_social'),
   fantasia: text('fantasia'),
@@ -170,12 +168,7 @@ export const clientsTable = pgTable('clients', {
 
 
 // Add relations for clientsTable
-export const clientsTableRelations = relations(clientsTable, ({ one }) => ({
-  clinic: one(clinicsTable, {
-    fields: [clientsTable.clinicId],
-    references: [clinicsTable.id],
-  }),
-}));
+
 
 // 🔗 Relações de Clínica
 export const clinicsTableRelations = relations(clinicsTable, ({ many }) => ({

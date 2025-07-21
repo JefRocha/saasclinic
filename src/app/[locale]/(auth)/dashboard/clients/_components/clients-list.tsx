@@ -1,10 +1,10 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useAction } from "next-safe-action/hooks";
 import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 
 import { searchClients } from "@/actions/upsert-client";
-import { SearchClientsResult } from "@/actions/upsert-client/schema";
 import { DataTable } from "@/components/ui/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -12,32 +12,44 @@ import AddClientButton from "./add-client-button";
 import { SearchInput } from "./search-input";
 import { clientsTableColumns } from "./table-columns";
 
-interface ClientsListProps {}
-
-export const ClientsList = ({}: ClientsListProps) => {
+export const ClientsList = () => {
   const searchParams = useSearchParams();
-
   const search = searchParams.get("search");
   const page = Number(searchParams.get("page")) || 1;
   const order = searchParams.get("order");
   const orderBy = searchParams.get("orderBy");
 
-  const { data, isLoading } = useQuery<SearchClientsResult>({
-    queryKey: ["clients", search, page, order, orderBy],
-    queryFn: async () => {
-      const result = await searchClients({
-        search: search || undefined,
-        page,
-        order: order || undefined,
-        orderBy: orderBy || undefined,
-      });
-      if (result.data) {
-        return result.data;
-      } else {
-        throw new Error(result.serverError || "Erro ao buscar clientes");
-      }
+  const { execute, result, status } = useAction(searchClients, {
+    onError: (error) => {
+      console.error("Erro ao buscar clientes:", error);
     },
   });
+
+  useEffect(() => {
+    execute({
+      search: search || undefined,
+      page,
+      order: order || undefined,
+      orderBy: orderBy || undefined,
+    });
+  }, [search, page, order, orderBy, execute]);
+
+  const isLoading = status === "executing";
+  const data = result?.data;
+  const error = result?.serverError;
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center rounded-lg border border-destructive bg-destructive/10 p-8 text-center">
+        <h2 className="text-lg font-semibold text-destructive">
+          Acesso não autorizado
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Ocorreu um erro ao carregar os clientes. Verifique suas permissões e tente novamente.
+        </p>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return <Skeleton className="h-96 w-full" />;
