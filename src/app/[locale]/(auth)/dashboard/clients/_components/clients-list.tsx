@@ -1,73 +1,85 @@
 "use client";
 
-import { useAction } from "next-safe-action/hooks";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useEffect } from "react";
 
-import { searchClients } from "@/actions/upsert-client";
 import { DataTable } from "@/components/ui/data-table";
-import { Skeleton } from "@/components/ui/skeleton";
-
-import AddClientButton from "./add-client-button";
-import { SearchInput } from "./search-input";
 import { clientsTableColumns } from "./table-columns";
+import { Skeleton } from "@/components/ui/skeleton";
+import { SearchInput } from "./search-input";
+import AddClientButton from "./add-client-button";
+
+import type { SearchClientsResult } from "@/types/clients";
+
 
 export const ClientsList = () => {
   const searchParams = useSearchParams();
-  const search = searchParams.get("search");
-  const page = Number(searchParams.get("page")) || 1;
-  const order = searchParams.get("order");
-  const orderBy = searchParams.get("orderBy");
 
-  const { execute, result, status } = useAction(searchClients, {
-    onError: (error) => {
-      console.error("Erro ao buscar clientes:", error);
-    },
-  });
+  const search = searchParams.get("search") || "";
+  const page = Number(searchParams.get("page") || 1);
+  const order = searchParams.get("order") || "";
+  const orderBy = searchParams.get("orderBy") || "";
+
+  const [data, setData] = useState<SearchClientsResult | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    execute({
-      search: search || undefined,
-      page,
-      order: order || undefined,
-      orderBy: orderBy || undefined,
-    });
-  }, [search, page, order, orderBy, execute]);
+  const fetchClients = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(
+        `/api/clients?search=${search}&page=${page}&order=${order}&orderBy=${orderBy}`,
+        { cache: "no-store" }
+      );
+      console.log("Resposta bruta:", res); // 👈 novo
+      if (!res.ok) throw new Error("Erro ao buscar clientes.");
+      const json: SearchClientsResult = await res.json();
+      console.log("Dados recebidos:", json); // 👈 novo
+      setData(json);
+    } catch (err: any) {
+      console.error("Erro ao buscar clientes:", err); // 👈 novo
+      setError(err.message || "Erro inesperado.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const isLoading = status === "executing";
-  const data = result?.data;
-  const error = result?.serverError;
+  fetchClients();
+}, [search, page, order, orderBy]);
+
+  if (loading) return <Skeleton className="h-96 w-full" />;
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-lg border border-destructive bg-destructive/10 p-8 text-center">
-        <h2 className="text-lg font-semibold text-destructive">
-          Acesso não autorizado
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          Ocorreu um erro ao carregar os clientes. Verifique suas permissões e tente novamente.
-        </p>
+      <div className="text-center p-6 text-destructive">
+        {error}
       </div>
     );
   }
 
-  if (isLoading) {
-    return <Skeleton className="h-96 w-full" />;
-  }
 
   return (
-    <>
-      <div className="mb-4 flex w-full items-center gap-4">
-        <div className="min-w-0 flex-1">
-          <SearchInput />
-        </div>
-        <AddClientButton />
+  <>
+    <div className="mb-4 flex items-center gap-4">
+      <div className="flex-1">
+        <SearchInput />
       </div>
+      <AddClientButton />
+    </div>
+
+    {error ? (
+      <div className="text-center p-6 text-destructive">
+        {error}
+      </div>
+    ) : (
       <DataTable
         columns={clientsTableColumns}
-        data={data?.data || []}
+        data={data?.data ?? []}
         pagination={data?.pagination}
+        emptyMessage="Nenhum cliente encontrado."
       />
-    </>
-  );
-};
+    )}
+  </>
+)};

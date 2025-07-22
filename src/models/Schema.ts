@@ -57,136 +57,12 @@ export const todoSchema = pgTable('todo', {
 });
 
 /* ---------- Clínicas ---------- */
-export const clinicsTable = pgTable('clinics', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  name: text('name').notNull(),
-  // Adicione outras colunas relevantes para a tabela de clínicas aqui
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at')
-    .defaultNow()
-    .$onUpdate(() => new Date()),
-});
-
-/* ---------- Clientes da clínica ---------- */
-export const clientsTable = pgTable('clients', {
-  id: serial('id').primaryKey(),
-
-  /** Relaciona diretamente à Organization do Clerk */
-  organizationId: text('organization_id')
-    .notNull()
-    .references(() => organizationSchema.id, { onDelete: 'cascade' }),
-
-  
-
-  razaoSocial: text('razao_social'),
-  fantasia: text('fantasia'),
-
-  /* Endereço principal */
-  endereco: text('endereco'),
-  numero: text('numero'),
-  bairro: text('bairro'),
-  cidade: text('cidade'),
-  uf: text('uf'),
-  cep: text('cep'),
-  complemento: text('complemento'),
-
-  /* Dados extras vindos do Firebird */
-  moradia: integer('moradia'),
-  tipo: integer('tipo'),
-  situacao: integer('situacao'),
-  telefone1: text('telefone1'),
-  telefone2: text('telefone2'),
-  telefone3: text('telefone3'),
-  celular: text('celular'),
-  email: text('email'),
-  rg: text('rg'),
-  cpf: text('cpf'),
-  estadoCivil: text('estado_civil'),
-  empresa: text('empresa'),
-  dataCadastro: timestamp('data_cadastro'),
-  dataUltimaCompra: timestamp('data_ultima_compra'),
-  previsao: timestamp('previsao'),
-  cnae: text('cnae'),
-  codMunicipioIbge: text('cod_municipio_ibge'),
-  ibge: text('ibge'),
-
-  /* Endereço de correspondência */
-  correspEndereco: text('corresp_endereco'),
-  correspBairro: text('corresp_bairro'),
-  correspCidade: text('corresp_cidade'),
-  correspUf: text('corresp_uf'),
-  correspCep: text('corresp_cep'),
-  correspComplemento: text('corresp_complemento'),
-  correspNumero: text('corresp_numero'),
-
-  foto: text('foto'),
-  tipoCadastro: text('tipo_cadastro'),
-  ie: text('ie'),
-  mdia: text('mdia'),
-  tDocumento: text('t_documento'),
-  tVencimento: text('t_vencimento'),
-  tCobranca: text('t_cobranca'),
-  retencoes: text('retencoes'),
-  simples: text('simples'),
-  correios: text('correios'),
-
-  /* E-mails alternativos */
-  email1: text('email1'),
-  email2: text('email2'),
-  email3: text('email3'),
-  email4: text('email4'),
-  email5: text('email5'),
-
-  contribuinte: text('contribuinte'),
-  vlrMens: numeric('vlr_mens', { precision: 15, scale: 2 }),
-
-  observacao: text('observacao'),
-
-  usaFor: integer('usa_for'),
-  crt: text('crt'),
-  melhorDia: text('melhor_dia'),
-  vendedor: text('vendedor'),
-  teste: text('teste'),
-
-  /* Flags */
-  travado: boolean('travado').default(false),
-  ativo: boolean('ativo').default(false),
-  inadimplente: boolean('inadimplente').default(false),
-  especial: boolean('especial').default(false),
-  bloqueado: boolean('bloqueado').default(false),
-
-  pessoa: text('pessoa').default('J'),
-  documentosPdf: text('documentos_pdf'),
-  codigoAnterior: text('codigo_anterior'),
-
-  /** Timestamps */
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at')
-    .defaultNow()
-    .$onUpdate(() => new Date()),
-});
-
-
-// Add relations for clientsTable
-
-
-// 🔗 Relações de Clínica
-export const clinicsTableRelations = relations(clinicsTable, ({ many }) => ({
-  doctors: many(doctorsTable),
-  patients: many(patientsTable),
-  appointments: many(appointmentsTable),
-  usersToClinics: many(usersToClinicsTable),
-  exames: many(examesTable),
-  clients: many(clientsTable),
-}));
 
 /* ---------- Pacientes ---------- */
 export const patientsTable = pgTable("patients", {
+  organizationId: text("organization_id").notNull(),
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
-  clinicId: uuid("clinic_id")
-    .notNull()
-    .references(() => clinicsTable.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
@@ -195,11 +71,9 @@ export const patientsTable = pgTable("patients", {
 
 /* ---------- Médicos ---------- */
 export const doctorsTable = pgTable("doctors", {
+  organizationId: text("organization_id").notNull(),
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
-  clinicId: uuid("clinic_id")
-    .notNull()
-    .references(() => clinicsTable.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
@@ -209,10 +83,8 @@ export const doctorsTable = pgTable("doctors", {
 /* ---------- Exames ---------- */
 export const examesTable = pgTable("exames", {
   id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: text("organization_id").notNull(),
   name: text("name").notNull(),
-  clinicId: uuid("clinic_id")
-    .notNull()
-    .references(() => clinicsTable.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
@@ -222,6 +94,7 @@ export const examesTable = pgTable("exames", {
 /* ---------- Usuários ---------- */
 export const usersTable = pgTable("users", {
   id: text("id").primaryKey(), // Clerk user ID
+  organizationId: text("organization_id").notNull(),
   name: text("name"),
   email: text("email").notNull().unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -230,28 +103,13 @@ export const usersTable = pgTable("users", {
     .$onUpdate(() => new Date()),
 });
 
-/* ---------- Usuários para Clínicas (Tabela de Junção) ---------- */
-export const usersToClinicsTable = pgTable("users_to_clinics", {
-  userId: text("user_id")
-    .notNull()
-    .references(() => usersTable.id, { onDelete: "cascade" }),
-  clinicId: uuid("clinic_id")
-    .notNull()
-    .references(() => clinicsTable.id, { onDelete: "cascade" }),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
-    .defaultNow()
-    .$onUpdate(() => new Date()),
-});
 
 // 📅 Agendamentos
 export const appointmentsTable = pgTable("appointments", {
   id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: text("organization_id").notNull(),
   date: timestamp("date").notNull(),
   appointmentPriceInCents: integer("appointment_price_in_cents").notNull(),
-  clinicId: uuid("clinic_id")
-    .notNull()
-    .references(() => clinicsTable.id, { onDelete: "cascade" }),
   patientId: uuid("patient_id")
     .notNull()
     .references(() => patientsTable.id, { onDelete: "cascade" }),
@@ -270,10 +128,6 @@ export const appointmentsTable = pgTable("appointments", {
 export const appointmentsTableRelations = relations(
   appointmentsTable,
   ({ one }) => ({
-    clinic: one(clinicsTable, {
-      fields: [appointmentsTable.clinicId],
-      references: [clinicsTable.id],
-    }),
     patient: one(patientsTable, {
       fields: [appointmentsTable.patientId],
       references: [patientsTable.id],
@@ -286,8 +140,13 @@ export const appointmentsTableRelations = relations(
       fields: [appointmentsTable.doctorId],
       references: [doctorsTable.id],
     }),
-  }),
+    organization: one(organizationSchema, {
+      fields: [appointmentsTable.organizationId],
+      references: [organizationSchema.id],
+    }),
+  })
 );
+
 
 export const permissionsTable = pgTable("permissions", {
   id: text("id").primaryKey(),
@@ -295,12 +154,77 @@ export const permissionsTable = pgTable("permissions", {
   description: text("description"),
 });
 
-export const userPermissionsTable = pgTable("user_permissions", {
-  userId: text("user_id").references(() => usersTable.id, { onDelete: "cascade" }).notNull(),
-  permissionId: text("permission_id").references(() => permissionsTable.id, { onDelete: "cascade" }).notNull(),
-  clinicId: uuid("clinic_id").references(() => clinicsTable.id, { onDelete: "cascade" }).notNull(), // 👈 opcional por clínica
+
+// 🧑‍💼 Clientes
+export const clientsTable = pgTable("clients", {
+  id: serial("id").primaryKey(),
+  organizationId: text("organization_id").notNull(),
+  razaoSocial: text("razao_social"),
+  fantasia: text("fantasia"),
+  endereco: text("endereco"),
+  numero: text("numero"),
+  bairro: text("bairro"),
+  cidade: text("cidade"),
+  uf: text("uf"),
+  cep: text("cep"),
+  complemento: text("complemento"),
+  moradia: integer("moradia"),
+  tipo: integer("tipo"),
+  situacao: integer("situacao"),
+  telefone1: text("telefone1"),
+  telefone2: text("telefone2"),
+  telefone3: text("telefone3"),
+  celular: text("celular"),
+  email: text("email"),
+  rg: text("rg"),
+  cpf: text("cpf"),
+  estadoCivil: text("estado_civil"),
+  empresa: text("empresa"),
+  dataCadastro: timestamp("data_cadastro"),
+  dataUltimaCompra: timestamp("data_ultima_compra"),
+  previsao: timestamp("previsao"),
+  cnae: text("cnae"),
+  codMunicipioIbge: text("cod_municipio_ibge"),
+  ibge: text("ibge"),
+  correspEndereco: text("corresp_endereco"),
+  correspBairro: text("corresp_bairro"),
+  correspCidade: text("corresp_cidade"),
+  correspUf: text("corresp_uf"),
+  correspCep: text("corresp_cep"),
+  correspComplemento: text("corresp_complemento"),
+  foto: text("foto"),
+  tipoCadastro: text("tipo_cadastro"),
+  ie: text("ie"),
+  mdia: text("mdia"),
+  tDocumento: text("t_documento"),
+  tVencimento: text("t_vencimento"),
+  tCobranca: text("t_cobranca"),
+  retencoes: text("retencoes"),
+  simples: text("simples"),
+  correios: text("correios"),
+  email1: text("email1"),
+  email2: text("email2"),
+  email3: text("email3"),
+  email4: text("email4"),
+  email5: text("email5"),
+  contribuinte: text("contribuinte"),
+  vlrMens: numeric("vlr_mens", { precision: 15, scale: 2 }),
+  observacao: text("observacao"),
+  usaFor: integer("usa_for"),
+  crt: text("crt"),
+  melhorDia: text("melhor_dia"),
+  vendedor: text("vendedor"),
+  travado: boolean("travado").default(false),
+  ativo: boolean("ativo").default(false),
+  inadimplente: boolean("inadimplente").default(false),
+  especial: boolean("especial").default(false),
+  bloqueado: boolean("bloqueado").default(false),
+  pessoa: text("pessoa").default("J"),
+  documentosPdf: text("documentos_pdf"),
+  codigoAnterior: text("codigo_anterior"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date()),
 });
 
-export type Client = typeof clientsTable.$inferSelect;
-export type NewClient = typeof clientsTable.$inferInsert;

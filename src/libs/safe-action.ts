@@ -23,11 +23,17 @@ export const action = createSafeActionClient({
 
 export const protectedAction = createSafeActionClient({
   handleReturnedServerError: handleReturnedServerError,
-  getAuthData: async () => {
-    const { userId, orgId } = auth();
-    if (!userId || !orgId) {
-      throw new ActionError("Acesso não autorizado.");
-    }
-    return { userId, orgId };
-  },
+}).use(async ({ next }) => {
+  const { userId, orgId } = await auth();
+
+  if (!userId || !orgId) {
+    throw new ActionError("Acesso não autorizado.");
+  }
+
+  return next({
+    ctx: {
+      userId,
+      orgId,
+    },
+  });
 });

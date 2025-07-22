@@ -1,3 +1,5 @@
+"use client";
+
 import { useQueryClient } from "@tanstack/react-query";
 import { EditIcon, MoreVerticalIcon, TrashIcon } from "lucide-react";
 import { useState } from "react";
@@ -26,13 +28,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Sheet } from "@/components/ui/sheet";
-import { clientsTable } from "@/models/Schema"; // Alterado de @/db/schema
 import { useAction } from "@/hooks/use-action";
 
 import UpsertClientForm from "./upsert-client-form";
 
+// Interface simplificada: apenas os campos utilizados
+interface Client {
+  id: number;
+  fantasia: string;
+}
+
 interface ClientsTableActionsProps {
-  client: typeof clientsTable.$inferSelect;
+  client: Client;
 }
 
 const ClientsTableActions = ({ client }: ClientsTableActionsProps) => {
@@ -67,13 +74,13 @@ const ClientsTableActions = ({ client }: ClientsTableActionsProps) => {
             <DropdownMenuLabel>{client.fantasia}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => setUpsertSheetIsOpen(true)}>
-              <EditIcon />
+              <EditIcon className="mr-2 h-4 w-4" />
               Editar
             </DropdownMenuItem>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                  <TrashIcon />
+                  <TrashIcon className="mr-2 h-4 w-4" />
                   Excluir
                 </DropdownMenuItem>
               </AlertDialogTrigger>
@@ -83,8 +90,7 @@ const ClientsTableActions = ({ client }: ClientsTableActionsProps) => {
                     Tem certeza que deseja excluir esse cliente?
                   </AlertDialogTitle>
                   <AlertDialogDescription>
-                    Essa ação não pode ser revertida. Isso irá deletar o
-                    paciente e todas as consultas agendadas.
+                    Essa ação não pode ser revertida. Isso irá deletar o paciente e todas as consultas agendadas.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

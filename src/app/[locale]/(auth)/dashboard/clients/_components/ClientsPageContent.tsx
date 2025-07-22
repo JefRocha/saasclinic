@@ -11,7 +11,7 @@ import {
   PageContent,
 } from "@/components/ui/page-container";
 
-export function ClientsPageContent() {
+export default function ClientsPageContent() {
   return (
     <PageContainer>
       <PageHeader>

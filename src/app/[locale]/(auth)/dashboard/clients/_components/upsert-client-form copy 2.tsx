@@ -153,7 +153,9 @@ const validarCNPJ = (cnpj: string): boolean => {
   return cnpj.length === 14;
 };
 
-import { useDebounce } from "use-debounce"; // Assumindo que useDebounce está aqui
+// Hook personalizado para debounce (você precisa implementar ou instalar)
+const cepValue = form.watch("cep");
+const [debouncedCep] = useDebounce(cepValue, 500);
 
 // Hook para role do usuário (você precisa implementar)
 const useUserRole = () => {
@@ -318,82 +320,13 @@ const UpsertClientForm = ({
   // Watches para campos específicos
   const cpfValue = form.watch("cpf");
   const pessoaValue = form.watch("pessoa");
-  const enderecoValue = form.watch("endereco");
-  const correspEnderecoValue = form.watch("correspEndereco");
-
   const cepValue = form.watch("cep");
+  const enderecoValue = form.watch("endereco");
   const correspCepValue = form.watch("correspCep");
+  const correspEnderecoValue = form.watch("correspEndereco");
 
   const [debouncedCep] = useDebounce(cepValue, 500);
   const [debouncedCorrespCep] = useDebounce(correspCepValue, 500);
-
-  useEffect(() => {
-    const fetchAddress = async () => {
-      // Condição: CEP preenchido (8 dígitos) E Endereço vazio
-      if (
-        debouncedCep &&
-        debouncedCep.replace(/\D/g, "").length === 8 &&
-        !enderecoValue
-      ) {
-        console.log("Searching CEP:", debouncedCep);
-        try {
-          const response = await fetch(
-            `https://viacep.com.br/ws/${debouncedCep.replace(/\D/g, "")}/json/`,
-          );
-          const data = await response.json();
-          console.log("ViaCEP Response Data:", data);
-
-          if (!data.erro) {
-            form.setValue("endereco", data.logradouro.toUpperCase());
-            form.setValue("bairro", data.bairro.toUpperCase());
-            form.setValue("cidade", data.localidade.toUpperCase());
-            form.setValue("uf", data.uf.toUpperCase());
-            form.setValue("cep", data.cep); // Atualiza o próprio campo CEP
-          } else {
-            toast.error("CEP não encontrado.");
-          }
-        } catch (error) {
-          toast.error("Erro ao buscar CEP.");
-        }
-      }
-    };
-
-    fetchAddress();
-  }, [debouncedCep, form, enderecoValue]); // Adicionado enderecoValue às dependências
-
-  useEffect(() => {
-    const fetchCorrespAddress = async () => {
-      if (
-        debouncedCorrespCep &&
-        debouncedCorrespCep.replace(/\D/g, "").length === 8 &&
-        !correspEnderecoValue
-      ) {
-        console.log("Searching Corresp CEP:", debouncedCorrespCep);
-        try {
-          const response = await fetch(
-            `https://viacep.com.br/ws/${debouncedCorrespCep.replace(/\D/g, "")}/json/`,
-          );
-          const data = await response.json();
-          console.log("ViaCEP Corresp Response Data:", data);
-
-          if (!data.erro) {
-            form.setValue("correspEndereco", data.logradouro.toUpperCase());
-            form.setValue("correspBairro", data.bairro.toUpperCase());
-            form.setValue("correspCidade", data.localidade.toUpperCase());
-            form.setValue("correspUf", data.uf.toUpperCase());
-            form.setValue("correspCep", data.cep); // Atualiza o próprio campo CEP
-            form.setValue("correspNumero", ""); // Limpa o número para ser preenchido manualmente
-          } else {
-            toast.error("CEP de Correspondência não encontrado.");
-          }
-        } catch (error) {
-          toast.error("Erro ao buscar CEP de Correspondência.");
-        }
-      }
-    };
-
-    fetchCorrespAddress();
-  }, [debouncedCorrespCep, form, correspEnderecoValue]);
 
   
 
@@ -469,48 +402,71 @@ const UpsertClientForm = ({
 
   // Função para buscar CNPJ
   const { execute: executeCnpjSearch, isLoading: isLoadingCnpjSearch } =
-  useAction(getCnpjInfo, {
-    onSuccess: (response) => {
-      if (response.success && response.data) {
-        const apiData = response.data;
-        
-        try {
-          form.setValue("razaoSocial", (apiData.nome || "").toUpperCase());
-          form.setValue("fantasia", (apiData.fantasia || apiData.nome || "").toUpperCase());
-          form.setValue("endereco", (apiData.logradouro || "").toUpperCase());
-          form.setValue("numero", (apiData.numero || "").toUpperCase());
-          form.setValue("complemento", (apiData.complemento || "").toUpperCase());
-          form.setValue("bairro", (apiData.bairro || "").toUpperCase());
-          form.setValue("cidade", (apiData.municipio || "").toUpperCase());
-          form.setValue("uf", (apiData.uf || "").toUpperCase());
-          form.setValue("cep", apiData.cep || "");
-          form.setValue("ie", (apiData.ie || "").toUpperCase());
-          form.setValue("cnae", (apiData.atividade_principal?.[0]?.code || "").toUpperCase());
-          form.setValue("telefone1", apiData.telefone || "");
-          form.setValue("email", apiData.email || "");
+    useAction(getCnpjInfo, {
+      onSuccess: (response) => {
+        if (response.data.success) {
+          form.setValue(
+            "razaoSocial",
+            (response.data.data.nome || "").toUpperCase(),
+          );
+          form.setValue(
+            "fantasia",
+            (
+              response.data.data.fantasia ||
+              response.data.data.nome ||
+              ""
+            ).toUpperCase(),
+          );
+          form.setValue(
+            "endereco",
+            (response.data.data.logradouro || "").toUpperCase(),
+          );
+          form.setValue(
+            "numero",
+            (response.data.data.numero || "").toUpperCase(),
+          );
+          form.setValue(
+            "complemento",
+            (response.data.data.complemento || "").toUpperCase(),
+          );
+          form.setValue(
+            "bairro",
+            (response.data.data.bairro || "").toUpperCase(),
+          );
+          form.setValue(
+            "cidade",
+            (response.data.data.municipio || "").toUpperCase(),
+          );
+          form.setValue("uf", (response.data.data.uf || "").toUpperCase());
+          form.setValue("cep", response.data.data.cep || "");
+          form.setValue("ie", (response.data.data.ie || "").toUpperCase());
+          form.setValue(
+            "cnae",
+            (response.data.data.atividade_principal?.[0]?.code || "").toUpperCase(),
+          );
+          form.setValue("telefone1", response.data.data.telefone || "");
+          form.setValue("email", response.data.data.email || "");
 
-          const rawCpfCnpj = apiData.cnpj;
+          const rawCpfCnpj = response.data.data.cnpj;
           if (rawCpfCnpj) {
             const cleanedValue = rawCpfCnpj.replace(/\D/g, "");
-            form.setValue("pessoa", "J");
+            form.setValue("pessoa", "J"); // Define o tipo de pessoa como Jurídica
             form.setValue("cpf", cleanedValue);
           }
 
-          form.trigger();
+          console.log("Form values after setValue:", form.getValues()); // Novo log
           toast.success("Dados do CNPJ preenchidos com sucesso!");
-        } catch (e) {
-          console.error("Erro ao preencher formulário com dados do CNPJ:", e);
-          toast.error("Erro ao preencher formulário.");
+          form.reset(form.getValues()); // Força a redefinição do formulário com os novos valores
+        } else {
+          toast.error(response.data.error || "Erro ao buscar CNPJ.");
         }
-      } else {
-        toast.error(response.data?.error || "Erro ao buscar CNPJ.");
-      }
-    },
-    onError: (error) => {
-      console.error("CNPJ Search Error:", error);
-      toast.error((error as any).serverError || "Ocorreu um erro inesperado ao buscar CNPJ.");
-    },
-  });
+      },
+      onError: (error) => {
+        toast.error(
+          (error as any).serverError || "Ocorreu um erro inesperado ao buscar CNPJ.",
+        );
+      },
+    });
 
   const handleCnpjSearch = () => {
     const cleanedCnpj = cpfValue ? cpfValue.replace(/\D/g, "") : "";
@@ -532,12 +488,9 @@ const UpsertClientForm = ({
     }
   };
 
-  // useEffect(() => {
-  // // Só reseta nos casos apropriados
-  // if (!isLoadingCnpjSearch && !isLoading) {
-  //   form.reset(initialData || defaultEmptyValues);
-  // }
-  // }, [initialData]);
+  useEffect(() => {
+    form.reset(initialData || defaultEmptyValues);
+  }, [initialData, form]);
 
   const onSubmit = async (values: any) => {
     setIsLoading(true);

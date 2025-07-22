@@ -13,19 +13,12 @@ async function getCnpjData({ parsedInput }: { parsedInput: { cnpj: string } }) {
   try {
     const cleanedCnpj = cnpj.replace(/\D/g, '').padStart(14, '0');
     const response = await fetch(`https://www.receitaws.com.br/v1/cnpj/${cleanedCnpj}`);
-    console.log("Server Action - ReceitaWS Response Status:", response.status);
-
-    const contentType = response.headers.get("content-type");
-    if (!response.ok || !contentType || !contentType.includes("application/json")) {
-      const errorText = await response.text();
-      console.error("Server Action - ReceitaWS Non-JSON/Error Response:", errorText);
-      return { success: false, error: `Erro na API da ReceitaWS: ${errorText}` };
-    }
-
+    //console.log("Server Action - ReceitaWS Response Status:", response.status);
+    
     const data = await response.json();
-    console.log("Server Action - ReceitaWS Response Data:", data);
+    //console.log("Server Action - ReceitaWS Data:", data);
 
-    if (response.status === 200 && data.status !== "ERROR") {
+    if (data.status === "OK") {
       return { success: true, data };
     } else {
       return { success: false, error: data.message || "Erro ao buscar CNPJ." };

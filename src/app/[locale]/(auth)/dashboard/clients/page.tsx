@@ -11,7 +11,7 @@ import {
   PageTitle,
 } from "@/components/ui/page-container";
 
-import { ClientsList } from "./_components/clients-list";
+import ClientsPageContent from "./_components/ClientsPageContent";
 
 const ClientsPage = async () => {
   const { userId, orgId } = await auth();
@@ -34,10 +34,10 @@ const ClientsPage = async () => {
         </PageHeaderContent>
       </PageHeader>
       <PageContent>
-        <ClientsList />
+        <ClientsPageContent />
       </PageContent>
     </PageContainer>
   );
 };
 
-export default ClientsPage;
+export default ClientsPageContent;

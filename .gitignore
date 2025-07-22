@@ -5,7 +5,9 @@
 /OldProjeto
 /ProjetoOriginal
 /ProjetoAuth
+/ProjetoExemplo
 /.pnp
+/Temp
 .pnp.*
 .yarn/*
 !.yarn/patches
