@@ -25,11 +25,15 @@ export const ClientsList = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchClients = useCallback(async () => {
+    console.log("fetchClients is being executed.");
+    console.log("Current search params:", { search, page, order, orderBy });
     setLoading(true);
     setError(null);
     try {
+      const url = `/api/clients?search=${search}&page=${page}&order=${order}&orderBy=${orderBy}`;
+      console.log("Fetching from URL:", url);
       const res = await fetch(
-        `/api/clients?search=${search}&page=${page}&order=${order}&orderBy=${orderBy}`,
+        url,
         { cache: "no-store" }
       );
       console.log("Resposta bruta:", res);

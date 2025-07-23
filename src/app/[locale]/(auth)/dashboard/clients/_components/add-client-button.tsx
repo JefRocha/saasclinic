@@ -25,11 +25,13 @@ const AddClientButton = ({ onClientUpsertSuccess }: AddClientButtonProps) => {
         </Button>
       </DialogTrigger>
       <UpsertClientForm
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
         onSuccess={() => {
           setIsOpen(false);
           onClientUpsertSuccess();
         }}
-        isOpen={isOpen}
+        //isOpen={isOpen}
       />
     </Dialog>
   );

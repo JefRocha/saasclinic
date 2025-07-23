@@ -1,11 +1,9 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
 import { EditIcon, MoreVerticalIcon, TrashIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { deleteClient } from "@/actions/delete-client";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,7 +26,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Sheet } from "@/components/ui/sheet";
-import { useAction } from "@/hooks/use-action";
 
 import UpsertClientForm from "./upsert-client-form";
 
@@ -40,22 +37,26 @@ interface ClientsTableActionsProps {
 
 const ClientsTableActions = ({ client, onClientUpsertSuccess }: ClientsTableActionsProps) => {
   const [upsertSheetIsOpen, setUpsertSheetIsOpen] = useState(false);
-  const queryClient = useQueryClient();
 
-  const deleteClientAction = useAction(deleteClient, {
-    onSuccess: () => {
-      toast.success("Cliente excluído com sucesso.");
-      onClientUpsertSuccess(); // Chamar a função de atualização da lista
-    },
-    onError: (error) => {
-      console.error("Erro ao deletar cliente:", error); // Debug log
-      toast.error("Erro ao deletar cliente.");
-    },
-  });
-
-  const handleDeleteClientClick = () => {
+  const handleDeleteClientClick = async () => {
     if (!client) return;
-    deleteClientAction.execute({ id: client.id });
+
+    try {
+      const res = await fetch(`/api/clients?id=${client.id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        toast.error(error.message || "Erro ao deletar cliente.");
+        return;
+      }
+
+      toast.success("Cliente excluído com sucesso.");
+      onClientUpsertSuccess();
+    } catch (err) {
+      toast.error("Erro inesperado ao deletar cliente.");
+    }
   };
 
   return (

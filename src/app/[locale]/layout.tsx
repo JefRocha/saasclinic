@@ -7,6 +7,7 @@ import { getMessages } from "next-intl/server";
 
 import ClientIntlProvider from "@/components/ClientIntlProvider";
 import ReactQueryProvider from "@/components/providers/react-query-provider";
+import { PermissionModalProvider } from "@/components/PermissionModal"; // Importado novamente
 import { AppConfig } from "@/utils/AppConfig";
 
 export const metadata: Metadata = {
@@ -61,7 +62,11 @@ export default async function LocaleLayout({
         messages={messages}
         timeZone={timeZone}
       >
-        <ReactQueryProvider>{children}</ReactQueryProvider>
+        <ReactQueryProvider>
+          <PermissionModalProvider> {/* Descomentado */}
+            {children}
+          </PermissionModalProvider>
+        </ReactQueryProvider>
       </ClientIntlProvider>
     </ClerkProvider>
   );

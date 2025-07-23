@@ -1,5 +1,6 @@
 "use client";
 
+import { useFetchWithPopup } from '@/lib/fetchWithPopup';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useEffect, forwardRef } from "react";
 import { useForm } from "react-hook-form";
@@ -127,6 +128,7 @@ interface UpsertClientFormProps {
   initialData?: Client;
   isOpen: boolean;
   onSuccess: () => void;
+  onClose: () => void;
 }
 
 // Component personalizado para inputs numéricos
@@ -164,9 +166,13 @@ const UpsertClientForm = ({
   initialData,
   isOpen,
   onSuccess,
+  onClose,
 }: UpsertClientFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   
+  const { fetch: secureFetch, loading: isSubmitting } = useFetchWithPopup();
+  
+
   const userRole = useUserRole();
   const canEditSituacao = ["SUPER_ADMIN", "MASTER"].includes(
     userRole?.toUpperCase?.() ?? "",
@@ -540,32 +546,39 @@ const UpsertClientForm = ({
   // }, [initialData]);
 
   const onSubmit = async (values: any) => {
-    setIsLoading(true);
-    try {
-      const res = await fetch("/api/clients", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
+  setIsLoading(true);
+  try {
+    const res = await secureFetch('/api/clients', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(values),
+    });
 
-      if (!res.ok) {
-        const error = await res.json();
-        toast.error(error.message || "Erro ao salvar cliente.");
-        return;
-      }
-
-      toast.success(initialData ? "Cliente atualizado" : "Cliente criado");
-      form.reset();
-      onSuccess();
-    } catch (err) {
-      toast.error("Erro inesperado ao salvar cliente.");
-    } finally {
-      setIsLoading(false);
+    if (!res) {          // 403 → popup já exibido
+      onClose();         // fecha o diálogo
+      return;
     }
-  };
+
+    if (res.ok) {
+      const { error } = await res.json();
+      toast.error(error ?? 'Erro ao salvar');
+      return;
+    }
+
+    toast.success(initialData ? 'Cliente atualizado' : 'Cliente criado');
+    onSuccess();         // refetch da lista
+    onClose();           // fecha o diálogo
+  } catch {
+    toast.error('Erro inesperado ao salvar cliente.');
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   return (
-    <Dialog open={isOpen} onOpenChange={onSuccess}>
+    //<Dialog open={isOpen} onOpenChange={onSuccess}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
         hideCloseButton
         className="max-h-[90vh] w-full max-w-5xl overflow-y-auto"
@@ -1406,7 +1419,7 @@ const UpsertClientForm = ({
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isLoading}>
+              <Button type="submit" disabled={isLoading || isSubmitting}>
                 {isLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : initialData ? (

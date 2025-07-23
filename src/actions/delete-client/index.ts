@@ -24,6 +24,7 @@ export const deleteClient = async (input: typeof deleteClientSchema._type) => {
       }
       await db.delete(clientsTable).where(eq(clientsTable.id, parsedInput.id));
       revalidatePath("/clients");
+      revalidatePath("/api/clients");
       return { data: { success: true } };
     })(input);
 };

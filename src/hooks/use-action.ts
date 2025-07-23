@@ -13,7 +13,6 @@ export const useAction = <TInput, TData, TError>(
 ) => {
   const { execute, status, result, reset } = useSafeAction(action, {
     onSuccess: (result) => {
-      console.log("useAction onSuccess triggered.", result); // Debug log
       if (result.data && options?.onSuccess) {
         options.onSuccess(result.data);
       }
