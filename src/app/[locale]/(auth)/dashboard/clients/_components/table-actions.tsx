@@ -33,25 +33,22 @@ import { useAction } from "@/hooks/use-action";
 import UpsertClientForm from "./upsert-client-form";
 
 // Interface simplificada: apenas os campos utilizados
-interface Client {
-  id: number;
-  fantasia: string;
-}
-
 interface ClientsTableActionsProps {
   client: Client;
+  onClientUpsertSuccess: () => void;
 }
 
-const ClientsTableActions = ({ client }: ClientsTableActionsProps) => {
+const ClientsTableActions = ({ client, onClientUpsertSuccess }: ClientsTableActionsProps) => {
   const [upsertSheetIsOpen, setUpsertSheetIsOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const deleteClientAction = useAction(deleteClient, {
     onSuccess: () => {
       toast.success("Cliente excluído com sucesso.");
-      queryClient.invalidateQueries({ queryKey: ["clients"] });
+      onClientUpsertSuccess(); // Chamar a função de atualização da lista
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Erro ao deletar cliente:", error); // Debug log
       toast.error("Erro ao deletar cliente.");
     },
   });
@@ -107,7 +104,10 @@ const ClientsTableActions = ({ client }: ClientsTableActionsProps) => {
         <UpsertClientForm
           initialData={client}
           isOpen={upsertSheetIsOpen}
-          onSuccess={() => setUpsertSheetIsOpen(false)}
+          onSuccess={() => {
+            setUpsertSheetIsOpen(false);
+            onClientUpsertSuccess();
+          }}
         />
       </Sheet>
     </>

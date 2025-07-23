@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { DataTable } from "@/components/ui/data-table";
-import { clientsTableColumns } from "./table-columns";
+import { getClientsTableColumns } from "./table-columns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SearchInput } from "./search-input";
 import AddClientButton from "./add-client-button";
@@ -24,8 +24,7 @@ export const ClientsList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-  const fetchClients = async () => {
+  const fetchClients = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -33,21 +32,24 @@ export const ClientsList = () => {
         `/api/clients?search=${search}&page=${page}&order=${order}&orderBy=${orderBy}`,
         { cache: "no-store" }
       );
-      console.log("Resposta bruta:", res); // 👈 novo
+      console.log("Resposta bruta:", res);
       if (!res.ok) throw new Error("Erro ao buscar clientes.");
       const json: SearchClientsResult = await res.json();
-      console.log("Dados recebidos:", json); // 👈 novo
+      console.log("Dados recebidos:", json);
       setData(json);
     } catch (err: any) {
-      console.error("Erro ao buscar clientes:", err); // 👈 novo
+      console.error("Erro ao buscar clientes:", err);
       setError(err.message || "Erro inesperado.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, page, order, orderBy]);
 
-  fetchClients();
-}, [search, page, order, orderBy]);
+  useEffect(() => {
+    fetchClients();
+  }, [fetchClients]);
+
+  const columns = getClientsTableColumns(fetchClients);
 
   if (loading) return <Skeleton className="h-96 w-full" />;
 
@@ -66,7 +68,7 @@ export const ClientsList = () => {
       <div className="flex-1">
         <SearchInput />
       </div>
-      <AddClientButton />
+      <AddClientButton onClientUpsertSuccess={fetchClients} />
     </div>
 
     {error ? (
@@ -75,7 +77,7 @@ export const ClientsList = () => {
       </div>
     ) : (
       <DataTable
-        columns={clientsTableColumns}
+        columns={columns}
         data={data?.data ?? []}
         pagination={data?.pagination}
         emptyMessage="Nenhum cliente encontrado."

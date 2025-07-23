@@ -12,7 +12,7 @@ import { upsertClientSchema } from "@/actions/upsert-client/schema";
 
 type Client = typeof upsertClientSchema._type;
 
-export const clientsTableColumns: ColumnDef<Client>[] = [
+export const getClientsTableColumns = (onClientUpsertSuccess: () => void): ColumnDef<Client>[] => [
   {
     accessorKey: "id",
     header: ({ column }) => (
@@ -96,6 +96,6 @@ export const clientsTableColumns: ColumnDef<Client>[] = [
   },
   {
     id: "actions",
-    cell: ({ row }) => <ClientsTableActions client={row.original} />,
+    cell: ({ row }) => <ClientsTableActions client={row.original} onClientUpsertSuccess={onClientUpsertSuccess} />,
   },
 ];
