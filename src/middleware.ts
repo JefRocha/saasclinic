@@ -25,5 +25,6 @@ export default clerkMiddleware((auth, req) => {
 
 export const config = {
   //matcher: ["/((?!.*\..*|_next|_vercel|monitoring|api|trpc).*)"],
-  matcher: '/((?!_next|_vercel|monitoring|.*\\..*).*)',
+  //matcher: '/((?!_next|_vercel|monitoring|.*\\..*).*)',
+  matcher: ["/((?!.*\\..*|_next).*)"],
 };

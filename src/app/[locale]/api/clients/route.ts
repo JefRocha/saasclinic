@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
-import { clientsTable } from "@/models/Schema";
+import { clientsTable, organizationSchema } from "@/models/Schema";
 import { and, ilike, sql, eq } from "drizzle-orm";
-import { searchClientsSchema } from "@/actions/upsert-client/schema";
+import { searchClientsSchema, upsertClientSchema } from "@/actions/upsert-client/schema";
 
 export async function GET(req: NextRequest) {
   const { orgId } = await auth();
@@ -29,13 +29,11 @@ export async function GET(req: NextRequest) {
   const limit = 10;
   const offset = (page - 1) * limit;
 
-  // ✅ corrige: bloco `where` era inválido
   const where = and(
     eq(clientsTable.organizationId, orgId),
     ilike(clientsTable.razaoSocial, `%${search}%`)
   );
 
-  // ✅ corrige: estrutura do Promise.all estava fora de lugar
   const [clients, countResult] = await Promise.all([
     db
       .select()
@@ -68,4 +66,59 @@ export async function GET(req: NextRequest) {
       totalPages: Math.ceil(count / limit),
     },
   });
+}
+
+export async function POST(req: NextRequest) {
+  const { orgId } = await auth();
+
+  if (!orgId) {
+    return NextResponse.json({ error: "Organização não encontrada" }, { status: 401 });
+  }
+
+  try {
+    const body = await req.json();
+    const parsed = upsertClientSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Dados inválidos", details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+
+    // Verifica se a organização já existe no banco
+    const [organization] = await db
+      .select()
+      .from(organizationSchema)
+      .where(eq(organizationSchema.id, orgId))
+      .limit(1);
+
+    // Se não existir, cria uma nova com dados mínimos
+    if (!organization) {
+      await db.insert(organizationSchema).values({
+        id: orgId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }).execute();
+    }
+
+    const clientData = { ...parsed.data, organizationId: orgId };
+    console.log("Dados prontos para insert:", clientData);
+    const result = clientData.id
+      ? await db
+          .update(clientsTable)
+          .set(clientData)
+          .where(eq(clientsTable.id, clientData.id))
+          .returning()
+      : await db.insert(clientsTable).values(clientData).returning();
+      console.log("Resultado do insert:", result);
+
+    return NextResponse.json({ success: true, client: result[0] }, { status: 200 });
+  } catch (error: any) {
+    console.error("Erro ao processar requisição POST para clientes:", error);
+    return NextResponse.json(
+      { error: "Erro interno do servidor", details: error.message },
+      { status: 500 }
+    );
+  }
 }
