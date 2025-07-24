@@ -32,6 +32,8 @@ type DataTableProps<TData, TValue> = {
   sorting: SortingState; // Adicionado
   isFetching?: boolean; // Adicionado
   highlightedClientId?: string | number | null; // Adicionado
+  selectedRowId?: string | number | null; // Adicionado
+  onRowClick?: (id: string | number) => void; // Adicionado
 };
 
 export function DataTable<TData, TValue>({
@@ -41,7 +43,9 @@ export function DataTable<TData, TValue>({
   onSortingChange,
   sorting,
   isFetching = false,
-  highlightedClientId = null, // Adicionado
+  highlightedClientId = null,
+  selectedRowId = null,
+  onRowClick,
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
@@ -83,9 +87,12 @@ export function DataTable<TData, TValue>({
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && 'selected'}
+                    onClick={() => onRowClick && row.original && row.original.id && onRowClick(row.original.id)}
                     className={cn(
-                      "odd:bg-muted/50 hover:bg-blue-100 dark:hover:bg-blue-900/20 transition-colors duration-200",
-                      row.original && row.original.id === highlightedClientId && "bg-blue-200 dark:bg-blue-800",
+                      "hover:bg-blue-100 dark:hover:bg-blue-900/20 transition-colors duration-200",
+                      row.original && row.original.id === highlightedClientId && "bg-blue-100 dark:bg-blue-900/20",
+                      row.original && row.original.id === selectedRowId && "bg-gray-200 dark:bg-gray-700",
+                      !(row.original && (row.original.id === highlightedClientId || row.original.id === selectedRowId)) && "odd:bg-muted/50"
                     )}
                   >
                     {row.getVisibleCells().map(cell => (

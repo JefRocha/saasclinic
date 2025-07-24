@@ -43,6 +43,7 @@ export const ClientsList = () => {
     { id: initialOrderBy, desc: initialOrder === "desc" },
   ]);
   const [highlightedClientId, setHighlightedClientId] = useState<string | number | null>(null);
+  const [selectedClientId, setSelectedClientId] = useState<string | number | null>(null);
 
   // useQuery para buscar e gerenciar os dados
   const {
@@ -60,7 +61,13 @@ export const ClientsList = () => {
     queryClient.invalidateQueries({ queryKey: ["clients"] });
     if (clientId) {
       setHighlightedClientId(clientId);
+      setSelectedClientId(clientId); // Define o cliente selecionado também
     }
+  };
+
+  // Função para lidar com o clique na linha da tabela
+  const handleRowClick = (clientId: string | number) => {
+    setSelectedClientId(clientId);
   };
 
   // Limpa o destaque após alguns segundos
@@ -73,7 +80,7 @@ export const ClientsList = () => {
     }
   }, [highlightedClientId]);
 
-  const columns = getClientsTableColumns(handleSuccess);
+  const columns = getClientsTableColumns(handleSuccess, handleRowClick);
 
   // Renderiza o Skeleton apenas no carregamento inicial
   if (isLoading && !data) return <Skeleton className="h-96 w-full" />;
@@ -117,8 +124,10 @@ export const ClientsList = () => {
           });
         }}
         sorting={sorting}
-        isFetching={isPending} // Passa o isPending para o DataTable
-        highlightedClientId={highlightedClientId} // Passa o ID do cliente destacado
+        isFetching={isPending}
+        highlightedClientId={highlightedClientId}
+        selectedRowId={selectedClientId}
+        onRowClick={handleRowClick}
       />
     </>
   );

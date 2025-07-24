@@ -32,10 +32,11 @@ import UpsertClientForm from "./upsert-client-form";
 // Interface simplificada: apenas os campos utilizados
 interface ClientsTableActionsProps {
   client: Client;
-  onClientUpsertSuccess: () => void;
+  onClientUpsertSuccess: (clientId?: string | number) => void;
+  onRowClick: (clientId: string | number) => void;
 }
 
-const ClientsTableActions = ({ client, onClientUpsertSuccess }: ClientsTableActionsProps) => {
+const ClientsTableActions = ({ client, onClientUpsertSuccess, onRowClick }: ClientsTableActionsProps) => {
   const [upsertSheetIsOpen, setUpsertSheetIsOpen] = useState(false);
 
   const handleDeleteClientClick = async () => {
@@ -53,7 +54,7 @@ const ClientsTableActions = ({ client, onClientUpsertSuccess }: ClientsTableActi
       }
 
       toast.success("Cliente excluído com sucesso.");
-      onClientUpsertSuccess();
+      onClientUpsertSuccess(client.id);
     } catch (err) {
       toast.error("Erro inesperado ao deletar cliente.");
     }
@@ -63,7 +64,7 @@ const ClientsTableActions = ({ client, onClientUpsertSuccess }: ClientsTableActi
     <>
       <Sheet open={upsertSheetIsOpen} onOpenChange={setUpsertSheetIsOpen}>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+          <DropdownMenuTrigger asChild onPointerDownCapture={() => onRowClick(client.id)}>
             <Button variant="ghost" size="icon">
               <MoreVerticalIcon className="h-4 w-4" />
             </Button>
@@ -106,9 +107,9 @@ const ClientsTableActions = ({ client, onClientUpsertSuccess }: ClientsTableActi
           initialData={client}
           isOpen={upsertSheetIsOpen}
           onClose={() => setUpsertSheetIsOpen(false)} 
-          onSuccess={() => {
+          onSuccess={(clientId) => {
             setUpsertSheetIsOpen(false);
-            onClientUpsertSuccess();
+            onClientUpsertSuccess(clientId);
           }}
         />
       </Sheet>

@@ -156,6 +156,13 @@ const validarCNPJ = (cnpj: string): boolean => {
 };
 
 import { useDebounce } from "use-debounce"; // Assumindo que useDebounce está aqui
+import { useAuth, useUser } from "@clerk/nextjs";
+import { buildAbility, Action } from "@/lib/ability";
+
+// Hook para role do usuário (você precisa implementar)
+// const useUserRole = () => {
+//   return "SUPER_ADMIN"; // Placeholder
+// }; // Assumindo que useDebounce está aqui
 
 // Hook para role do usuário (você precisa implementar)
 const useUserRole = () => {
@@ -180,10 +187,11 @@ const UpsertClientForm = ({
 
   const { fetch: secureFetch, loading: isSubmitting } = useFetchWithPopup();
 
-  const userRole = useUserRole();
-  const canEditSituacao = ["SUPER_ADMIN", "MASTER"].includes(
-    userRole?.toUpperCase?.() ?? "",
-  );
+  const { orgId } = useAuth();
+  const { user } = useUser();
+  const role = user?.publicMetadata?.role as string;
+  const ability = buildAbility(role, orgId ?? undefined);
+  const canEditSituacao = ability.can(Action.Update, "Client", "situacao");
 
   const form = useForm({
     resolver: zodResolver(upsertClientSchema),
@@ -526,9 +534,9 @@ const UpsertClientForm = ({
       return;                  // mantém o formulário aberto p/ correção
     }
 
-    /* sucesso 200/201 */
+    const responseData = await res.json();
     toast.success(initialData ? 'Cliente atualizado' : 'Cliente criado');
-    const savedClientId = res.client?.id || initialData?.id; // Pega o ID do cliente salvo
+    const savedClientId = responseData.client?.id || initialData?.id; // Pega o ID do cliente salvo
     onSuccess(savedClientId);               // refetch da lista e passa o ID
     onClose();                 // fecha o diálogo
   } catch {

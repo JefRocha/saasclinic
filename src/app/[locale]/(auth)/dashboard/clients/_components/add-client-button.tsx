@@ -27,9 +27,9 @@ const AddClientButton = ({ onClientUpsertSuccess }: AddClientButtonProps) => {
       <UpsertClientForm
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
-        onSuccess={() => {
+        onSuccess={(clientId) => {
           setIsOpen(false);
-          onClientUpsertSuccess();
+          onClientUpsertSuccess(clientId);
         }}
         //isOpen={isOpen}
       />

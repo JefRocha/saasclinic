@@ -13,7 +13,7 @@ export const upsertClient = protectedAction
   .action(async ({ parsedInput, ctx }) => {
     const { createdAt, updatedAt, ...dataToInsert } = parsedInput;
 
-    await db
+    const [upsertedClient] = await db
       .insert(clientsTable)
       .values({
         ...dataToInsert,
@@ -32,9 +32,12 @@ export const upsertClient = protectedAction
               ? String(parsedInput.vlrMens)
               : parsedInput.vlrMens,
         },
-      });
+      })
+      .returning({ id: clientsTable.id });
 
-    // REMOVIDO: revalidatePath("/clients")
+    return { id: upsertedClient.id };
+
+    revalidatePath("/clients");
     console.log("✅ upsertClient action completed");
   });
 
@@ -80,10 +83,4 @@ export const searchClients = protectedAction
     };
   });
 
-  await fetch("/api/clients/revalidate", {
-  method: "POST",
-  body: JSON.stringify({ path: "/dashboard/clients" }),
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+  
