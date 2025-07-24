@@ -1,10 +1,11 @@
 import { z } from "zod";
 
 import { isValidCnpj, isValidCpf } from "@/helpers/validation";
-import { Client } from "@/models/Schema";
+import { clientsTable } from "@/models/Schema";
 
 export const upsertClientSchema = z.object({
-  id: z.number().optional(),
+  id: z.union([z.string(), z.number()]).optional(),
+  organizationId: z.string().uuid().optional(),
   razaoSocial: z.string().optional().nullable(),
   cpf: z.string().optional().nullable(),
   fantasia: z.string().optional().nullable(),
@@ -106,7 +107,7 @@ export type upsertClientSchema = z.infer<typeof upsertClientSchema>;
 export type searchClientsSchema = z.infer<typeof searchClientsSchema>;
 
 export type SearchClientsResult = {
-  data: Client[];
+  data: clientsTable[];
   pagination: {
     page: number;
     limit: number;

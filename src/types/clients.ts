@@ -1,6 +1,6 @@
 // src/types/clients.ts
 export interface Client {
-  id: string;
+  id?: number;
   razaoSocial: string;
   cnpj?: string;
   telefone?: string;

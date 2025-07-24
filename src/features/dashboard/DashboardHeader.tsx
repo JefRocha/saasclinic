@@ -1,8 +1,9 @@
 'use client';
 
-import { OrganizationSwitcher, UserButton } from '@clerk/nextjs';
+import { OrganizationSwitcher, UserButton, useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 import { useLocale } from 'next-intl';
+import { AdminOrgSwitcher } from '@/components/AdminOrgSwitcher';
 
 import { ActiveLink } from '@/components/ActiveLink';
 import { LocaleSwitcher } from '@/components/LocaleSwitcher';
@@ -32,12 +33,15 @@ export const DashboardHeader = (props: {
   )[];
 }) => {
   const locale = useLocale();
+  const { user } = useUser();
+  const isSuper  = user?.publicMetadata?.role === 'super_admin';
 
   return (
     <>
       <div className="flex items-center">
         <Link href="/dashboard" className="max-sm:hidden">
           <Logo />
+          <AdminOrgSwitcher /> 
         </Link>
 
         <svg
@@ -52,25 +56,27 @@ export const DashboardHeader = (props: {
           <path d="M17 5 7 19" />
         </svg>
 
-        <OrganizationSwitcher
-          organizationProfileMode="navigation"
-          organizationProfileUrl={getI18nPath(
-            '/dashboard/organization-profile',
-            locale,
-          )}
-          afterCreateOrganizationUrl="/dashboard"
-          hidePersonal
-          skipInvitationScreen
-          appearance={{
-            elements: {
-              organizationSwitcherTrigger: 'max-w-28 sm:max-w-52 text-foreground overflow-visible',
-              organizationPreviewMainIdentifier: { color: 'var(--foreground)', __css: { color: 'var(--foreground) !important' } },
-            },
-            variables: {
-              colorText: 'var(--foreground)',
-            },
-          }}
-        />
+        {isSuper && (
+          <OrganizationSwitcher
+            organizationProfileMode="navigation"
+            organizationProfileUrl={getI18nPath(
+              '/dashboard/organization-profile',
+              locale,
+            )}
+            afterCreateOrganizationUrl="/dashboard"
+            hidePersonal
+            skipInvitationScreen
+            appearance={{
+              elements: {
+                organizationSwitcherTrigger: 'max-w-28 sm:max-w-52 text-foreground overflow-visible',
+                organizationPreviewMainIdentifier: { color: 'var(--foreground)', __css: { color: 'var(--foreground) !important' } },
+              },
+              variables: {
+                colorText: 'var(--foreground)',
+              },
+            }}
+          />
+        )}
 
         <nav className="ml-3 max-lg:hidden">
           <ul className="flex flex-row items-center gap-x-3 text-lg font-medium [&_a:hover]:opacity-100 [&_a]:opacity-75">

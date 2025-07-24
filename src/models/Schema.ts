@@ -17,6 +17,7 @@ export const organizationSchema = pgTable(
   'organization',
   {
     id: text('id').primaryKey(), // ex.: "org_123"
+    nome: text("nome").notNull(),
     stripeCustomerId: text('stripe_customer_id'),
     stripeSubscriptionId: text('stripe_subscription_id'),
     stripeSubscriptionPriceId: text('stripe_subscription_price_id'),

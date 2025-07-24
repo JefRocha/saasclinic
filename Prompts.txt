@@ -1,3 +1,5 @@
+{ "role": "super_admin" }
+
 Atualizar banco de dados:
 npx drizzle-kit push 
 

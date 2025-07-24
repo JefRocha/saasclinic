@@ -105,6 +105,7 @@ const ClientsTableActions = ({ client, onClientUpsertSuccess }: ClientsTableActi
         <UpsertClientForm
           initialData={client}
           isOpen={upsertSheetIsOpen}
+          onClose={() => setUpsertSheetIsOpen(false)} 
           onSuccess={() => {
             setUpsertSheetIsOpen(false);
             onClientUpsertSuccess();

@@ -334,6 +334,8 @@ const UpsertClientForm = ({
   const [debouncedCorrespCep] = useDebounce(correspCepValue, 500);
 
   useEffect(() => {
+    console.log('form errors →', form.formState.errors);
+    
     const fetchAddress = async () => {
       // Condição: CEP preenchido (8 dígitos) E Endereço vazio
       if (
@@ -368,6 +370,7 @@ const UpsertClientForm = ({
   }, [debouncedCep, form, enderecoValue]); // Adicionado enderecoValue às dependências
 
   useEffect(() => {
+    console.log('form errors →', form.formState.errors);
     const fetchCorrespAddress = async () => {
       if (
         debouncedCorrespCep &&
@@ -554,26 +557,29 @@ const UpsertClientForm = ({
       body: JSON.stringify(values),
     });
 
-    if (!res) {          // 403 → popup já exibido
-      onClose();         // fecha o diálogo
+    if (!res) {                // 403 → popup já exibido
+      onClose();               // fecha o diálogo
       return;
     }
 
-    if (res.ok) {
+    /* ↓↓  trata somente resposta fora da faixa 2xx */
+    if (!res.ok) {
       const { error } = await res.json();
       toast.error(error ?? 'Erro ao salvar');
-      return;
+      return;                  // mantém o formulário aberto p/ correção
     }
 
+    /* sucesso 200/201 */
     toast.success(initialData ? 'Cliente atualizado' : 'Cliente criado');
-    onSuccess();         // refetch da lista
-    onClose();           // fecha o diálogo
+    onSuccess();               // refetch da lista
+    onClose();                 // fecha o diálogo
   } catch {
     toast.error('Erro inesperado ao salvar cliente.');
   } finally {
     setIsLoading(false);
   }
 };
+
 
 
   return (

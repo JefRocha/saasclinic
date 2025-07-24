@@ -10,7 +10,7 @@ export class ActionError extends Error {
 }
 
 const handleReturnedServerError = (e: Error) => {
-  console.error("Erro bruto no handleReturnedServerError:", e);
+  console.error("Erro capturado em handleReturnedServerError:", e);
   if (e instanceof ActionError) {
     return e.message;
   }
@@ -25,9 +25,14 @@ export const protectedAction = createSafeActionClient({
   handleReturnedServerError: handleReturnedServerError,
 }).use(async ({ next }) => {
   const { userId, orgId } = await auth();
+  console.log("protectedAction - userId:", userId, "orgId:", orgId);
 
-  if (!userId || !orgId) {
-    throw new ActionError("Acesso não autorizado.");
+  if (!userId) {
+    throw new ActionError("Usuário não autenticado.");
+  }
+  // Adicionar verificação explícita para orgId
+  if (!orgId) {
+    throw new ActionError("Organização não encontrada para o usuário.");
   }
 
   return next({
