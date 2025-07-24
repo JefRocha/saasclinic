@@ -68,7 +68,7 @@ export const DashboardHeader = (props: {
             skipInvitationScreen
             appearance={{
               elements: {
-                organizationSwitcherTrigger: 'max-w-28 sm:max-w-52 text-foreground overflow-visible',
+                organizationSwitcherTrigger: 'max-w-28 sm:max-w-52 text-foreground',
                 organizationPreviewMainIdentifier: { color: 'var(--foreground)', __css: { color: 'var(--foreground) !important' } },
               },
               variables: {

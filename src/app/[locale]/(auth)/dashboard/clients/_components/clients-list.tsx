@@ -42,6 +42,7 @@ export const ClientsList = () => {
   const [sorting, setSorting] = useState<SortingState>([
     { id: initialOrderBy, desc: initialOrder === "desc" },
   ]);
+  const [highlightedClientId, setHighlightedClientId] = useState<string | number | null>(null);
 
   // useQuery para buscar e gerenciar os dados
   const {
@@ -55,9 +56,22 @@ export const ClientsList = () => {
   });
 
   // Função para ser chamada em caso de sucesso (criação/edição/exclusão)
-  const handleSuccess = () => {
+  const handleSuccess = (clientId?: string | number) => {
     queryClient.invalidateQueries({ queryKey: ["clients"] });
+    if (clientId) {
+      setHighlightedClientId(clientId);
+    }
   };
+
+  // Limpa o destaque após alguns segundos
+  useEffect(() => {
+    if (highlightedClientId) {
+      const timer = setTimeout(() => {
+        setHighlightedClientId(null);
+      }, 3000); // 3 segundos
+      return () => clearTimeout(timer);
+    }
+  }, [highlightedClientId]);
 
   const columns = getClientsTableColumns(handleSuccess);
 
@@ -104,6 +118,7 @@ export const ClientsList = () => {
         }}
         sorting={sorting}
         isFetching={isPending} // Passa o isPending para o DataTable
+        highlightedClientId={highlightedClientId} // Passa o ID do cliente destacado
       />
     </>
   );

@@ -127,7 +127,7 @@ interface Client {
 interface UpsertClientFormProps {
   initialData?: Client;
   isOpen: boolean;
-  onSuccess: () => void;
+  onSuccess: (clientId?: string | number) => void; // Alterado para aceitar clientId
   onClose: () => void;
 }
 
@@ -528,7 +528,8 @@ const UpsertClientForm = ({
 
     /* sucesso 200/201 */
     toast.success(initialData ? 'Cliente atualizado' : 'Cliente criado');
-    onSuccess();               // refetch da lista
+    const savedClientId = res.client?.id || initialData?.id; // Pega o ID do cliente salvo
+    onSuccess(savedClientId);               // refetch da lista e passa o ID
     onClose();                 // fecha o diálogo
   } catch {
     toast.error('Erro inesperado ao salvar cliente.');

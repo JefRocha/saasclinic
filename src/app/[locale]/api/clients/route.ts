@@ -5,7 +5,7 @@ import { auth, currentUser } from '@clerk/nextjs/server';
 
 import { db } from '@/db';
 import { clientsTable, organizationSchema } from '@/models/Schema';
-import { eq, and, ilike, sql } from 'drizzle-orm';
+import { eq, and, ilike, sql, or } from 'drizzle-orm';
 
 import { upsertClientSchema, searchClientsSchema } from '@/actions/upsert-client/schema';
 import { buildAbility, Action } from '@/lib/ability';
@@ -30,45 +30,63 @@ async function abilityForRequest() {
 /* GET: lista paginada (unchanged)                                     */
 /* ------------------------------------------------------------------ */
 export async function GET(req: NextRequest) {
-  const { ability, orgId } = await abilityForRequest();
-  if (!ability.can(Action.Read, 'Client')) return jsonError('Forbidden', 403);
+  try {
+    const { ability, orgId } = await abilityForRequest();
+    if (!ability.can(Action.Read, 'Client')) return jsonError('Forbidden', 403);
 
-  const url = new URL(req.url);
-  const parsed = searchClientsSchema.safeParse({
-    search : url.searchParams.get('search') || '',
-    page   : parseInt(url.searchParams.get('page') || '1'),
-    order  : url.searchParams.get('order')  || 'asc',
-    orderBy: url.searchParams.get('orderBy') || 'razaoSocial',
-  });
-  if (!parsed.success) return jsonError('Parâmetros inválidos');
+    const url = new URL(req.url);
+    const parsed = searchClientsSchema.safeParse({
+      search : url.searchParams.get('search') || '',
+      page   : parseInt(url.searchParams.get('page') || '1'),
+      order  : url.searchParams.get('order')  || 'asc',
+      orderBy: url.searchParams.get('orderBy') || 'razaoSocial',
+    });
+    if (!parsed.success) return jsonError('Parâmetros inválidos');
 
-  const { search, page, order, orderBy } = parsed.data;
-  const limit  = 10;
-  const offset = (page - 1) * limit;
+    const { search, page, order, orderBy } = parsed.data;
+    const limit  = 10;
+    const offset = (page - 1) * limit;
 
-  const whereOrg = ability.can(Action.Manage, 'all')
-    ? sql`1=1`                                   // super_admin → ignora filtro
-    : eq(clientsTable.organizationId, orgId);    // demais papéis → filtra
+    const whereOrg = ability.can(Action.Manage, 'all')
+      ? sql`1=1`                                   // super_admin → ignora filtro
+      : eq(clientsTable.organizationId, orgId);    // demais papéis → filtra
 
-  const where = and(whereOrg, ilike(clientsTable.razaoSocial, `%${search}%`));
+    const where = and(
+      whereOrg,
+      or(
+        ilike(clientsTable.razaoSocial, `%${search}%`),
+        ilike(clientsTable.fantasia, `%${search}%`),
+        ilike(clientsTable.cpf, `%${search}%`),
+        ilike(clientsTable.celular, `%${search}%`),
+        ilike(clientsTable.email, `%${search}%`),
+        ilike(clientsTable.cidade, `%${search}%`),
+      ),
+    );
 
-  const [clients, [{ count } = { count: 0 }]] = await Promise.all([
-    db.select().from(clientsTable)
-      .where(where)
-      .orderBy(
-        order === 'desc'
-          ? sql`${clientsTable[orderBy]} DESC`
-          : sql`${clientsTable[orderBy]} ASC`,
-      )
-      .limit(limit)
-      .offset(offset),
-    db.select({ count: sql<number>`count(*)` }).from(clientsTable).where(where),
-  ]);
+    const [clients, [{ count } = { count: 0 }]] = await Promise.all([
+      db.select().from(clientsTable)
+        .where(where)
+        .orderBy(
+          order === 'desc'
+            ? sql`${clientsTable[orderBy]} DESC`
+            : sql`${clientsTable[orderBy]} ASC`,
+        )
+        .limit(limit)
+        .offset(offset),
+      db.select({ count: sql<number>`count(*)` }).from(clientsTable).where(where),
+    ]);
 
-  return NextResponse.json({
-    data: clients,
-    pagination: { page, limit, total: count, totalPages: Math.ceil(count / limit) },
-  });
+    return NextResponse.json({
+      data: clients,
+      pagination: { page, limit, total: count, totalPages: Math.ceil(count / limit) },
+    });
+  } catch (e) {
+    console.error('GET /api/clients ‒ erro:', e);
+    return NextResponse.json(
+      { error: 'Internal error', detail: String(e) },
+      { status: 500 },
+    );
+  }
 }
 
 /* ------------------------------------------------------------------ */

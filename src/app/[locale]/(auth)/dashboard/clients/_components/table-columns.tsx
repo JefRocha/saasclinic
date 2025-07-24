@@ -6,6 +6,12 @@ import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatCnpjCpf } from "@/helpers/format";
 import { cn } from "@/libs/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import ClientsTableActions from "./table-actions";
 import { upsertClientSchema } from "@/actions/upsert-client/schema";
@@ -15,6 +21,7 @@ type Client = typeof upsertClientSchema._type;
 export const getClientsTableColumns = (onClientUpsertSuccess: () => void): ColumnDef<Client>[] => [
   {
     accessorKey: "id",
+    size: 80,
     header: ({ column }) => (
       <Button
         variant="ghost"
@@ -39,11 +46,46 @@ export const getClientsTableColumns = (onClientUpsertSuccess: () => void): Colum
     cell: ({ row }) => {
       const isBlocked = row.original.situacao === 3;
       return (
-        <span className={cn({ "text-red-500": isBlocked })}>
-          {row.original.razaoSocial}
-        </span>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className={cn({ "text-red-500": isBlocked }, "truncate max-w-[250px]")}>
+                {row.original.razaoSocial}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{row.original.razaoSocial}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       );
     },
+  },
+  {
+    accessorKey: "fantasia",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Nome Fantasia
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    cell: ({ row }) => (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="truncate max-w-[180px]">
+              {row.original.fantasia}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{row.original.fantasia}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    ),
   },
   {
     accessorKey: "cpf",
