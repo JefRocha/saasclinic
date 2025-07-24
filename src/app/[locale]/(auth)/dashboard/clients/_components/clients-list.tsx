@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { DataTable } from "@/components/ui/data-table";
 import { getClientsTableColumns } from "./table-columns";
@@ -11,81 +11,74 @@ import AddClientButton from "./add-client-button";
 
 import type { SearchClientsResult } from "@/types/clients";
 
+// Função que busca os dados da API
+const fetchClients = async (
+  search: string,
+  page: number,
+  order: string,
+  orderBy: string,
+): Promise<SearchClientsResult> => {
+  const url = `/api/clients?search=${search}&page=${page}&order=${order}&orderBy=${orderBy}`;
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) {
+    throw new Error("Erro ao buscar clientes.");
+  }
+  return res.json();
+};
 
 export const ClientsList = () => {
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
 
   const search = searchParams.get("search") || "";
   const page = Number(searchParams.get("page") || 1);
   const order = searchParams.get("order") || "";
   const orderBy = searchParams.get("orderBy") || "";
 
-  const [data, setData] = useState<SearchClientsResult | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // useQuery para buscar e gerenciar os dados
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+  } = useQuery<SearchClientsResult, Error>({
+    queryKey: ["clients", search, page, order, orderBy],
+    queryFn: () => fetchClients(search, page, order, orderBy),
+    // staleTime: 1000 * 60 * 5, // Opcional: 5 minutos de cache
+  });
 
-  const fetchClients = useCallback(async () => {
-    console.log("fetchClients is being executed.");
-    console.log("Current search params:", { search, page, order, orderBy });
-    setLoading(true);
-    setError(null);
-    try {
-      const url = `/api/clients?search=${search}&page=${page}&order=${order}&orderBy=${orderBy}`;
-      console.log("Fetching from URL:", url);
-      const res = await fetch(
-        url,
-        { cache: "no-store" }
-      );
-      console.log("Resposta bruta:", res);
-      if (!res.ok) throw new Error("Erro ao buscar clientes.");
-      const json: SearchClientsResult = await res.json();
-      console.log("Dados recebidos:", json);
-      setData(json);
-    } catch (err: any) {
-      console.error("Erro ao buscar clientes:", err);
-      setError(err.message || "Erro inesperado.");
-    } finally {
-      setLoading(false);
-    }
-  }, [search, page, order, orderBy]);
+  // Função para ser chamada em caso de sucesso (criação/edição/exclusão)
+  const handleSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ["clients"] });
+  };
 
-  useEffect(() => {
-    fetchClients();
-  }, [fetchClients]);
+  const columns = getClientsTableColumns(handleSuccess);
 
-  const columns = getClientsTableColumns(fetchClients);
+  if (isLoading) return <Skeleton className="h-96 w-full" />;
 
-  if (loading) return <Skeleton className="h-96 w-full" />;
-
-  if (error) {
+  if (isError) {
     return (
       <div className="text-center p-6 text-destructive">
-        {error}
+        {error.message || "Erro inesperado."}
       </div>
     );
   }
 
-
   return (
-  <>
-    <div className="mb-4 flex items-center gap-4">
-      <div className="flex-1">
-        <SearchInput />
+    <>
+      <div className="mb-4 flex items-center gap-4">
+        <div className="flex-1">
+          <SearchInput />
+        </div>
+        <AddClientButton onClientUpsertSuccess={handleSuccess} />
       </div>
-      <AddClientButton onClientUpsertSuccess={fetchClients} />
-    </div>
 
-    {error ? (
-      <div className="text-center p-6 text-destructive">
-        {error}
-      </div>
-    ) : (
       <DataTable
         columns={columns}
         data={data?.data ?? []}
         pagination={data?.pagination}
         emptyMessage="Nenhum cliente encontrado."
       />
-    )}
-  </>
-)};
+    </>
+  );
+};

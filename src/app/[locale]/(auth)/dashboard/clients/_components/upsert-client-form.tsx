@@ -556,12 +556,7 @@ const UpsertClientForm = ({
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit, (errors) => {
-              console.error("Erros de validação encontrados:", errors);
-              toast.error(
-                "Existem erros no formulário. Verifique o console (F12) para ver os detalhes.",
-              );
-            })}
+            onSubmit={form.handleSubmit(onSubmit)}
             className="w-full space-y-4"
           >
             <Tabs defaultValue="geral" className="w-full">
