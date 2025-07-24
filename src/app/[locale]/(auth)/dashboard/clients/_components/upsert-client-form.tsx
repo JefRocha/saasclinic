@@ -162,6 +162,14 @@ const useUserRole = () => {
   return "SUPER_ADMIN"; // Placeholder
 };
 
+// Função para validar se uma string é um UUID
+const isUuid = (value: string | null | undefined): boolean => {
+  if (!value) return false;
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(value);
+};
+
 const UpsertClientForm = ({
   initialData,
   isOpen,
@@ -169,9 +177,8 @@ const UpsertClientForm = ({
   onClose,
 }: UpsertClientFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const { fetch: secureFetch, loading: isSubmitting } = useFetchWithPopup();
-  
 
   const userRole = useUserRole();
   const canEditSituacao = ["SUPER_ADMIN", "MASTER"].includes(
@@ -182,75 +189,25 @@ const UpsertClientForm = ({
     resolver: zodResolver(upsertClientSchema),
     defaultValues: initialData
       ? {
-          id: initialData.id,
-          organizationId: initialData.organizationId,
-          razaoSocial: initialData.razaoSocial || "",
-          fantasia: initialData.fantasia || "",
-          endereco: initialData.endereco || "",
-          numero: initialData.numero || "",
-          bairro: initialData.bairro || "",
-          cidade: initialData.cidade || "",
-          uf: initialData.uf || "",
-          cep: initialData.cep || "",
-          complemento: initialData.complemento || "",
-          moradia: initialData.moradia ?? undefined,
-          tipo: initialData.tipo ?? undefined,
-          situacao: initialData.situacao ?? undefined,
-          telefone1: initialData.telefone1 || "",
-          telefone2: initialData.telefone2 || "",
-          telefone3: initialData.telefone3 || "",
-          celular: initialData.celular || "",
-          email: initialData.email || "",
-          rg: initialData.rg || "",
-          cpf: initialData.cpf || "",
-          estadoCivil: initialData.estadoCivil || "",
-          empresa: initialData.empresa || "",
-          dataCadastro: initialData.dataCadastro ? new Date(initialData.dataCadastro) : undefined,
-          dataUltimaCompra: initialData.dataUltimaCompra ? new Date(initialData.dataUltimaCompra) : undefined,
-          previsao: initialData.previsao ? new Date(initialData.previsao) : undefined,
-          cnae: initialData.cnae || "",
-          codMunicipioIbge: initialData.codMunicipioIbge || "",
-          ibge: initialData.ibge || "",
-          correspEndereco: initialData.correspEndereco || "",
-          correspBairro: initialData.correspBairro || "",
-          correspCidade: initialData.correspCidade || "",
-          correspUf: initialData.correspUf || "",
-          correspCep: initialData.correspCep || "",
-          correspComplemento: initialData.correspComplemento || "",
-          correspNumero: initialData.correspNumero || "",
-          foto: initialData.foto || "",
-          tipoCadastro: initialData.tipoCadastro || "",
-          ie: initialData.ie || "",
-          mdia: initialData.mdia || "",
-          tDocumento: initialData.tDocumento || "",
-          tVencimento: initialData.tVencimento || "",
-          tCobranca: initialData.tCobranca || "",
-          retencoes: initialData.retencoes || "",
-          simples: initialData.simples || "",
-          correios: initialData.correios || "",
-          email1: initialData.email1 || "",
-          email2: initialData.email2 || "",
-          email3: initialData.email3 || "",
-          email4: initialData.email4 || "",
-          email5: initialData.email5 || "",
-          contribuinte: initialData.contribuinte || "N",
-          vlrMens: initialData.vlrMens !== null && initialData.vlrMens !== undefined ? Number(initialData.vlrMens) : undefined,
-          observacao: initialData.observacao || "",
-          usaFor: initialData.usaFor ?? undefined,
-          crt: initialData.crt || "",
-          melhorDia: initialData.melhorDia || "",
-          vendedor: initialData.vendedor || "",
-          teste: initialData.teste || "",
-          travado: initialData.travado ?? undefined,
-          ativo: initialData.ativo ?? undefined,
-          inadimplente: initialData.inadimplente ?? undefined,
-          especial: initialData.especial ?? undefined,
-          bloqueado: initialData.bloqueado ?? undefined,
-          pessoa: initialData.pessoa || "J",
-          documentosPdf: initialData.documentosPdf || "",
-          codigoAnterior: initialData.codigoAnterior || "",
-          createdAt: initialData.createdAt,
-          updatedAt: initialData.updatedAt ?? undefined,
+          ...initialData,
+          organizationId: isUuid(initialData.organizationId)
+            ? initialData.organizationId
+            : undefined,
+          dataCadastro: initialData.dataCadastro
+            ? new Date(initialData.dataCadastro)
+            : undefined,
+          dataUltimaCompra: initialData.dataUltimaCompra
+            ? new Date(initialData.dataUltimaCompra)
+            : undefined,
+          previsao: initialData.previsao
+            ? new Date(initialData.previsao)
+            : undefined,
+          createdAt: initialData.createdAt
+            ? new Date(initialData.createdAt)
+            : undefined,
+          updatedAt: initialData.updatedAt
+            ? new Date(initialData.updatedAt)
+            : undefined,
         }
       : {
           razaoSocial: "",
@@ -599,7 +556,12 @@ const UpsertClientForm = ({
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
+            onSubmit={form.handleSubmit(onSubmit, (errors) => {
+              console.error("Erros de validação encontrados:", errors);
+              toast.error(
+                "Existem erros no formulário. Verifique o console (F12) para ver os detalhes.",
+              );
+            })}
             className="w-full space-y-4"
           >
             <Tabs defaultValue="geral" className="w-full">

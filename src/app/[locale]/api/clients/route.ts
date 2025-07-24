@@ -123,6 +123,22 @@ export async function POST(req: NextRequest) {
 
     /* 5. prossegue com o insert/update do cliente */
     const clientData = { ...parsed.data, organizationId: finalOrgId };
+
+    // Converte booleanos para 0/1 antes de salvar no banco
+    const booleanFields = [
+      "travado",
+      "ativo",
+      "inadimplente",
+      "especial",
+      "bloqueado",
+      "usaFor",
+    ];
+    for (const field of booleanFields) {
+      if (typeof clientData[field] === "boolean") {
+        clientData[field] = clientData[field] ? 1 : 0;
+      }
+    }
+
     const result = clientData.id
       ? await db.update(clientsTable)
           .set(clientData)
