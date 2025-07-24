@@ -1,7 +1,9 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect, useTransition } from "react";
+import type { SortingState } from "@tanstack/react-table";
 
 import { DataTable } from "@/components/ui/data-table";
 import { getClientsTableColumns } from "./table-columns";
@@ -28,12 +30,18 @@ const fetchClients = async (
 
 export const ClientsList = () => {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const queryClient = useQueryClient();
+  const [isPending, startTransition] = useTransition();
 
   const search = searchParams.get("search") || "";
   const page = Number(searchParams.get("page") || 1);
-  const order = searchParams.get("order") || "";
-  const orderBy = searchParams.get("orderBy") || "";
+  const initialOrderBy = searchParams.get("orderBy") || "razaoSocial";
+  const initialOrder = searchParams.get("order") || "asc";
+
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: initialOrderBy, desc: initialOrder === "desc" },
+  ]);
 
   // useQuery para buscar e gerenciar os dados
   const {
@@ -42,9 +50,8 @@ export const ClientsList = () => {
     isError,
     error,
   } = useQuery<SearchClientsResult, Error>({
-    queryKey: ["clients", search, page, order, orderBy],
-    queryFn: () => fetchClients(search, page, order, orderBy),
-    // staleTime: 1000 * 60 * 5, // Opcional: 5 minutos de cache
+    queryKey: ["clients", search, page, sorting[0].id, (sorting[0].desc ? "desc" : "asc")],
+    queryFn: () => fetchClients(search, page, sorting[0].desc ? "desc" : "asc", sorting[0].id),
   });
 
   // Função para ser chamada em caso de sucesso (criação/edição/exclusão)
@@ -54,7 +61,8 @@ export const ClientsList = () => {
 
   const columns = getClientsTableColumns(handleSuccess);
 
-  if (isLoading) return <Skeleton className="h-96 w-full" />;
+  // Renderiza o Skeleton apenas no carregamento inicial
+  if (isLoading && !data) return <Skeleton className="h-96 w-full" />;
 
   if (isError) {
     return (
@@ -78,7 +86,27 @@ export const ClientsList = () => {
         data={data?.data ?? []}
         pagination={data?.pagination}
         emptyMessage="Nenhum cliente encontrado."
+        onSortingChange={(updater) => {
+          startTransition(() => {
+            const newSortingState = typeof updater === 'function' ? updater(sorting) : updater;
+            setSorting(newSortingState);
+
+            const newOrderBy = newSortingState.length > 0 ? newSortingState[0].id : "razaoSocial";
+            const newOrder = newSortingState.length > 0 && newSortingState[0].desc ? "desc" : "asc";
+
+            const params = new URLSearchParams(searchParams.toString());
+            params.set("orderBy", newOrderBy);
+            params.set("order", newOrder);
+            router.replace(`?${params.toString()}`);
+
+            queryClient.invalidateQueries({ queryKey: ["clients"] });
+          });
+        }}
+        sorting={sorting}
+        isFetching={isPending} // Passa o isPending para o DataTable
       />
     </>
   );
 };
+
+

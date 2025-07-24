@@ -1,12 +1,14 @@
 'use client';
 
-import type { ColumnDef } from '@tanstack/react-table';
+import type { ColumnDef, SortingState } from '@tanstack/react-table';
 import {
   flexRender,
   getCoreRowModel,
+  getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
 import { useTranslations } from 'next-intl';
+import { cn } from "@/libs/utils";
 
 import {
   Table,
@@ -26,21 +28,33 @@ type DataTableProps<TData, TValue> = {
     total: number;
     totalPages: number;
   };
+  onSortingChange: (sorting: SortingState) => void; // Adicionado
+  sorting: SortingState; // Adicionado
+  isFetching?: boolean; // Adicionado
 };
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  pagination,
+  onSortingChange,
+  sorting,
+  isFetching = false, // Adicionado
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(), // Adicionado
+    onSortingChange: onSortingChange, // Adicionado
+    state: {
+      sorting: sorting, // Adicionado
+    },
   });
   const t = useTranslations('DataTable');
 
   return (
-    <div className="rounded-md border bg-card">
+    <div className={cn("rounded-md border bg-card", { "opacity-50 transition-opacity duration-300": isFetching })}>
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map(headerGroup => (
@@ -70,7 +84,7 @@ export function DataTable<TData, TValue>({
                     className="odd:bg-muted/50"
                   >
                     {row.getVisibleCells().map(cell => (
-                      <TableCell key={cell.id} className="py-2 px-4 whitespace-nowrap">
+                      <TableCell key={cell.id} className="py-1 px-4 text-sm whitespace-nowrap">
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     ))}
