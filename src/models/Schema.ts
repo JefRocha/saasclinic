@@ -10,7 +10,30 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
+  pgEnum,
 } from 'drizzle-orm/pg-core';
+
+export const exametipoEnum = pgEnum("exame_tipo", [
+  "ADMISSIONAL",
+  "PERIODICO",
+  "MUDANCA FUNCAO",
+  "RE. AO TRABALHO",
+  "DEMISSIONAL",
+  "OUTROS",
+  "PCMSO",
+  "PPRA",
+  "LCAT",
+  "PCMAT",
+  "ART",
+  "PCA",
+  "SESMET",
+  "CONSULTA MEDICA",
+  "ATESTADO SAN",
+  "HOMOL. ATESTADO",
+]);
+export const pedidoEnum = pgEnum("pedido", ["Sim", "Não"]);
+
+
 
 /* ---------- Clerk Organization ---------- */
 export const organizationSchema = pgTable(
@@ -74,17 +97,6 @@ export const patientsTable = pgTable("patients", {
 export const doctorsTable = pgTable("doctors", {
   organizationId: text("organization_id").notNull(),
   id: uuid("id").defaultRandom().primaryKey(),
-  name: text("name").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
-    .defaultNow()
-    .$onUpdate(() => new Date()),
-});
-
-/* ---------- Exames ---------- */
-export const examesTable = pgTable("exames", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  organizationId: text("organization_id").notNull(),
   name: text("name").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
@@ -229,3 +241,46 @@ export const clientsTable = pgTable("clients", {
     .$onUpdate(() => new Date()),
 });
 
+
+/* ---------- Exames ---------- */
+export const examesTable = pgTable("exames", {
+  id: serial("id").primaryKey(),
+  organizationId: text("organization_id").notNull(),
+  descricao: text("descricao").notNull(),
+  validade: integer("validade").notNull(),
+  validade1: integer("validade1").notNull(),
+  valor: numeric("valor", { precision: 15, scale: 2 }).notNull(),
+  pedido: pedidoEnum("pedido").notNull(),
+  codigo_anterior: text("codigo_anterior"),
+  tipo: exametipoEnum("tipo").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
+/* ---------- Medicos ---------- */
+export const medicosTable = pgTable("medicos", {
+  id: serial("codigo").primaryKey(),
+  organizationId: text("organization_id").notNull(),
+  nome: text("nome").notNull(),
+  endereco: text("endereco").notNull(),
+  bairro: text("bairro").notNull(),
+  cidade: text("cidade").notNull(),
+  uf: text("uf").notNull(),
+  cep: text("cep").notNull(),
+  cpf: text("cpf").notNull(),
+  telefone: text("telefone").notNull(),
+  celular: text("celular").notNull(),
+  crm: text("crm").notNull(),
+  usaAgenda: integer("usa_agenda").notNull(),
+  codAgenda: integer("cod_agenda").notNull(),
+  numero: text("numero").notNull(),
+  complemento: text("complemento").notNull(),
+  codiIbge: integer("codiibge").notNull(),
+  email: text("email").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});

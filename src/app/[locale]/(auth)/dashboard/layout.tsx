@@ -8,7 +8,7 @@ import { SidebarProvider, Sidebar, SidebarContent, SidebarMenu, SidebarMenuItem,
 import { DashboardHeader } from '@/features/dashboard/DashboardHeader';
 
 
-import { Home, Users, Settings, ChevronDown, ChevronUp } from 'lucide-react';
+import { Home, Users, Settings, ChevronDown, ChevronUp, FileText, Stethoscope } from 'lucide-react';
 
 
 
@@ -41,6 +41,16 @@ export default function DashboardLayout(props: { children: React.ReactNode, para
           href: '/dashboard/clients',
           label: t('clients'),
           icon: <Users className="size-4" />,
+        },
+        {
+          href: '/dashboard/exames',
+          label: t('exams'),
+          icon: <FileText className="size-4" />,
+        },
+        {
+          href: '/dashboard/medicos',
+          label: t('doctors'),
+          icon: <Stethoscope className="size-4" />,
         },
       ],
     },

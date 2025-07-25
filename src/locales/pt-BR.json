@@ -93,6 +93,8 @@
     "billing": "Cobrança",
     "settings": "Configurações",
     "clients": "Clientes",
+    "exams": "Exames",
+    "doctors": "Médicos",
     "registrations": "Cadastros"
   },
   "Dashboard": {
@@ -134,6 +136,14 @@
   },
   "DataTable": {
     "no_results": "Nenhum resultado."
+  },
+  "ExamesPage": {
+    "title": "Exames",
+    "description": "Gerencie os exames da sua clínica"
+  },
+  "MedicosPage": {
+    "title": "Médicos",
+    "description": "Gerencie os médicos da sua clínica"
   },
   "Todos": {
     "title_bar": "Lista de tarefas",

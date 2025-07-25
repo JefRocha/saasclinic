@@ -4,6 +4,7 @@ import { Slot } from "@radix-ui/react-slot"
 import { cva,VariantProps } from "class-variance-authority"
 import { PanelLeftIcon } from "lucide-react"
 import * as React from "react"
+import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -511,13 +512,15 @@ function SidebarMenuButton({
   size = "default",
   tooltip,
   className,
+  href,
   ...props
 }: React.ComponentProps<"button"> & {
   asChild?: boolean
   isActive?: boolean
   tooltip?: string | React.ComponentProps<typeof TooltipContent>
+  href?: string
 } & VariantProps<typeof sidebarMenuButtonVariants>) {
-  const Comp = asChild ? Slot : "button"
+  const Comp = asChild ? Slot : (href ? Link : "button")
   const { isMobile, state } = useSidebar()
 
   const button = (
@@ -527,6 +530,7 @@ function SidebarMenuButton({
       data-size={size}
       data-active={isActive}
       className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
+      {...(href ? { href } : {})} // Passa href se for um Link
       {...props}
     />
   )
@@ -682,13 +686,15 @@ function SidebarMenuSubButton({
   size = "md",
   isActive = false,
   className,
+  href,
   ...props
 }: React.ComponentProps<"a"> & {
   asChild?: boolean
   size?: "sm" | "md"
   isActive?: boolean
+  href?: string
 }) {
-  const Comp = asChild ? Slot : "a"
+  const Comp = asChild ? Slot : (href ? Link : "a")
   const { state, collapsible } = useSidebar()
 
   return (
@@ -705,6 +711,7 @@ function SidebarMenuSubButton({
         state === "collapsed" && collapsible === "icon" && "hidden",
         className
       )}
+      {...(href ? { href } : {})} // Passa href se for um Link
       {...props}
     />
   )

@@ -5,30 +5,30 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useTransition } from "react";
 import type { SortingState } from "@tanstack/react-table";
 
-import { DataTable as ClientsDataTable } from "./clients-data-table";
-import { getClientsTableColumns } from "./table-columns";
+import { DataTable as MedicosDataTable } from "./medicos-data-table";
+import { getMedicosTableColumns } from "./table-columns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SearchInput } from "./search-input";
-import AddClientButton from "./add-client-button";
+import AddMedicoButton from "./add-medico-button";
 
-import type { SearchClientsResult } from "@/types/clients";
+import type { SearchMedicosResult } from "@/actions/upsert-medico/schema";
 
 // Função que busca os dados da API
-const fetchClients = async (
+const fetchMedicos = async (
   search: string,
   page: number,
   order: string,
   orderBy: string,
-): Promise<SearchClientsResult> => {
-  const url = `/api/clients?search=${search}&page=${page}&order=${order}&orderBy=${orderBy}`;
+): Promise<SearchMedicosResult> => {
+  const url = `/api/medicos?search=${search}&page=${page}&order=${order}&orderBy=${orderBy}`;
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) {
-    throw new Error("Erro ao buscar clientes.");
+    throw new Error("Erro ao buscar médicos.");
   }
   return res.json();
 };
 
-export const ClientsList = () => {
+export const MedicosList = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -36,14 +36,14 @@ export const ClientsList = () => {
 
   const search = searchParams.get("search") || "";
   const page = Number(searchParams.get("page") || 1);
-  const initialOrderBy = searchParams.get("orderBy") || "razaoSocial";
+  const initialOrderBy = searchParams.get("orderBy") || "nome";
   const initialOrder = searchParams.get("order") || "asc";
 
   const [sorting, setSorting] = useState<SortingState>([
     { id: initialOrderBy, desc: initialOrder === "desc" },
   ]);
-  const [highlightedClientId, setHighlightedClientId] = useState<string | number | null>(null);
-  const [selectedClientId, setSelectedClientId] = useState<string | number | null>(null);
+  const [highlightedMedicoId, setHighlightedMedicoId] = useState<string | number | null>(null);
+  const [selectedMedicoId, setSelectedMedicoId] = useState<string | number | null>(null);
 
   // useQuery para buscar e gerenciar os dados
   const {
@@ -51,36 +51,36 @@ export const ClientsList = () => {
     isLoading,
     isError,
     error,
-  } = useQuery<SearchClientsResult, Error>({
-    queryKey: ["clients", search, page, sorting[0].id, (sorting[0].desc ? "desc" : "asc")],
-    queryFn: () => fetchClients(search, page, sorting[0].desc ? "desc" : "asc", sorting[0].id),
+  } = useQuery<SearchMedicosResult, Error>({
+    queryKey: ["medicos", search, page, sorting[0].id, (sorting[0].desc ? "desc" : "asc")],
+    queryFn: () => fetchMedicos(search, page, sorting[0].desc ? "desc" : "asc", sorting[0].id),
   });
 
   // Função para ser chamada em caso de sucesso (criação/edição/exclusão)
-  const handleSuccess = (clientId?: string | number) => {
-    queryClient.invalidateQueries({ queryKey: ["clients"] });
-    if (clientId) {
-      setHighlightedClientId(clientId);
-      setSelectedClientId(clientId); // Define o cliente selecionado também
+  const handleSuccess = (medicoId?: string | number) => {
+    queryClient.invalidateQueries({ queryKey: ["medicos"] });
+    if (medicoId) {
+      setHighlightedMedicoId(medicoId);
+      setSelectedMedicoId(medicoId);
     }
   };
 
   // Função para lidar com o clique na linha da tabela
-  const handleRowClick = (clientId: string | number) => {
-    setSelectedClientId(clientId);
+  const handleRowClick = (medicoId: string | number) => {
+    setSelectedMedicoId(medicoId);
   };
 
   // Limpa o destaque após alguns segundos
   useEffect(() => {
-    if (highlightedClientId) {
+    if (highlightedMedicoId) {
       const timer = setTimeout(() => {
-        setHighlightedClientId(null);
+        setHighlightedMedicoId(null);
       }, 3000); // 3 segundos
       return () => clearTimeout(timer);
     }
-  }, [highlightedClientId]);
+  }, [highlightedMedicoId]);
 
-  const columns = getClientsTableColumns(handleSuccess, handleRowClick);
+  const columns = getMedicosTableColumns(handleSuccess, handleRowClick);
 
   // Renderiza o Skeleton apenas no carregamento inicial
   if (isLoading && !data) return <Skeleton className="h-96 w-full" />;
@@ -99,20 +99,20 @@ export const ClientsList = () => {
         <div className="flex-1">
           <SearchInput />
         </div>
-        <AddClientButton onClientUpsertSuccess={handleSuccess} />
+        <AddMedicoButton onMedicoUpsertSuccess={handleSuccess} />
       </div>
 
-      <ClientsDataTable
+      <MedicosDataTable
         columns={columns}
         data={data?.data ?? []}
         pagination={data?.pagination}
-        emptyMessage="Nenhum cliente encontrado."
+        emptyMessage="Nenhum médico encontrado."
         onSortingChange={(updater) => {
           startTransition(() => {
             const newSortingState = typeof updater === 'function' ? updater(sorting) : updater;
             setSorting(newSortingState);
 
-            const newOrderBy = newSortingState.length > 0 ? newSortingState[0].id : "razaoSocial";
+            const newOrderBy = newSortingState.length > 0 ? newSortingState[0].id : "nome";
             const newOrder = newSortingState.length > 0 && newSortingState[0].desc ? "desc" : "asc";
 
             const params = new URLSearchParams(searchParams.toString());
@@ -120,17 +120,15 @@ export const ClientsList = () => {
             params.set("order", newOrder);
             router.replace(`?${params.toString()}`);
 
-            queryClient.invalidateQueries({ queryKey: ["clients"] });
+            queryClient.invalidateQueries({ queryKey: ["medicos"] });
           });
         }}
         sorting={sorting}
         isFetching={isPending}
-        highlightedClientId={highlightedClientId}
-        selectedRowId={selectedClientId}
+        highlightedClientId={highlightedMedicoId}
+        selectedRowId={selectedMedicoId}
         onRowClick={handleRowClick}
       />
     </>
   );
 };
-
-

@@ -5,30 +5,30 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useTransition } from "react";
 import type { SortingState } from "@tanstack/react-table";
 
-import { DataTable as ClientsDataTable } from "./clients-data-table";
-import { getClientsTableColumns } from "./table-columns";
+import { DataTable as ExamesDataTable } from "./exames-data-table";
+import { getExamesTableColumns } from "./table-columns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SearchInput } from "./search-input";
-import AddClientButton from "./add-client-button";
+import AddExameButton from "./add-exame-button";
 
-import type { SearchClientsResult } from "@/types/clients";
+import type { SearchExamesResult } from "@/actions/upsert-exame/schema";
 
 // Função que busca os dados da API
-const fetchClients = async (
+const fetchExames = async (
   search: string,
   page: number,
   order: string,
   orderBy: string,
-): Promise<SearchClientsResult> => {
-  const url = `/api/clients?search=${search}&page=${page}&order=${order}&orderBy=${orderBy}`;
+): Promise<SearchExamesResult> => {
+  const url = `/api/exames?search=${search}&page=${page}&order=${order}&orderBy=${orderBy}`;
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) {
-    throw new Error("Erro ao buscar clientes.");
+    throw new Error("Erro ao buscar exames.");
   }
   return res.json();
 };
 
-export const ClientsList = () => {
+export const ExamesList = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -36,14 +36,14 @@ export const ClientsList = () => {
 
   const search = searchParams.get("search") || "";
   const page = Number(searchParams.get("page") || 1);
-  const initialOrderBy = searchParams.get("orderBy") || "razaoSocial";
+  const initialOrderBy = searchParams.get("orderBy") || "descricao";
   const initialOrder = searchParams.get("order") || "asc";
 
   const [sorting, setSorting] = useState<SortingState>([
     { id: initialOrderBy, desc: initialOrder === "desc" },
   ]);
-  const [highlightedClientId, setHighlightedClientId] = useState<string | number | null>(null);
-  const [selectedClientId, setSelectedClientId] = useState<string | number | null>(null);
+  const [highlightedExameId, setHighlightedExameId] = useState<string | number | null>(null);
+  const [selectedExameId, setSelectedExameId] = useState<string | number | null>(null);
 
   // useQuery para buscar e gerenciar os dados
   const {
@@ -51,36 +51,36 @@ export const ClientsList = () => {
     isLoading,
     isError,
     error,
-  } = useQuery<SearchClientsResult, Error>({
-    queryKey: ["clients", search, page, sorting[0].id, (sorting[0].desc ? "desc" : "asc")],
-    queryFn: () => fetchClients(search, page, sorting[0].desc ? "desc" : "asc", sorting[0].id),
+  } = useQuery<SearchExamesResult, Error>({
+    queryKey: ["exames", search, page, sorting[0].id, (sorting[0].desc ? "desc" : "asc")],
+    queryFn: () => fetchExames(search, page, sorting[0].desc ? "desc" : "asc", sorting[0].id),
   });
 
   // Função para ser chamada em caso de sucesso (criação/edição/exclusão)
-  const handleSuccess = (clientId?: string | number) => {
-    queryClient.invalidateQueries({ queryKey: ["clients"] });
-    if (clientId) {
-      setHighlightedClientId(clientId);
-      setSelectedClientId(clientId); // Define o cliente selecionado também
+  const handleSuccess = (exameId?: string | number) => {
+    queryClient.invalidateQueries({ queryKey: ["exames"] });
+    if (exameId) {
+      setHighlightedExameId(exameId);
+      setSelectedExameId(exameId);
     }
   };
 
   // Função para lidar com o clique na linha da tabela
-  const handleRowClick = (clientId: string | number) => {
-    setSelectedClientId(clientId);
+  const handleRowClick = (exameId: string | number) => {
+    setSelectedExameId(exameId);
   };
 
   // Limpa o destaque após alguns segundos
   useEffect(() => {
-    if (highlightedClientId) {
+    if (highlightedExameId) {
       const timer = setTimeout(() => {
-        setHighlightedClientId(null);
+        setHighlightedExameId(null);
       }, 3000); // 3 segundos
       return () => clearTimeout(timer);
     }
-  }, [highlightedClientId]);
+  }, [highlightedExameId]);
 
-  const columns = getClientsTableColumns(handleSuccess, handleRowClick);
+  const columns = getExamesTableColumns(handleSuccess, handleRowClick);
 
   // Renderiza o Skeleton apenas no carregamento inicial
   if (isLoading && !data) return <Skeleton className="h-96 w-full" />;
@@ -99,20 +99,20 @@ export const ClientsList = () => {
         <div className="flex-1">
           <SearchInput />
         </div>
-        <AddClientButton onClientUpsertSuccess={handleSuccess} />
+        <AddExameButton onExameUpsertSuccess={handleSuccess} />
       </div>
 
-      <ClientsDataTable
+      <ExamesDataTable
         columns={columns}
         data={data?.data ?? []}
         pagination={data?.pagination}
-        emptyMessage="Nenhum cliente encontrado."
+        emptyMessage="Nenhum exame encontrado."
         onSortingChange={(updater) => {
           startTransition(() => {
             const newSortingState = typeof updater === 'function' ? updater(sorting) : updater;
             setSorting(newSortingState);
 
-            const newOrderBy = newSortingState.length > 0 ? newSortingState[0].id : "razaoSocial";
+            const newOrderBy = newSortingState.length > 0 ? newSortingState[0].id : "descricao";
             const newOrder = newSortingState.length > 0 && newSortingState[0].desc ? "desc" : "asc";
 
             const params = new URLSearchParams(searchParams.toString());
@@ -120,17 +120,15 @@ export const ClientsList = () => {
             params.set("order", newOrder);
             router.replace(`?${params.toString()}`);
 
-            queryClient.invalidateQueries({ queryKey: ["clients"] });
+            queryClient.invalidateQueries({ queryKey: ["exames"] });
           });
         }}
         sorting={sorting}
         isFetching={isPending}
-        highlightedClientId={highlightedClientId}
-        selectedRowId={selectedClientId}
+        highlightedClientId={highlightedExameId}
+        selectedRowId={selectedExameId}
         onRowClick={handleRowClick}
       />
     </>
   );
 };
-
-

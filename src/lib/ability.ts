@@ -8,7 +8,7 @@ export enum Action {
   Delete = 'delete',
 }
 
-export type Subjects = 'Client' | 'Organization' | 'all';
+export type Subjects = 'Client' | 'Organization' | 'Exame' | 'Medico' | 'all';
 export type AppAbility = Ability<[Action, Subjects]>;
 
 /* recebe `orgId` para saber qual org pertence ao usuário */
@@ -23,6 +23,8 @@ export function buildAbility(role?: string, orgId?: string): AppAbility {
     case 'admin':
       // tudo da própria org
       can(Action.Manage,   'Client',       { organizationId: orgId });
+      can(Action.Manage,   'Exame',        { organizationId: orgId });
+      can(Action.Manage,   'Medico',       { organizationId: orgId });
       can(Action.Read,     'Organization', { id: orgId });
       can(Action.Update,   'Organization', { id: orgId });
       // (se quiser permitir deletar a org própria, acrescente Delete)
@@ -32,10 +34,18 @@ export function buildAbility(role?: string, orgId?: string): AppAbility {
       can(Action.Read,     'Client', { organizationId: orgId });
       can(Action.Create,   'Client', { organizationId: orgId });
       can(Action.Update,   'Client', { organizationId: orgId });
+      can(Action.Read,     'Exame',  { organizationId: orgId });
+      can(Action.Create,   'Exame',  { organizationId: orgId });
+      can(Action.Update,   'Exame',  { organizationId: orgId });
+      can(Action.Read,     'Medico', { organizationId: orgId });
+      can(Action.Create,   'Medico', { organizationId: orgId });
+      can(Action.Update,   'Medico', { organizationId: orgId });
       break;
 
     default: // viewer
       can(Action.Read,     'Client', { organizationId: orgId });
+      can(Action.Read,     'Exame',  { organizationId: orgId });
+      can(Action.Read,     'Medico', { organizationId: orgId });
   }
 
   return build();

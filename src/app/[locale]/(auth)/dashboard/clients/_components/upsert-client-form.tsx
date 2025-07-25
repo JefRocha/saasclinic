@@ -553,6 +553,7 @@ const UpsertClientForm = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
         hideCloseButton
+        onInteractOutside={(e) => e.preventDefault()}
         className="max-h-[90vh] w-full max-w-5xl overflow-y-auto"
       >
         <DialogHeader>
@@ -915,7 +916,7 @@ const UpsertClientForm = ({
                       <FormItem className="col-span-12 md:col-span-2">
                         <FormLabel>CEP</FormLabel>
                         <FormControl>
-                          <NumericFormat
+                          <PatternFormat
                             format="#####-###"
                             mask="_"
                             value={field.value}
@@ -1067,7 +1068,7 @@ const UpsertClientForm = ({
                       <FormItem className="col-span-12 md:col-span-2">
                         <FormLabel>CEP</FormLabel>
                         <FormControl>
-                          <NumericFormat
+                          <PatternFormat
                             format="#####-###"
                             mask="_"
                             value={field.value}
