@@ -1,13 +1,18 @@
 "use client";
 
-import { useFetchWithPopup } from '@/lib/fetchWithPopup';
+
+"use client";
+
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState, useEffect, forwardRef } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { NumericFormat, PatternFormat } from "react-number-format";
 import { Loader2 } from "lucide-react";
+import { useAction } from "@/hooks/use-action";
+import { z } from "zod";
 
+import { upsertMedico } from "@/actions/upsert-medico";
 import { upsertMedicoSchema } from "@/actions/upsert-medico/schema";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,7 +23,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
 import {
   Form,
   FormControl,
@@ -29,21 +33,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
 import { useAuth, useUser } from "@clerk/nextjs";
 import { buildAbility, Action } from "@/lib/ability";
-
 import { useDebounce } from "use-debounce";
+import { useQuery } from "@tanstack/react-query";
+import { getOrganizations } from "@/actions/get-organizations";
 
 // Função para validar se uma string é um UUID
 const isUuid = (value: string | null | undefined): boolean => {
@@ -89,15 +85,16 @@ const UpsertMedicoForm = ({
   onSuccess,
   onClose,
 }: UpsertMedicoFormProps) => {
-  const [isLoading, setIsLoading] = useState(false);
-
-  const { fetch: secureFetch, loading: isSubmitting } = useFetchWithPopup();
-
   const { orgId } = useAuth();
   const { user } = useUser();
   const role = user?.publicMetadata?.role as string;
   const ability = buildAbility(role, orgId ?? undefined);
   const canEditMedico = ability.can(Action.Update, "Medico");
+
+  const { data: organizations, isLoading: isLoadingOrganizations } = useQuery({
+    queryKey: ["organizations"],
+    queryFn: () => getOrganizations({}),
+  });
 
   const form = useForm({
     resolver: zodResolver(upsertMedicoSchema),
@@ -107,8 +104,12 @@ const UpsertMedicoForm = ({
           organizationId: isUuid(initialData.organizationId)
             ? initialData.organizationId
             : undefined,
-          createdAt: initialData.createdAt ? new Date(initialData.createdAt) : undefined,
-          updatedAt: initialData.updatedAt ? new Date(initialData.updatedAt) : undefined,
+          createdAt: initialData.createdAt
+            ? new Date(initialData.createdAt)
+            : undefined,
+          updatedAt: initialData.updatedAt
+            ? new Date(initialData.updatedAt)
+            : undefined,
           usaAgenda: initialData.usaAgenda === 1 ? 1 : 0, // Garante 0 ou 1
         }
       : {
@@ -128,7 +129,19 @@ const UpsertMedicoForm = ({
           complemento: "",
           codiIbge: undefined,
           email: "",
+          organizationId: role === "super_admin" ? "" : orgId, // Define orgId padrão para não-super_admin
         },
+  });
+
+  const { execute, status } = useAction(upsertMedico, {
+    onSuccess: (data) => {
+      toast.success(initialData ? "Médico atualizado" : "Médico criado");
+      onSuccess(data.id);
+      onClose();
+    },
+    onError: ({ serverError }) => {
+      toast.error(serverError || "Erro inesperado ao salvar médico.");
+    },
   });
 
   // Watches para campos específicos
@@ -136,18 +149,18 @@ const UpsertMedicoForm = ({
   const [debouncedCep] = useDebounce(cepValue, 500);
 
   useEffect(() => {
-    console.log("Formulário de Médicos - Erros de validação:", form.formState.errors);
+    // console.log("Formulário de Médicos - Erros de validação:", form.formState.errors);
   }, [form.formState.errors]);
 
   useEffect(() => {
     const fetchAddress = async () => {
-      if (
-        debouncedCep &&
-        debouncedCep.replace(/\D/g, "").length === 8
-      ) {
+      if (debouncedCep && debouncedCep.replace(/\D/g, "").length === 8) {
         try {
           const response = await fetch(
-            `https://viacep.com.br/ws/${debouncedCep.replace(/\D/g, "")}/json/`,
+            `https://viacep.com.br/ws/${debouncedCep.replace(
+              /\D/g,
+              ""
+            )}/json/`
           );
           const data = await response.json();
 
@@ -170,37 +183,9 @@ const UpsertMedicoForm = ({
     fetchAddress();
   }, [debouncedCep, form]);
 
-  const onSubmit = async (values: any) => {
-    setIsLoading(true);
-    console.log("Valores enviados:", values);
-    try {
-      const res = await secureFetch('/api/medicos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      });
-
-      if (!res) {
-        onClose();
-        return;
-      }
-
-      if (!res.ok) {
-        const { error } = await res.json();
-        toast.error(error ?? 'Erro ao salvar');
-        return;
-      }
-
-      const responseData = await res.json();
-      toast.success(initialData ? 'Médico atualizado' : 'Médico criado');
-      const savedMedicoId = responseData.medico?.id || initialData?.id;
-      onSuccess(savedMedicoId);
-      onClose();
-    } catch {
-      toast.error('Erro inesperado ao salvar médico.');
-    } finally {
-      setIsLoading(false);
-    }
+  const onSubmit = (values: z.infer<typeof upsertMedicoSchema>) => {
+    console.log("Form values before execute - organizationId:", form.getValues("organizationId"));
+    execute(values);
   };
 
   return (
@@ -234,7 +219,9 @@ const UpsertMedicoForm = ({
                       placeholder="Nome do Médico"
                       {...field}
                       value={field.value || ""}
-                      onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                      onChange={(e) =>
+                        field.onChange(e.target.value.toUpperCase())
+                      }
                       disabled={!canEditMedico}
                     />
                   </FormControl>
@@ -242,6 +229,42 @@ const UpsertMedicoForm = ({
                 </FormItem>
               )}
             />
+
+            {role === "super_admin" && (
+              <FormField
+                control={form.control}
+                name="organizationId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Organização</FormLabel>
+                    <Select
+                      onValueChange={(value) => {
+                        console.log("Select onValueChange - value:", value);
+                        field.onChange(value);
+                      }}
+                      value={field.value || ""}
+                      disabled={isLoadingOrganizations}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione uma organização" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {organizations?.data?.data?.map((org: any) => {
+                          return (
+                            <SelectItem key={org.id} value={org.id}>
+                              {org.nome}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
@@ -278,7 +301,9 @@ const UpsertMedicoForm = ({
                         placeholder="CRM"
                         {...field}
                         value={field.value || ""}
-                        onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                        onChange={(e) =>
+                          field.onChange(e.target.value.toUpperCase())
+                        }
                         disabled={!canEditMedico}
                       />
                     </FormControl>
@@ -323,7 +348,9 @@ const UpsertMedicoForm = ({
                         placeholder="Endereço"
                         {...field}
                         value={field.value || ""}
-                        onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                        onChange={(e) =>
+                          field.onChange(e.target.value.toUpperCase())
+                        }
                         disabled={!canEditMedico}
                       />
                     </FormControl>
@@ -345,7 +372,9 @@ const UpsertMedicoForm = ({
                         placeholder="Número"
                         {...field}
                         value={field.value || ""}
-                        onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                        onChange={(e) =>
+                          field.onChange(e.target.value.toUpperCase())
+                        }
                         disabled={!canEditMedico}
                       />
                     </FormControl>
@@ -364,7 +393,9 @@ const UpsertMedicoForm = ({
                         placeholder="Complemento"
                         {...field}
                         value={field.value || ""}
-                        onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                        onChange={(e) =>
+                          field.onChange(e.target.value.toUpperCase())
+                        }
                         disabled={!canEditMedico}
                       />
                     </FormControl>
@@ -383,7 +414,9 @@ const UpsertMedicoForm = ({
                         placeholder="Bairro"
                         {...field}
                         value={field.value || ""}
-                        onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                        onChange={(e) =>
+                          field.onChange(e.target.value.toUpperCase())
+                        }
                         disabled={!canEditMedico}
                       />
                     </FormControl>
@@ -405,7 +438,9 @@ const UpsertMedicoForm = ({
                         placeholder="UF"
                         {...field}
                         value={field.value || ""}
-                        onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                        onChange={(e) =>
+                          field.onChange(e.target.value.toUpperCase())
+                        }
                         disabled={!canEditMedico}
                       />
                     </FormControl>
@@ -498,7 +533,9 @@ const UpsertMedicoForm = ({
                       placeholder="Email"
                       {...field}
                       value={field.value || ""}
-                      onChange={(e) => field.onChange(e.target.value.toLowerCase())}
+                      onChange={(e) =>
+                        field.onChange(e.target.value.toLowerCase())
+                      }
                       disabled={!canEditMedico}
                     />
                   </FormControl>
@@ -521,7 +558,9 @@ const UpsertMedicoForm = ({
                   <FormControl>
                     <Switch
                       checked={field.value === 1}
-                      onCheckedChange={(checked) => field.onChange(checked ? 1 : 0)}
+                      onCheckedChange={(checked) =>
+                        field.onChange(checked ? 1 : 0)
+                      }
                       disabled={!canEditMedico}
                     />
                   </FormControl>
@@ -564,8 +603,11 @@ const UpsertMedicoForm = ({
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isLoading || isSubmitting || !canEditMedico}>
-                {isLoading ? (
+              <Button
+                type="submit"
+                disabled={status === "executing" || !canEditMedico}
+              >
+                {status === "executing" ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : initialData ? (
                   "Salvar Alterações"

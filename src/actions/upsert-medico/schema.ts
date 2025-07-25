@@ -4,16 +4,16 @@ import { isValidCpf } from "@/helpers/validation";
 
 export const upsertMedicoSchema = z.object({
   id: z.union([z.string(), z.number()]).optional(),
-  organizationId: z.string().uuid().optional().nullable(),
+  organizationId: z.string().optional(),
   nome: z.string().min(1, "Nome é obrigatório"),
   endereco: z.string().optional().nullable(),
   bairro: z.string().optional().nullable(),
   cidade: z.string().optional().nullable(),
   uf: z.string().optional().nullable(),
   cep: z.string().optional().nullable(),
-  cpf: z.string().optional().nullable(),
-  telefone: z.string().optional().nullable(),
-  celular: z.string().optional().nullable(),
+  cpf: z.string().min(11, "CPF é obrigatório"),
+  telefone: z.string(),
+  celular: z.string(),
   crm: z.string().optional().nullable(),
   usaAgenda: z.coerce.number().optional().nullable(),
   codAgenda: z.coerce.number().optional().nullable(),
@@ -24,6 +24,17 @@ export const upsertMedicoSchema = z.object({
   createdAt: z.coerce.date().optional().nullable(),
   updatedAt: z.coerce.date().optional().nullable(),
 }).superRefine((data, ctx) => {
+  if (data.organizationId && data.organizationId !== "") {
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(data.organizationId)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "ID da organização inválido (não é um UUID válido).",
+        path: ["organizationId"],
+      });
+    }
+  }
   if (data.cpf) {
     const cleanedCpf = data.cpf.replace(/\D/g, '');
     if (!isValidCpf(cleanedCpf)) {

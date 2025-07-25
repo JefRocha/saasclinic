@@ -4,6 +4,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useTransition } from "react";
 import type { SortingState } from "@tanstack/react-table";
+import { useAuth } from "@clerk/nextjs";
 
 import { DataTable as MedicosDataTable } from "./medicos-data-table";
 import { getMedicosTableColumns } from "./table-columns";
@@ -11,28 +12,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SearchInput } from "./search-input";
 import AddMedicoButton from "./add-medico-button";
 
+import { getMedicos } from "@/actions/get-medicos";
 import type { SearchMedicosResult } from "@/actions/upsert-medico/schema";
-
-// Função que busca os dados da API
-const fetchMedicos = async (
-  search: string,
-  page: number,
-  order: string,
-  orderBy: string,
-): Promise<SearchMedicosResult> => {
-  const url = `/api/medicos?search=${search}&page=${page}&order=${order}&orderBy=${orderBy}`;
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) {
-    throw new Error("Erro ao buscar médicos.");
-  }
-  return res.json();
-};
 
 export const MedicosList = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
+  const { orgId } = useAuth();
 
   const search = searchParams.get("search") || "";
   const page = Number(searchParams.get("page") || 1);
@@ -52,8 +40,8 @@ export const MedicosList = () => {
     isError,
     error,
   } = useQuery<SearchMedicosResult, Error>({
-    queryKey: ["medicos", search, page, sorting[0].id, (sorting[0].desc ? "desc" : "asc")],
-    queryFn: () => fetchMedicos(search, page, sorting[0].desc ? "desc" : "asc", sorting[0].id),
+    queryKey: ["medicos", orgId, search, page, sorting[0].id, (sorting[0].desc ? "desc" : "asc")],
+    queryFn: () => getMedicos({ search, page, orderBy: sorting[0].id, order: sorting[0].desc ? "desc" : "asc" }),
   });
 
   // Função para ser chamada em caso de sucesso (criação/edição/exclusão)
@@ -120,7 +108,7 @@ export const MedicosList = () => {
             params.set("order", newOrder);
             router.replace(`?${params.toString()}`);
 
-            queryClient.invalidateQueries({ queryKey: ["medicos"] });
+            queryClient.invalidateQueries({ queryKey: ["medicos", orgId] });
           });
         }}
         sorting={sorting}

@@ -38,7 +38,7 @@ type DataTableProps<TData, TValue> = {
 
 export function DataTable<TData, TValue>({
   columns,
-  data,
+  data: tableData, // Renomeado para evitar conflito
   pagination,
   onSortingChange,
   sorting,
@@ -48,7 +48,7 @@ export function DataTable<TData, TValue>({
   onRowClick,
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
-    data,
+    data: tableData.data, // Usar tableData.data aqui
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(), // Adicionado
@@ -57,6 +57,9 @@ export function DataTable<TData, TValue>({
       sorting: sorting, // Adicionado
     },
   });
+
+  console.log("MedicosDataTable - table.getRowModel().rows:", table.getRowModel().rows);
+
   const t = useTranslations('DataTable');
 
   return (
@@ -87,12 +90,15 @@ export function DataTable<TData, TValue>({
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && 'selected'}
-                    onClick={() => onRowClick && row.original && row.original.id && onRowClick(row.original.id)}
+                    onClick={() => {
+                      console.log("Row original:", row.original);
+                      onRowClick && row.original && (row.original as any).id && onRowClick((row.original as any).id);
+                    }}
                     className={cn(
                       "hover:bg-blue-100 dark:hover:bg-blue-900/20 transition-colors duration-200",
-                      row.original && row.original.id === highlightedClientId && "bg-blue-100 dark:bg-blue-900/20",
-                      row.original && row.original.id === selectedRowId && "bg-gray-200 dark:bg-gray-700",
-                      !(row.original && (row.original.id === highlightedClientId || row.original.id === selectedRowId)) && "odd:bg-muted/50"
+                      (row.original as any).id === highlightedClientId && "bg-blue-100 dark:bg-blue-900/20",
+                      (row.original as any).id === selectedRowId && "bg-gray-200 dark:bg-gray-700",
+                      !((row.original as any).id === highlightedClientId || (row.original as any).id === selectedRowId) && "odd:bg-muted/50"
                     )}
                   >
                     {row.getVisibleCells().map(cell => (

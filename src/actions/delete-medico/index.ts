@@ -1,30 +1,45 @@
 "use server";
 
-import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
-
-import { deleteMedicoSchema } from "./schema";
-
+import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { medicosTable } from "@/models/Schema";
+import { protectedAction, ActionError } from "@/libs/safe-action";
+import { deleteMedicoSchema } from "./schema";
+import { buildAbility, Action as CaslAction } from "@/lib/ability";
+import { eq } from "drizzle-orm";
+import { z } from "zod";
 
-import { protectedAction } from "@/libs/safe-action";
+export const deleteMedico = protectedAction
+  .schema(deleteMedicoSchema)
+  .action(async ({ parsedInput, ctx: { orgId } }) => {
+    const user = await currentUser();
+    const role = user?.publicMetadata?.role as string;
 
-export const deleteMedico = async (input: typeof deleteMedicoSchema._type) => {
-  return protectedAction.schema(deleteMedicoSchema)
-    .action(async ({ parsedInput, ctx }) => {
-      const medico = await db.query.medicosTable.findFirst({
-        where: eq(medicosTable.id, parsedInput.id),
-      });
-      if (!medico) {
-        return { error: "Médico não encontrado." };
-      }
-      if (medico.organizationId !== ctx.orgId) {
-        return { error: "Você não tem permissão para excluir este médico." };
-      }
-      await db.delete(medicosTable).where(eq(medicosTable.id, parsedInput.id));
-      revalidatePath("/dashboard/medicos");
-      revalidatePath("/api/medicos");
-      return { data: { success: true } };
-    })(input);
-};
+    const ability = buildAbility(role, orgId);
+    if (!ability.can(CaslAction.Delete, "Medico")) {
+      throw new ActionError("Você não tem permissão para excluir médicos.");
+    }
+
+    const { id } = parsedInput;
+
+    const medico = await db.query.medicosTable.findFirst({
+      where: eq(medicosTable.id, id),
+    });
+
+    if (!medico) {
+      throw new ActionError("Médico não encontrado.");
+    }
+
+    // super_admin pode deletar qualquer médico; demais verificam orgId
+    if (role !== "super_admin" && medico.organizationId !== orgId) {
+      throw new ActionError("Você não tem permissão para excluir este médico.");
+    }
+
+    try {
+      await db.delete(medicosTable).where(eq(medicosTable.id, id));
+      return { success: true, id };
+    } catch (e) {
+      console.error("Erro ao excluir médico na Server Action:", e);
+      throw new ActionError("Erro interno ao excluir médico.");
+    }
+  });
