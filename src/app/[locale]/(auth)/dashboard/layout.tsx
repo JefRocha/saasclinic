@@ -52,6 +52,11 @@ export default function DashboardLayout(props: { children: React.ReactNode, para
           label: t('doctors'),
           icon: <Stethoscope className="size-4" />,
         },
+        {
+          href: '/dashboard/colaboradores',
+          label: t('colaboradores'),
+          icon: <Users className="size-4" />,
+        },
       ],
     },
     {

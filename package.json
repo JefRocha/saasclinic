@@ -70,6 +70,7 @@
     "pino": "^9.5.0",
     "pino-pretty": "^11.3.0",
     "react": "19.1.0",
+    "react-day-picker": "^9.8.1",
     "react-dom": "19.1.0",
     "react-hook-form": "^7.53.0",
     "react-number-format": "^5.4.4",

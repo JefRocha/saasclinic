@@ -1,14 +1,16 @@
 "use client";
 
-import { useFetchWithPopup } from '@/lib/fetchWithPopup';
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState, useEffect, forwardRef } from "react";
+import { useEffect, forwardRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { NumericFormat, PatternFormat } from "react-number-format";
 import { Search, Loader2 } from "lucide-react";
 import { useAction } from "@/hooks/use-action";
 import { getCnpjInfo } from "@/actions/get-cnpj-info";
+import { useFetchWithPopup } from "@/lib/fetchWithPopup";
+
+import { upsertClient } from "@/actions/upsert-client";
 
 
 
@@ -183,9 +185,16 @@ const UpsertClientForm = ({
   onSuccess,
   onClose,
 }: UpsertClientFormProps) => {
-  const [isLoading, setIsLoading] = useState(false);
-
-  const { fetch: secureFetch, loading: isSubmitting } = useFetchWithPopup();
+  const { execute, isLoading: isSubmitting } = useAction(upsertClient, {
+    onSuccess: (data) => {
+      toast.success(initialData ? 'Cliente atualizado' : 'Cliente criado');
+      onSuccess(data.id); // Passa o ID do cliente salvo
+      onClose();
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
 
   const { orgId } = useAuth();
   const { user } = useUser();
@@ -514,37 +523,8 @@ const UpsertClientForm = ({
   // }, [initialData]);
 
   const onSubmit = async (values: any) => {
-  setIsLoading(true);
-  try {
-    const res = await secureFetch('/api/clients', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(values),
-    });
-
-    if (!res) {                // 403 → popup já exibido
-      onClose();               // fecha o diálogo
-      return;
-    }
-
-    /* ↓↓  trata somente resposta fora da faixa 2xx */
-    if (!res.ok) {
-      const { error } = await res.json();
-      toast.error(error ?? 'Erro ao salvar');
-      return;                  // mantém o formulário aberto p/ correção
-    }
-
-    const responseData = await res.json();
-    toast.success(initialData ? 'Cliente atualizado' : 'Cliente criado');
-    const savedClientId = responseData.client?.id || initialData?.id; // Pega o ID do cliente salvo
-    onSuccess(savedClientId);               // refetch da lista e passa o ID
-    onClose();                 // fecha o diálogo
-  } catch {
-    toast.error('Erro inesperado ao salvar cliente.');
-  } finally {
-    setIsLoading(false);
-  }
-};
+    execute(values);
+  };
 
 
 
@@ -1392,8 +1372,8 @@ const UpsertClientForm = ({
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isLoading || isSubmitting}>
-                {isLoading ? (
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : initialData ? (
                   "Salvar Alterações"

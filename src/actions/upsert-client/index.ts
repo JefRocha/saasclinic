@@ -1,86 +1,111 @@
-import { and, eq, like, sql } from "drizzle-orm";
+"use server";
+
+import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/db";
-import { clientsTable } from "@/models/Schema";
-import { protectedAction } from "@/libs/safe-action";
-import {
-  upsertClientSchema,
-  searchClientsSchema,
-  SearchClientsResult,
-} from "./schema";
+import { clientsTable, organizationSchema } from "@/models/Schema";
+import { protectedAction, ActionError } from "@/libs/safe-action";
+import { upsertClientSchema } from "./schema";
+import { buildAbility, Action as CaslAction } from "@/lib/ability";
+import { eq } from "drizzle-orm";
+import { z } from "zod";
+import { clerkClient } from "@clerk/clerk-sdk-node";
 
-export const upsertClient = protectedAction
-  .schema(upsertClientSchema)
-  .action(async ({ parsedInput, ctx }) => {
-    const { createdAt, updatedAt, ...dataToInsert } = parsedInput;
+async function handler({
+  parsedInput,
+  ctx: { userId, orgId },
+}: {
+  parsedInput: z.infer<typeof upsertClientSchema>;
+  ctx: { userId: string; orgId: string };
+}) {
+  const user = await currentUser();
+  const role = user?.publicMetadata?.role as string;
 
-    const [upsertedClient] = await db
-      .insert(clientsTable)
+  const ability = buildAbility(role, orgId);
+  const isEditing = !!parsedInput.id;
+
+  // 1. Verificar permissão
+  const actionToPerform = isEditing ? CaslAction.Update : CaslAction.Create;
+  if (!ability.can(actionToPerform, "Client")) {
+    throw new ActionError("Você não tem permissão para realizar esta ação.");
+  }
+
+  // 2. Decidir em qual organização gravar (orgId já vem do contexto)
+  const finalOrgId = orgId;
+
+  // 3. Garante que a organização existe na tabela local
+  const [org] = await db
+    .select()
+    .from(organizationSchema)
+    .where(eq(organizationSchema.id, finalOrgId))
+    .limit(1);
+
+  if (!org) {
+    // Busca dados diretamente no Clerk
+    const clerkOrg = await clerkClient.organizations.getOrganization({
+      organizationId: finalOrgId,
+    });
+
+    // clerkOrg.name sempre existe; created_at vem como epoch ms
+    const now = new Date();
+
+    // Faz UPSERT (ignora se outra req já inseriu)
+    await db
+      .insert(organizationSchema)
       .values({
-        ...dataToInsert,
-        vlrMens:
-          parsedInput.vlrMens !== undefined && parsedInput.vlrMens !== null
-            ? String(parsedInput.vlrMens)
-            : parsedInput.vlrMens,
-        organizationId: ctx.orgId,
+        id: clerkOrg.id,
+        nome: clerkOrg.name,
+        createdAt: now,
+        updatedAt: now,
       })
-      .onConflictDoUpdate({
-        target: [clientsTable.id],
-        set: {
-          ...dataToInsert,
-          vlrMens:
-            parsedInput.vlrMens !== undefined && parsedInput.vlrMens !== null
-              ? String(parsedInput.vlrMens)
-              : parsedInput.vlrMens,
-        },
-      })
-      .returning({ id: clientsTable.id });
+      .onConflictDoNothing();
+  }
 
-    return { id: upsertedClient.id };
+  // 4. Prepara os dados do cliente
+  const clientData = { ...parsedInput, organizationId: finalOrgId };
 
-    revalidatePath("/clients");
-    console.log("✅ upsertClient action completed");
-  });
+  // Converte booleanos para 0/1 antes de salvar no banco
+  const booleanFields = [
+    "travado",
+    "ativo",
+    "inadimplente",
+    "especial",
+    "bloqueado",
+    "usaFor",
+  ];
+  for (const field of booleanFields) {
+    if (typeof clientData[field] === "boolean") {
+      clientData[field] = clientData[field] ? 1 : 0;
+    }
+  }
 
-export const searchClients = protectedAction
-  .schema(searchClientsSchema)
-  .action(async ({ parsedInput, ctx }): Promise<SearchClientsResult> => {
-    const { search = "", page = 1, limit = 10, orderBy, order } = parsedInput;
-    const offset = (page - 1) * limit;
+  try {
+    if (isEditing) {
+      // Atualização
+      const [updatedClient] = await db
+        .update(clientsTable)
+        .set(clientData)
+        .where(eq(clientsTable.id, Number(parsedInput.id)))
+        .returning();
 
-    const whereClause = and(
-      ctx.orgId ? eq(clientsTable.organizationId, ctx.orgId) : undefined,
-      search
-        ? like(sql`lower(${clientsTable.fantasia})`, `%${search.toLowerCase()}%`)
-        : undefined
-    );
+      if (!updatedClient) {
+        throw new ActionError("Cliente não encontrado para atualização.");
+      }
+      return updatedClient;
+    } else {
+      // Inserção
+      const [newClient] = await db
+        .insert(clientsTable)
+        .values(clientData)
+        .returning();
 
-    const [data, [{ total }]] = await Promise.all([
-      db
-        .select()
-        .from(clientsTable)
-        .where(whereClause)
-        .limit(limit)
-        .offset(offset)
-        .orderBy(
-          orderBy && order
-            ? sql`${clientsTable[orderBy]} ${sql.raw(order)}`
-            : clientsTable.fantasia
-        ),
-      db
-        .select({ total: sql<number>`count(*)` })
-        .from(clientsTable)
-        .where(whereClause),
-    ]);
+      return newClient;
+    }
+  } catch (error) {
+    console.error("Erro ao salvar cliente:", error);
+    throw new ActionError("Ocorreu um erro inesperado ao salvar o cliente.");
+  }
+}
 
-    return {
-      data,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
-  });
-
-  
+export const upsertClient = async (input: z.infer<typeof upsertClientSchema>) => {
+  return protectedAction.schema(upsertClientSchema).action(handler)(input);
+};

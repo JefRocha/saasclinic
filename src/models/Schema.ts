@@ -32,6 +32,7 @@ export const exametipoEnum = pgEnum("exame_tipo", [
   "HOMOL. ATESTADO",
 ]);
 export const pedidoEnum = pgEnum("pedido", ["Sim", "Não"]);
+export const colaboradorSexEnum = pgEnum("patient_sex", ["male", "female"]);
 
 
 
@@ -284,3 +285,42 @@ export const medicosTable = pgTable("medicos", {
     .defaultNow()
     .$onUpdate(() => new Date()),
 });
+
+export const colaboradorTable = pgTable("colaboradores", {
+  id: serial("codigo").primaryKey(),
+  organizationId: text("organization_id").notNull(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  endereco: text("endereco"),
+  numero: text("numero"),
+  complemento: text("complemento"),
+  bairro: text("bairro"),
+  cidade: text("cidade"),
+  uf: text("uf"),
+  cep: text("cep"),
+  telefone: text("telefone"),
+  celular: text("celular"),
+  cpf: text("cpf"),
+  rg: text("rg"),
+  ctps: text("ctps"),
+  data_admissao: timestamp("data_admissao"),
+  data_demissao: timestamp("data_demissao"),
+  situacao: text("situacao"),
+  obs1: text("obs1"),
+  data_nascimento: timestamp("data_nascimento"),
+  setor: text("setor"),
+  cargahoraria: text("cargahoraria"),
+  prontuario: text("prontuario"),
+  observacao: text("observacao"),
+  pcd: text("pcd"),
+  cod_anterior: text("cod_anterior"),
+  phoneNumber: text("phone_number").notNull(),
+  sex: colaboradorSexEnum("sex").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
+
+

@@ -1,30 +1,45 @@
 "use server";
 
-import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
-
-import { deleteExameSchema } from "./schema";
-
+import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/db";
-import { examesTable, Exame } from "@/models/Schema";
+import { examesTable } from "@/models/Schema";
+import { protectedAction, ActionError } from "@/libs/safe-action";
+import { deleteExameSchema } from "./schema";
+import { buildAbility, Action as CaslAction } from "@/lib/ability";
+import { eq } from "drizzle-orm";
+import { z } from "zod";
 
-import { protectedAction } from "@/libs/safe-action";
+export const deleteExame = protectedAction
+  .schema(deleteExameSchema)
+  .action(async ({ parsedInput, ctx: { orgId } }) => {
+    const user = await currentUser();
+    const role = user?.publicMetadata?.role as string;
 
-export const deleteExame = async (input: typeof deleteExameSchema._type) => {
-  return protectedAction.schema(deleteExameSchema)
-    .action(async ({ parsedInput, ctx }) => {
-      const exame: Exame | undefined = await db.query.examesTable.findFirst({
-        where: eq(examesTable.id, parsedInput.id),
-      });
-      if (!exame) {
-        return { error: "Exame não encontrado." };
-      }
-      if (exame.organizationId !== ctx.orgId) {
-        return { error: "Você não tem permissão para excluir este exame." };
-      }
-      await db.delete(examesTable).where(eq(examesTable.id, parsedInput.id));
-      revalidatePath("/dashboard/exames");
-      revalidatePath("/api/exames");
-      return { data: { success: true } };
-    })(input);
-};
+    const ability = buildAbility(role, orgId);
+    if (!ability.can(CaslAction.Delete, "Exame")) {
+      throw new ActionError("Você não tem permissão para excluir exames.");
+    }
+
+    const { id } = parsedInput;
+
+    const exame = await db.query.examesTable.findFirst({
+      where: eq(examesTable.id, id),
+    });
+
+    if (!exame) {
+      throw new ActionError("Exame não encontrado.");
+    }
+
+    // super_admin pode deletar qualquer exame; demais verificam orgId
+    if (role !== "super_admin" && exame.organizationId !== orgId) {
+      throw new ActionError("Você não tem permissão para excluir este exame.");
+    }
+
+    try {
+      await db.delete(examesTable).where(eq(examesTable.id, id));
+      return { success: true, id };
+    } catch (e) {
+      console.error("Erro ao excluir exame na Server Action:", e);
+      throw new ActionError("Erro interno ao excluir exame.");
+    }
+  });

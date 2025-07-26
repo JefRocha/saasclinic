@@ -95,6 +95,7 @@
     "clients": "Clientes",
     "exams": "Exames",
     "doctors": "Médicos",
+    "colaboradores": "Colaboradores",
     "registrations": "Cadastros"
   },
   "Dashboard": {
@@ -144,6 +145,10 @@
   "MedicosPage": {
     "title": "Médicos",
     "description": "Gerencie os médicos da sua clínica"
+  },
+  "ColaboradoresPage": {
+    "title": "Colaboradores",
+    "description": "Gerencie os colaboradores da sua clínica"
   },
   "Todos": {
     "title_bar": "Lista de tarefas",

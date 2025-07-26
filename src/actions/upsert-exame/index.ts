@@ -1,77 +1,77 @@
 "use server";
 
-import { and, eq, like, sql } from "drizzle-orm";
+import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { examesTable } from "@/models/Schema";
-import { protectedAction } from "@/libs/safe-action";
-import {
-  upsertExameSchema,
-  searchExamesSchema,
-  SearchExamesResult,
-} from "./schema";
-import { revalidatePath } from "next/cache";
+import { protectedAction, ActionError } from "@/libs/safe-action";
+import { upsertExameSchema } from "./schema";
+import { buildAbility, Action as CaslAction } from "@/lib/ability";
+import { eq } from "drizzle-orm";
+import { z } from "zod";
 
-export const upsertExame = protectedAction
-  .schema(upsertExameSchema)
-  .action(async ({ parsedInput, ctx }) => {
-    const { createdAt, updatedAt, ...dataToInsert } = parsedInput;
+async function handler({
+  parsedInput,
+  ctx: { userId, orgId },
+}: {
+  parsedInput: z.infer<typeof upsertExameSchema>;
+  ctx: { userId: string; orgId: string };
+}) {
+  const user = await currentUser();
+  const role = user?.publicMetadata?.role as string;
 
-    const [upsertedExame] = await db
-      .insert(examesTable)
-      .values({
-        ...dataToInsert,
-        organizationId: ctx.orgId,
-      })
-      .onConflictDoUpdate({
-        target: [examesTable.id],
-        set: {
-          ...dataToInsert,
-        },
-      })
-      .returning({ id: examesTable.id });
+  const ability = buildAbility(role, orgId);
+  const isEditing = !!parsedInput.id;
 
-    revalidatePath("/dashboard/exames");
-    return { id: upsertedExame.id };
-  });
+  // 1. Verificar permissão
+  const actionToPerform = isEditing ? CaslAction.Update : CaslAction.Create;
+  if (!ability.can(actionToPerform, "Exame")) {
+    throw new ActionError("Você não tem permissão para realizar esta ação.");
+  }
 
-export const searchExames = protectedAction
-  .schema(searchExamesSchema)
-  .action(async ({ parsedInput, ctx }): Promise<SearchExamesResult> => {
-    const { search = "", page = 1, limit = 10, orderBy, order } = parsedInput;
-    const offset = (page - 1) * limit;
+  // 2. Decidir em qual organização gravar (orgId já vem do contexto)
+  const finalOrgId = orgId;
 
-    const whereClause = and(
-      ctx.orgId ? eq(examesTable.organizationId, ctx.orgId) : undefined,
-      search
-        ? like(sql`lower(${examesTable.descricao})`, `%${search.toLowerCase()}%`)
-        : undefined
-    );
+  // 3. Preparar os dados para o banco (mapeamento explícito para segurança)
+  const exameData = {
+    id: parsedInput.id,
+    organizationId: finalOrgId,
+    descricao: parsedInput.descricao,
+    validade: parsedInput.validade,
+    validade1: parsedInput.validade1,
+    valor: parsedInput.valor,
+    pedido: parsedInput.pedido,
+    codigo_anterior: parsedInput.codigo_anterior || null,
+    tipo: parsedInput.tipo,
+  };
 
-    const [data, [{ total }]] = await Promise.all([
-      db
-        .select()
-        .from(examesTable)
-        .where(whereClause)
-        .limit(limit)
-        .offset(offset)
-        .orderBy(
-          orderBy && order
-            ? sql`${examesTable[orderBy]} ${sql.raw(order)}`
-            : examesTable.descricao
-        ),
-      db
-        .select({ total: sql<number>`count(*)` })
-        .from(examesTable)
-        .where(whereClause),
-    ]);
+  try {
+    if (isEditing) {
+      // Atualização
+      const [updatedExame] = await db
+        .update(examesTable)
+        .set(exameData)
+        .where(eq(examesTable.id, Number(parsedInput.id)))
+        .returning();
 
-    return {
-      data,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
-  });
+      if (!updatedExame) {
+        throw new ActionError("Exame não encontrado para atualização.");
+      }
+      return updatedExame;
+    } else {
+      // Inserção
+      const [newExame] = await db
+        .insert(examesTable)
+        .values(exameData)
+        .returning();
+
+      return newExame;
+    }
+  } catch (error) {
+    console.error("Erro ao salvar exame:", error);
+    throw new ActionError("Ocorreu um erro inesperado ao salvar o exame.");
+  }
+}
+
+export const upsertExame = async (input: z.infer<typeof upsertExameSchema>) => {
+  return protectedAction.schema(upsertExameSchema).action(handler)(input);
+};

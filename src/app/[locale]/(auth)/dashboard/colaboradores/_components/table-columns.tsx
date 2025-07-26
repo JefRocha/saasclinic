@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { formatCnpjCpf } from "@/helpers/format";
+import { formatCpf } from "@/helpers/format"; // Assumindo que você terá um formatCpf
 import { cn } from "@/libs/utils";
 import {
   Tooltip,
@@ -13,16 +13,15 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-import ClientsTableActions from "./table-actions";
-import { upsertClientSchema } from "@/actions/upsert-client/schema";
-import { clientsTable } from "@/models/Schema";
+import ColaboradoresTableActions from "./table-actions";
+import { colaboradorTable } from "@/models/Schema";
 
-type Client = typeof clientsTable.$inferSelect;
+type Colaborador = typeof colaboradorTable.$inferSelect;
 
-export const getClientsTableColumns = (
-  onClientUpsertSuccess: (clientId?: string | number) => void,
-  onRowClick: (clientId: string | number) => void
-): ColumnDef<Client>[] => [
+export const getColaboradoresTableColumns = (
+  onColaboradorUpsertSuccess: (colaboradorId?: string | number) => void,
+  onRowClick: (colaboradorId: string | number) => void
+): ColumnDef<Colaborador>[] => [
   {
     accessorKey: "id",
     size: 80,
@@ -37,59 +36,34 @@ export const getClientsTableColumns = (
     ),
   },
   {
-    accessorKey: "razaoSocial",
+    accessorKey: "name",
     header: ({ column }) => (
       <Button
         variant="ghost"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       >
-        Razão Social
+        Nome
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
     cell: ({ row }) => {
-      const isBlocked = row.original.situacao === 3;
+      // Adapte a lógica de bloqueio/situação se houver
+      // const isBlocked = row.original.situacao === "BLOQUEADO"; 
       return (
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className={cn({ "text-red-500": isBlocked }, "truncate max-w-[250px]")}>
-                {row.original.razaoSocial}
+              <div className={cn("truncate max-w-[250px]")}>
+                {row.original.name}
               </div>
             </TooltipTrigger>
             <TooltipContent>
-              <p>{row.original.razaoSocial}</p>
+              <p>{row.original.name}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
       );
     },
-  },
-  {
-    accessorKey: "fantasia",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        Nome Fantasia
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
-    cell: ({ row }) => (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div className="truncate max-w-[180px]">
-              {row.original.fantasia}
-            </div>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{row.original.fantasia}</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    ),
   },
   {
     accessorKey: "cpf",
@@ -98,11 +72,11 @@ export const getClientsTableColumns = (
         variant="ghost"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       >
-        CNPJ/CPF
+        CPF
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => formatCnpjCpf(row.original.cpf),
+    cell: ({ row }) => formatCpf(row.original.cpf),
   },
   {
     accessorKey: "celular",
@@ -111,19 +85,7 @@ export const getClientsTableColumns = (
         variant="ghost"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       >
-        Telefone
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
-  },
-  {
-    accessorKey: "cidade",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        Cidade
+        Celular
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
@@ -141,7 +103,19 @@ export const getClientsTableColumns = (
     ),
   },
   {
+    accessorKey: "setor",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Setor
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+  },
+  {
     id: "actions",
-    cell: ({ row }) => <ClientsTableActions client={row.original} onClientUpsertSuccess={onClientUpsertSuccess} onRowClick={onRowClick} />,
+    cell: ({ row }) => <ColaboradoresTableActions colaborador={row.original} onColaboradorUpsertSuccess={onColaboradorUpsertSuccess} onRowClick={onRowClick} />,
   },
 ];

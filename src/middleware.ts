@@ -13,6 +13,7 @@ const intlMiddleware = createMiddleware({
 const isProtectedRoute = createRouteMatcher([
   "/dashboard(.*)",
   "/(pt-BR|en|fr)/dashboard(.*)", // Inclui todos os idiomas configurados
+  "/(pt-BR|en|fr)/dashboard/colaboradores(.*)",
 ]);
 
 export default clerkMiddleware((auth, req) => {

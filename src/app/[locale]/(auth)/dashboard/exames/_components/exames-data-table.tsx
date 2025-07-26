@@ -38,7 +38,7 @@ type DataTableProps<TData, TValue> = {
 
 export function DataTable<TData, TValue>({
   columns,
-  data,
+  data: tableData, // Renomeado para evitar conflito
   pagination,
   onSortingChange,
   sorting,
@@ -48,7 +48,7 @@ export function DataTable<TData, TValue>({
   onRowClick,
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
-    data,
+    data: tableData.data, // Usar tableData.data aqui
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(), // Adicionado

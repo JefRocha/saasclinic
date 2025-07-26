@@ -1,13 +1,15 @@
 "use client";
 
-import { useFetchWithPopup } from '@/lib/fetchWithPopup';
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState, useEffect, forwardRef } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { NumericFormat } from "react-number-format";
 import { Loader2 } from "lucide-react";
+import { useAction } from "@/hooks/use-action";
+import { z } from "zod";
 
+import { upsertExame } from "@/actions/upsert-exame";
 import { upsertExameSchema } from "@/actions/upsert-exame/schema";
 import { Button } from "@/components/ui/button";
 import {
@@ -75,10 +77,6 @@ const UpsertExameForm = ({
   onSuccess,
   onClose,
 }: UpsertExameFormProps) => {
-  const [isLoading, setIsLoading] = useState(false);
-
-  const { fetch: secureFetch, loading: isSubmitting } = useFetchWithPopup();
-
   const { orgId } = useAuth();
   const { user } = useUser();
   const role = user?.publicMetadata?.role as string;
@@ -104,47 +102,29 @@ const UpsertExameForm = ({
           pedido: "Não",
           codigo_anterior: "",
           tipo: "ADMISSIONAL",
+          organizationId: orgId, // Define orgId padrão para não-super_admin
         },
   });
 
+  const { execute, status } = useAction(upsertExame, {
+    onSuccess: (data) => {
+      toast.success(initialData ? "Exame atualizado" : "Exame criado");
+      onSuccess(data.id);
+      onClose();
+    },
+    onError: ({ serverError }) => {
+      toast.error(serverError || "Erro inesperado ao salvar exame.");
+    },
+  });
+
   useEffect(() => {
-    console.log("Formulário de Exames - Erros de validação:", form.formState.errors);
+    // console.log("Formulário de Exames - Erros de validação:", form.formState.errors);
   }, [form.formState.errors]);
 
-  const onSubmit = async (values: any) => {
-    setIsLoading(true);
-    console.log("Valores enviados:", values);
-    try {
-      const res = await secureFetch('/api/exames', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      });
-
-      if (!res) {
-        onClose();
-        return;
-      }
-
-      if (!res.ok) {
-        const { error } = await res.json();
-        toast.error(error ?? 'Erro ao salvar');
-        return;
-      }
-
-      const responseData = await res.json();
-      toast.success(initialData ? 'Exame atualizado' : 'Exame criado');
-      const savedExameId = responseData.exame?.id || initialData?.id;
-      onSuccess(savedExameId);
-      onClose();
-    } catch {
-      toast.error('Erro inesperado ao salvar exame.');
-    } finally {
-      setIsLoading(false);
-    }
+  const onSubmit = (values: z.infer<typeof upsertExameSchema>) => {
+    execute(values);
   };
-
-  return (
+    return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
         hideCloseButton
@@ -315,8 +295,8 @@ const UpsertExameForm = ({
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isLoading || isSubmitting || !canEditExame}>
-                {isLoading ? (
+              <Button type="submit" disabled={status === "executing" || !canEditExame}>
+                {status === "executing" ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : initialData ? (
                   "Salvar Alterações"

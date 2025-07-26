@@ -4,6 +4,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useTransition } from "react";
 import type { SortingState } from "@tanstack/react-table";
+import { useAuth } from "@clerk/nextjs";
 
 import { DataTable as ClientsDataTable } from "./clients-data-table";
 import { getClientsTableColumns } from "./table-columns";
@@ -11,28 +12,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SearchInput } from "./search-input";
 import AddClientButton from "./add-client-button";
 
-import type { SearchClientsResult } from "@/types/clients";
-
-// Função que busca os dados da API
-const fetchClients = async (
-  search: string,
-  page: number,
-  order: string,
-  orderBy: string,
-): Promise<SearchClientsResult> => {
-  const url = `/api/clients?search=${search}&page=${page}&order=${order}&orderBy=${orderBy}`;
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) {
-    throw new Error("Erro ao buscar clientes.");
-  }
-  return res.json();
-};
+import { getClients } from "@/actions/get-clients";
+import type { SearchClientsResult } from "@/actions/upsert-client/schema";
 
 export const ClientsList = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
+  const { orgId } = useAuth();
 
   const search = searchParams.get("search") || "";
   const page = Number(searchParams.get("page") || 1);
@@ -52,13 +40,13 @@ export const ClientsList = () => {
     isError,
     error,
   } = useQuery<SearchClientsResult, Error>({
-    queryKey: ["clients", search, page, sorting[0].id, (sorting[0].desc ? "desc" : "asc")],
-    queryFn: () => fetchClients(search, page, sorting[0].desc ? "desc" : "asc", sorting[0].id),
+    queryKey: ["clients", orgId, search, page, sorting[0].id, (sorting[0].desc ? "desc" : "asc")],
+    queryFn: () => getClients({ search, page, orderBy: sorting[0].id, order: sorting[0].desc ? "desc" : "asc" }),
   });
 
   // Função para ser chamada em caso de sucesso (criação/edição/exclusão)
   const handleSuccess = (clientId?: string | number) => {
-    queryClient.invalidateQueries({ queryKey: ["clients"] });
+    queryClient.invalidateQueries({ queryKey: ["clients", orgId] });
     if (clientId) {
       setHighlightedClientId(clientId);
       setSelectedClientId(clientId); // Define o cliente selecionado também
@@ -120,7 +108,7 @@ export const ClientsList = () => {
             params.set("order", newOrder);
             router.replace(`?${params.toString()}`);
 
-            queryClient.invalidateQueries({ queryKey: ["clients"] });
+            queryClient.invalidateQueries({ queryKey: ["clients", orgId] });
           });
         }}
         sorting={sorting}

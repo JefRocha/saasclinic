@@ -31,7 +31,7 @@ type DataTableProps<TData, TValue> = {
   onSortingChange: (sorting: SortingState) => void; // Adicionado
   sorting: SortingState; // Adicionado
   isFetching?: boolean; // Adicionado
-  highlightedClientId?: string | number | null; // Adicionado
+  highlightedColaboradorId?: string | number | null; // Adicionado
   selectedRowId?: string | number | null; // Adicionado
   onRowClick?: (id: string | number) => void; // Adicionado
 };
@@ -43,7 +43,7 @@ export function DataTable<TData, TValue>({
   onSortingChange,
   sorting,
   isFetching = false,
-  highlightedClientId = null,
+  highlightedColaboradorId = null,
   selectedRowId = null,
   onRowClick,
 }: DataTableProps<TData, TValue>) {
@@ -90,9 +90,9 @@ export function DataTable<TData, TValue>({
                     onClick={() => onRowClick && row.original && row.original.id && onRowClick(row.original.id)}
                     className={cn(
                       "hover:bg-blue-100 dark:hover:bg-blue-900/20 transition-colors duration-200",
-                      row.original && row.original.id === highlightedClientId && "bg-blue-100 dark:bg-blue-900/20",
+                      row.original && row.original.id === highlightedColaboradorId && "bg-blue-100 dark:bg-blue-900/20",
                       row.original && row.original.id === selectedRowId && "bg-gray-200 dark:bg-gray-700",
-                      !(row.original && (row.original.id === highlightedClientId || row.original.id === selectedRowId)) && "odd:bg-muted/50"
+                      !(row.original && (row.original.id === highlightedColaboradorId || row.original.id === selectedRowId)) && "odd:bg-muted/50"
                     )}
                   >
                     {row.getVisibleCells().map(cell => (
