@@ -41,6 +41,8 @@ import { useDebounce } from "use-debounce";
 import { useQuery } from "@tanstack/react-query";
 import { getOrganizations } from "@/actions/get-organizations";
 
+import { useValidationErrorsModal } from "@/components/ui/validation-errors-modal";
+
 // Função para validar se uma string é um UUID
 const isUuid = (value: string | null | undefined): boolean => {
   if (!value) return false;
@@ -183,9 +185,22 @@ const UpsertMedicoForm = ({
     fetchAddress();
   }, [debouncedCep, form]);
 
+  const openValidationErrorsModal = useValidationErrorsModal();
+
   const onSubmit = (values: z.infer<typeof upsertMedicoSchema>) => {
     console.log("Form values before execute - organizationId:", form.getValues("organizationId"));
     execute(values);
+  };
+
+  const onInvalid = (errors: typeof form.formState.errors) => {
+    const errorMessages: string[] = [];
+    for (const fieldName in errors) {
+      const error = errors[fieldName as keyof typeof errors];
+      if (error && error.message) {
+        errorMessages.push(error.message);
+      }
+    }
+    openValidationErrorsModal(errorMessages);
   };
 
   return (
@@ -205,7 +220,7 @@ const UpsertMedicoForm = ({
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
+            onSubmit={form.handleSubmit(onSubmit, onInvalid)}
             className="flex h-full w-full flex-1 flex-col overflow-hidden"
           >
             <div className="flex-1 space-y-4 overflow-y-auto p-4">

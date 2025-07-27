@@ -55,6 +55,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+import { useValidationErrorsModal } from "@/components/ui/validation-errors-modal";
+
 // Interfaces e tipos
 interface Client {
   id?: string;
@@ -137,16 +139,7 @@ interface UpsertClientFormProps {
 
 // Component personalizado para inputs numéricos
 const CustomNumericInput = forwardRef<HTMLInputElement, any>(
-  ({ className, ...props }, ref) => {
-    const {
-      allowLeadingZeros,
-      format,
-      mask,
-      onValueChange,
-      customInput,
-      ...rest
-    } = props;
-
+  ({ className, allowLeadingZeros, format, mask, onValueChange, customInput, ...rest }, ref) => {
     return <Input className={className} ref={ref} {...rest} />;
   },
 );
@@ -524,11 +517,22 @@ const UpsertClientForm = ({
   // }
   // }, [initialData]);
 
+  const openValidationErrorsModal = useValidationErrorsModal();
+
   const onSubmit = async (values: any) => {
     execute(values);
   };
 
-
+  const onInvalid = (errors: typeof form.formState.errors) => {
+    const errorMessages: string[] = [];
+    for (const fieldName in errors) {
+      const error = errors[fieldName as keyof typeof errors];
+      if (error && error.message) {
+        errorMessages.push(error.message);
+      }
+    }
+    openValidationErrorsModal(errorMessages);
+  };
 
   return (
     //<Dialog open={isOpen} onOpenChange={onSuccess}>
@@ -548,7 +552,7 @@ const UpsertClientForm = ({
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
+            onSubmit={form.handleSubmit(onSubmit, onInvalid)}
             className="flex h-full w-full flex-1 flex-col overflow-hidden"
           >
             <Tabs

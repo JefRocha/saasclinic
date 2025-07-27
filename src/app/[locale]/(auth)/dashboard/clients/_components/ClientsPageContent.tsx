@@ -10,6 +10,7 @@ import {
   PageDescription,
   PageContent,
 } from "@/components/ui/page-container";
+import { ValidationErrorsModalProvider } from "@/components/ui/validation-errors-modal";
 
 export default function ClientsPageContent() {
   return (
@@ -21,7 +22,9 @@ export default function ClientsPageContent() {
         </PageHeaderContent>
       </PageHeader>
       <PageContent>
-        <ClientsList />
+        <ValidationErrorsModalProvider>
+          <ClientsList />
+        </ValidationErrorsModalProvider>
       </PageContent>
     </PageContainer>
   );

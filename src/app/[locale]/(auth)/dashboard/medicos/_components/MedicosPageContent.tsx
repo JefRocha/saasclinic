@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { PageContainer, PageHeader, PageHeaderContent, PageTitle, PageDescription, PageContent } from "@/components/ui/page-container";
 
 import { MedicosList } from "./medicos-list";
+import { ValidationErrorsModalProvider } from "@/components/ui/validation-errors-modal";
 
 export function MedicosPageContent() {
   const t = useTranslations("MedicosPage");
@@ -18,7 +19,9 @@ export function MedicosPageContent() {
         </PageHeaderContent>
       </PageHeader>
       <PageContent>
-        <MedicosList />
+        <ValidationErrorsModalProvider>
+          <MedicosList />
+        </ValidationErrorsModalProvider>
       </PageContent>
     </PageContainer>
   );

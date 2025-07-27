@@ -3,7 +3,7 @@ import { examesTable } from "@/models/Schema";
 
 export const upsertExameSchema = z.object({
   id: z.union([z.string(), z.number()]).optional(),
-  organizationId: z.string().uuid().optional().nullable(),
+  organizationId: z.string().optional().nullable(),
   descricao: z.string().min(1, "Descrição é obrigatória"),
   validade: z.coerce.number().min(1, "Validade é obrigatória"),
   validade1: z.coerce.number().min(1, "Validade 1 é obrigatória"),

@@ -42,6 +42,8 @@ import {
 import { useAuth, useUser } from "@clerk/nextjs";
 import { buildAbility, Action } from "@/lib/ability";
 
+import { useValidationErrorsModal } from "@/components/ui/validation-errors-modal";
+
 // Função para validar se uma string é um UUID
 const isUuid = (value: string | null | undefined): boolean => {
   if (!value) return false;
@@ -102,7 +104,9 @@ const UpsertExameForm = ({
           pedido: "Não",
           codigo_anterior: "",
           tipo: "ADMISSIONAL",
-          organizationId: orgId, // Define orgId padrão para não-super_admin
+          organizationId: initialData
+            ? (isUuid(initialData.organizationId) ? initialData.organizationId : undefined)
+            : (orgId === "" ? undefined : orgId), // Garante que seja um UUID válido ou undefined, tratando string vazia
         },
   });
 
@@ -121,9 +125,23 @@ const UpsertExameForm = ({
     // console.log("Formulário de Exames - Erros de validação:", form.formState.errors);
   }, [form.formState.errors]);
 
+  const openValidationErrorsModal = useValidationErrorsModal();
+
   const onSubmit = (values: z.infer<typeof upsertExameSchema>) => {
     execute(values);
   };
+
+  const onInvalid = (errors: typeof form.formState.errors) => {
+    const errorMessages: string[] = [];
+    for (const fieldName in errors) {
+      const error = errors[fieldName as keyof typeof errors];
+      if (error && error.message) {
+        errorMessages.push(error.message);
+      }
+    }
+    openValidationErrorsModal(errorMessages);
+  };
+
     return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
@@ -135,13 +153,13 @@ const UpsertExameForm = ({
           <DialogTitle>
             {initialData ? "Editar Exame" : "Novo Exame"}
           </DialogTitle>
-          <DialogDescription>
-            Preencha os campos para adicionar ou editar um exame.
-          </DialogDescription>
         </DialogHeader>
+        <DialogDescription>
+          Preencha os campos para adicionar ou editar um exame.
+        </DialogDescription>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
+            onSubmit={form.handleSubmit(onSubmit, onInvalid)}
             className="flex h-full w-full flex-1 flex-col overflow-hidden"
           >
             <div className="flex-1 space-y-4 overflow-y-auto p-4">

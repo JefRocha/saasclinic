@@ -24,17 +24,17 @@ export const upsertMedicoSchema = z.object({
   createdAt: z.coerce.date().optional().nullable(),
   updatedAt: z.coerce.date().optional().nullable(),
 }).superRefine((data, ctx) => {
-  if (data.organizationId && data.organizationId !== "") {
-    const uuidRegex =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(data.organizationId)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "ID da organização inválido (não é um UUID válido).",
-        path: ["organizationId"],
-      });
-    }
-  }
+  // if (data.organizationId && data.organizationId !== "") {
+  //   const uuidRegex =
+  //     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  //   if (!uuidRegex.test(data.organizationId)) {
+  //     ctx.addIssue({
+  //       code: z.ZodIssueCode.custom,
+  //       message: "ID da organização inválido (não é um UUID válido).",
+  //       path: ["organizationId"],
+  //     });
+  //   }
+  // }
   if (data.cpf) {
     const cleanedCpf = data.cpf.replace(/\D/g, '');
     if (!isValidCpf(cleanedCpf)) {

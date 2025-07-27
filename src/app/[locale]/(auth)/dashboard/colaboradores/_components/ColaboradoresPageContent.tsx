@@ -2,6 +2,8 @@ import { ColaboradoresList } from "./colaboradores-list";
 import { PageContent, PageContainer, PageHeader, PageHeaderContent, PageTitle, PageDescription } from "@/components/ui/page-container";
 import { useTranslations } from "next-intl";
 
+import { ValidationErrorsModalProvider } from "@/components/ui/validation-errors-modal";
+
 export function ColaboradoresPageContent() {
   const t = useTranslations("ColaboradoresPage");
 
@@ -14,7 +16,9 @@ export function ColaboradoresPageContent() {
         </PageHeaderContent>
       </PageHeader>
       <PageContent>
-        <ColaboradoresList />
+        <ValidationErrorsModalProvider>
+          <ColaboradoresList />
+        </ValidationErrorsModalProvider>
       </PageContent>
     </PageContainer>
   );

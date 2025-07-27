@@ -58,6 +58,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn as cn_utils } from "@/libs/utils";
 
+import { useValidationErrorsModal } from "@/components/ui/validation-errors-modal";
 // Interfaces e tipos
 interface Colaborador {
   id?: string | number;
@@ -195,8 +196,21 @@ const UpsertColaboradorForm = ({
     fetchAddress();
   }, [debouncedCep, form, enderecoValue]);
 
+  const openValidationErrorsModal = useValidationErrorsModal();
+
   const onSubmit = async (values: z.infer<typeof upsertColaboradorSchema>) => {
     execute(values);
+  };
+
+  const onInvalid = (errors: typeof form.formState.errors) => {
+    const errorMessages: string[] = [];
+    for (const fieldName in errors) {
+      const error = errors[fieldName as keyof typeof errors];
+      if (error && error.message) {
+        errorMessages.push(error.message);
+      }
+    }
+    openValidationErrorsModal(errorMessages);
   };
 
   return (
@@ -216,7 +230,7 @@ const UpsertColaboradorForm = ({
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
+            onSubmit={form.handleSubmit(onSubmit, onInvalid)}
             className="flex h-full w-full flex-1 flex-col overflow-hidden"
           >
             <Tabs

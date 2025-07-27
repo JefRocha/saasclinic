@@ -5,7 +5,7 @@ import { clientsTable } from "@/models/Schema";
 
 export const upsertClientSchema = z.object({
   id: z.union([z.string(), z.number()]).optional(),
-  organizationId: z.string().uuid().optional().nullable(),
+  organizationId: z.string().optional().nullable(),
   razaoSocial: z.string().optional().nullable(),
   cpf: z.string().optional().nullable(),
   fantasia: z.string().optional().nullable(),
