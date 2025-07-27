@@ -57,6 +57,11 @@ export default function DashboardLayout(props: { children: React.ReactNode, para
           label: t('colaboradores'),
           icon: <Users className="size-4" />,
         },
+        {
+          href: '/dashboard/exames-por-cliente',
+          label: t('exams_by_client'),
+          icon: <FileText className="size-4" />,
+        },
       ],
     },
     {

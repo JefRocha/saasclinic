@@ -684,7 +684,7 @@ const UpsertClientForm = ({
                     name="razaoSocial"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Razão Social</FormLabel>
+                        <FormLabel>{form.watch("pessoa") === "J" ? "Razão Social" : "Nome"}</FormLabel>
                         <FormControl>
                           <Input
                             placeholder="Razão Social"

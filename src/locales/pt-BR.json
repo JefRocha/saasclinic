@@ -96,7 +96,8 @@
     "exams": "Exames",
     "doctors": "Médicos",
     "colaboradores": "Colaboradores",
-    "registrations": "Cadastros"
+    "registrations": "Cadastros",
+    "exams_by_client": "Exames por Cliente"
   },
   "Dashboard": {
     "meta_title": "Dashboard – SaaS Template",
@@ -149,6 +150,18 @@
   "ColaboradoresPage": {
     "title": "Colaboradores",
     "description": "Gerencie os colaboradores da sua clínica"
+  },
+  "ColaboradoresPage": {
+    "title": "Colaboradores",
+    "description": "Gerencie os colaboradores da sua clínica"
+  },
+  "ExamesPorClientePage": {
+    "title": "Exames por Cliente",
+    "description": "Visualize e gerencie os exames vinculados aos clientes."
+  },
+  "ExamesPorCliente": {
+    "select_client_placeholder": "Selecione um cliente",
+    "select_all_clients": "Todos os Clientes"
   },
   "Todos": {
     "title_bar": "Lista de tarefas",

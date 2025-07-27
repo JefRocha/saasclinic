@@ -322,5 +322,31 @@ export const colaboradorTable = pgTable("colaboradores", {
     .$onUpdate(() => new Date()),
 });
 
+export const examesCliTable = pgTable("examescli", {
+  id: integer("id").primaryKey(),
+  idcliente: integer("idcliente").notNull().references(() => clientsTable.id),
+  idexame: integer("codiexame").notNull().references(() => examesTable.id),
+  descricao: text("descricao"),
+  valor: numeric("valor", { precision: 15, scale: 2 }).notNull(),
+  cargo: text("cargo"),
+  codExameAnt: text("codexameant")
+});text
+export const clientsRelations = relations(clientsTable, ({ many }) => ({
+  examesRealizados: many(examesCliTable) // Um cliente tem muitos exames realizados
+}));
 
+export const examesRelations = relations(examesTable, ({ many }) => ({
+  examesRealizados: many(examesCliTable) // Um tipo de exame pode ser realizado por muitos clientes
+}));
+
+export const examesCliRelations = relations(examesCliTable, ({ one }) => ({
+  cliente: one(clientsTable, {
+    fields: [examesCliTable.idcliente],
+    references: [clientsTable.id]
+  }),
+  tipoExame: one(examesTable, {
+    fields: [examesCliTable.idexame],
+    references: [examesTable.id]
+  })
+}));
 
