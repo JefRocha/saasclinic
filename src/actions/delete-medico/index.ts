@@ -7,7 +7,7 @@ import { protectedAction, ActionError } from "@/libs/safe-action";
 import { deleteMedicoSchema } from "./schema";
 import { buildAbility, Action as CaslAction } from "@/lib/ability";
 import { eq } from "drizzle-orm";
-import { z } from "zod";
+
 
 export const deleteMedico = protectedAction
   .schema(deleteMedicoSchema)

@@ -4,10 +4,9 @@ import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { colaboradorTable } from "@/models/Schema";
 import { protectedAction, ActionError } from "@/libs/safe-action";
-import { searchColaboradoresSchema, SearchColaboradoresResult } from "@/actions/upsert-colaborador/schema";
+import { searchColaboradoresSchema } from "@/actions/upsert-colaborador/schema";
 import { buildAbility, Action as CaslAction } from "@/lib/ability";
 import { eq, and, ilike, sql } from "drizzle-orm";
-import { z } from "zod";
 
 export const getColaboradores = protectedAction
   .schema(searchColaboradoresSchema)
@@ -31,6 +30,11 @@ export const getColaboradores = protectedAction
       search ? ilike(colaboradorTable.name, `%${search}%`) : undefined
     );
 
+    const validOrderByColumns = ['id', 'name', 'cpf', 'email', 'createdAt', 'updatedAt']; // Adicione outras colunas válidas aqui
+    const finalOrderBy = (orderBy && validOrderByColumns.includes(orderBy)) ? orderBy : 'id';
+
+    const orderByColumn = colaboradorTable[finalOrderBy as keyof typeof colaboradorTable];
+
     try {
       const [colaboradores, [{ count } = { count: 0 }]] = await Promise.all([
         db
@@ -39,8 +43,8 @@ export const getColaboradores = protectedAction
           .where(where)
           .orderBy(
             order === "desc"
-              ? sql`${colaboradorTable[orderBy]} DESC`
-              : sql`${colaboradorTable[orderBy]} ASC`
+              ? sql`${orderByColumn} DESC`
+              : sql`${orderByColumn} ASC`
           )
           .limit(limit)
           .offset(offset),

@@ -1,3 +1,4 @@
+/*
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
@@ -85,3 +86,4 @@ export const POST = async (request: Request) => {
     received: true,
   });
 };
+*/

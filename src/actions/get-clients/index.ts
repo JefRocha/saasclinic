@@ -4,10 +4,9 @@ import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { clientsTable } from "@/models/Schema";
 import { protectedAction, ActionError } from "@/libs/safe-action";
-import { searchClientsSchema, SearchClientsResult } from "@/actions/upsert-client/schema";
+import { searchClientsSchema } from "@/actions/upsert-client/schema";
 import { buildAbility, Action as CaslAction } from "@/lib/ability";
 import { eq, and, ilike, sql } from "drizzle-orm";
-import { z } from "zod";
 
 export const getClients = protectedAction
   .schema(searchClientsSchema)
@@ -31,16 +30,21 @@ export const getClients = protectedAction
       search ? ilike(clientsTable.razaoSocial, `%${search}%`) : undefined
     );
 
+    const validOrderByColumns = ['id', 'razaoSocial', 'fantasia', 'createdAt', 'updatedAt']; // Adicione outras colunas válidas aqui
+    const finalOrderBy = (orderBy && validOrderByColumns.includes(orderBy)) ? orderBy : 'id';
+
+    const orderByColumn = clientsTable[finalOrderBy as keyof typeof clientsTable];
+
     try {
       const [clients, [{ count } = { count: 0 }]] = await Promise.all([
         db
-          .select(clientsTable)
+          .select()
           .from(clientsTable)
           .where(where)
           .orderBy(
             order === "desc"
-              ? sql`${clientsTable[orderBy]} DESC`
-              : sql`${clientsTable[orderBy]} ASC`
+              ? sql`${orderByColumn} DESC`
+              : sql`${orderByColumn} ASC`
           )
           .limit(limit)
           .offset(offset),

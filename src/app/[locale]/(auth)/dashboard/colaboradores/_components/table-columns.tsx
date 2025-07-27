@@ -4,7 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { formatCpf } from "@/helpers/format"; // Assumindo que você terá um formatCpf
+import { formatCnpjCpf } from "@/helpers/format";
 import { cn } from "@/libs/utils";
 import {
   Tooltip,
@@ -76,7 +76,7 @@ export const getColaboradoresTableColumns = (
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => formatCpf(row.original.cpf),
+    cell: ({ row }) => formatCnpjCpf(row.original.cpf),
   },
   {
     accessorKey: "celular",

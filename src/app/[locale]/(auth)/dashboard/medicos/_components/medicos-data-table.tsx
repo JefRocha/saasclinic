@@ -38,8 +38,8 @@ type DataTableProps<TData, TValue> = {
 
 export function DataTable<TData, TValue>({
   columns,
-  data: tableData, // Renomeado para evitar conflito
-  pagination,
+  data: propData, // Renomeado para evitar conflito com a variável interna
+  pagination: propPagination,
   onSortingChange,
   sorting,
   isFetching = false,
@@ -47,8 +47,11 @@ export function DataTable<TData, TValue>({
   selectedRowId = null,
   onRowClick,
 }: DataTableProps<TData, TValue>) {
+  const actualData = (propData as any)?.data || propData;
+  const actualPagination = propPagination || (propData as any)?.pagination;
+
   const table = useReactTable({
-    data: tableData.data, // Usar tableData.data aqui
+    data: actualData, // Passar o array de dados extraído
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(), // Adicionado
@@ -57,8 +60,6 @@ export function DataTable<TData, TValue>({
       sorting: sorting, // Adicionado
     },
   });
-
-  console.log("MedicosDataTable - table.getRowModel().rows:", table.getRowModel().rows);
 
   const t = useTranslations('DataTable');
 
@@ -91,7 +92,6 @@ export function DataTable<TData, TValue>({
                     key={row.id}
                     data-state={row.getIsSelected() && 'selected'}
                     onClick={() => {
-                      console.log("Row original:", row.original);
                       onRowClick && row.original && (row.original as any).id && onRowClick((row.original as any).id);
                     }}
                     className={cn(

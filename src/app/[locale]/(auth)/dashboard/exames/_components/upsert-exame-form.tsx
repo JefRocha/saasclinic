@@ -129,7 +129,7 @@ const UpsertExameForm = ({
       <DialogContent
         hideCloseButton
         onInteractOutside={(e) => e.preventDefault()}
-        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto"
+        className="flex h-full max-h-[90vh] w-full max-w-2xl flex-col"
       >
         <DialogHeader>
           <DialogTitle>
@@ -142,151 +142,156 @@ const UpsertExameForm = ({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="w-full space-y-4"
+            className="flex h-full w-full flex-1 flex-col overflow-hidden"
           >
-            <FormField
-              control={form.control}
-              name="descricao"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Descrição</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Descrição do Exame"
-                      {...field}
-                      value={field.value || ""}
-                      onChange={(e) => field.onChange(e.target.value.toUpperCase())}
-                      disabled={!canEditExame}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="flex-1 space-y-4 overflow-y-auto p-4">
+              <FormField
+                control={form.control}
+                name="descricao"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Descrição</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Descrição do Exame"
+                        {...field}
+                        value={field.value || ""}
+                        onChange={(e) =>
+                          field.onChange(e.target.value.toUpperCase())
+                        }
+                        disabled={!canEditExame}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full">
-              <FormField
-                control={form.control}
-                name="validade"
-                render={({ field }) => (
-                  <FormItem className="w-full">
-                    <FormLabel>Validade Adm.</FormLabel>
-                    <FormControl>
-                      <NumericFormat
-                        value={field.value}
-                        onValueChange={(values) => {
-                          field.onChange(values.floatValue);
-                        }}
-                        decimalScale={0}
-                        allowNegative={false}
-                        customInput={Input}
-                        placeholder="Validade em meses"
-                        disabled={!canEditExame}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="validade1"
-                render={({ field }) => (
-                  <FormItem className="w-full">
-                    <FormLabel>Validade Per.</FormLabel>
-                    <FormControl>
-                      <NumericFormat
-                        value={field.value}
-                        onValueChange={(values) => {
-                          field.onChange(values.floatValue);
-                        }}
-                        decimalScale={0}
-                        allowNegative={false}
-                        customInput={Input}
-                        placeholder="Validade Periódico em meses"
-                        disabled={!canEditExame}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="valor"
-                render={({ field }) => (
-                  <FormItem className="w-full">
-                    <FormLabel>Valor</FormLabel>
-                    <FormControl>
-                      <NumericFormat
-                        value={field.value}
-                        onValueChange={(values) => {
-                          field.onChange(values.floatValue);
-                        }}
-                        decimalScale={2}
-                        fixedDecimalScale
-                        decimalSeparator=","
-                        allowNegative={false}
-                        allowLeadingZeros={false}
-                        thousandSeparator="."
-                        customInput={Input}
-                        prefix="R$"
-                        disabled={!canEditExame}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="pedido"
-                render={({ field }) => (
-                  <FormItem className="w-full">
-                    <FormLabel>Faturar?</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      disabled={!canEditExame}
-                    >
+              <div className="grid grid-cols-1 gap-4 w-full md:grid-cols-4">
+                <FormField
+                  control={form.control}
+                  name="validade"
+                  render={({ field }) => (
+                    <FormItem className="w-full">
+                      <FormLabel>Validade Adm.</FormLabel>
                       <FormControl>
-                        <SelectTrigger className="border border-input">
-                          <SelectValue placeholder="Selecione se é pedido" />
-                        </SelectTrigger>
+                        <NumericFormat
+                          value={field.value}
+                          onValueChange={(values) => {
+                            field.onChange(values.floatValue);
+                          }}
+                          decimalScale={0}
+                          allowNegative={false}
+                          customInput={Input}
+                          placeholder="Validade em meses"
+                          disabled={!canEditExame}
+                        />
                       </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Sim">Sim</SelectItem>
-                        <SelectItem value="Não">Não</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="validade1"
+                  render={({ field }) => (
+                    <FormItem className="w-full">
+                      <FormLabel>Validade Per.</FormLabel>
+                      <FormControl>
+                        <NumericFormat
+                          value={field.value}
+                          onValueChange={(values) => {
+                            field.onChange(values.floatValue);
+                          }}
+                          decimalScale={0}
+                          allowNegative={false}
+                          customInput={Input}
+                          placeholder="Validade Periódico em meses"
+                          disabled={!canEditExame}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="valor"
+                  render={({ field }) => (
+                    <FormItem className="w-full">
+                      <FormLabel>Valor</FormLabel>
+                      <FormControl>
+                        <NumericFormat
+                          value={field.value}
+                          onValueChange={(values) => {
+                            field.onChange(values.floatValue);
+                          }}
+                          decimalScale={2}
+                          fixedDecimalScale
+                          decimalSeparator=","
+                          allowNegative={false}
+                          allowLeadingZeros={false}
+                          thousandSeparator="."
+                          customInput={Input}
+                          prefix="R$"
+                          disabled={!canEditExame}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="pedido"
+                  render={({ field }) => (
+                    <FormItem className="w-full">
+                      <FormLabel>Faturar?</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        disabled={!canEditExame}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="border border-input">
+                            <SelectValue placeholder="Selecione se é pedido" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Sim">Sim</SelectItem>
+                          <SelectItem value="Não">Não</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="codigo_anterior"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Código Anterior</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Código Sistema Anterior"
+                        {...field}
+                        value={field.value || ""}
+                        onChange={(e) =>
+                          field.onChange(e.target.value.toUpperCase())
+                        }
+                        disabled={!canEditExame}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="codigo_anterior"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Código Anterior</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Código Sistema Anterior"
-                      {...field}
-                      value={field.value || ""}
-                      onChange={(e) => field.onChange(e.target.value.toUpperCase())}
-                      disabled={!canEditExame}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-
-            <DialogFooter>
+            <DialogFooter className="border-t pt-4">
               <Button
                 type="button"
                 variant="destructive"
@@ -295,7 +300,10 @@ const UpsertExameForm = ({
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={status === "executing" || !canEditExame}>
+              <Button
+                type="submit"
+                disabled={status === "executing" || !canEditExame}
+              >
                 {status === "executing" ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : initialData ? (

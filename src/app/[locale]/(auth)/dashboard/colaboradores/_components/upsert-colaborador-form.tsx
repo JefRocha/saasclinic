@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { NumericFormat, PatternFormat } from "react-number-format";
 import { Search, Loader2 } from "lucide-react";
 import { useAction } from "@/hooks/use-action";
-import { useFetchWithPopup } from "@/lib/fetchWithPopup"; // Assuming this is still needed for other fetches
+import { useFetchWithPopup } from "@/lib/fetchWithPopup";
 
 import { upsertColaborador } from "@/actions/upsert-colaborador";
 import { upsertColaboradorSchema } from "@/actions/upsert-colaborador/schema";
@@ -56,7 +56,7 @@ import { CalendarIcon } from "@radix-ui/react-icons";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn as cn_utils } from "@/libs/utils"; // Renomeado para evitar conflito com cn de tailwind-merge
+import { cn as cn_utils } from "@/libs/utils";
 
 // Interfaces e tipos
 interface Colaborador {
@@ -78,15 +78,7 @@ interface Colaborador {
   ctps?: string;
   data_admissao?: Date;
   data_demissao?: Date;
-  situacao?: string;
-  obs1?: string;
   data_nascimento?: Date;
-  setor?: string;
-  cargahoraria?: string;
-  prontuario?: string;
-  observacao?: string;
-  pcd?: string;
-  cod_anterior?: string;
   phoneNumber?: string;
   sex?: "male" | "female";
   createdAt?: Date;
@@ -100,10 +92,10 @@ interface UpsertColaboradorFormProps {
   onClose: () => void;
 }
 
-// Component personalizado para inputs numéricos (se necessário, adapte)
+// Component personalizado para inputs numéricos
 const CustomNumericInput = forwardRef<HTMLInputElement, any>(
-  ({ className, ...props }, ref) => {
-    return <Input className={className} ref={ref} {...props} />;
+  ({ className, allowLeadingZeros, format, mask, onValueChange, customInput, ...rest }, ref) => {
+    return <Input className={className} ref={ref} {...rest} />;
   },
 );
 
@@ -129,9 +121,7 @@ const UpsertColaboradorForm = ({
   const { orgId } = useAuth();
   const { user } = useUser();
   const role = user?.publicMetadata?.role as string;
-  const ability = buildAbility(role, orgId ?? undefined);
-  // Adapte as permissões conforme necessário para colaborador
-  const canEditSituacao = ability.can(Action.Update, "Colaborador", "situacao"); 
+  const ability = buildAbility(role, orgId ?? undefined); 
 
   const form = useForm<z.infer<typeof upsertColaboradorSchema>>({
     resolver: zodResolver(upsertColaboradorSchema),
@@ -163,15 +153,7 @@ const UpsertColaboradorForm = ({
           ctps: "",
           data_admissao: undefined,
           data_demissao: undefined,
-          situacao: "",
-          obs1: "",
           data_nascimento: undefined,
-          setor: "",
-          cargahoraria: "",
-          prontuario: "",
-          observacao: "",
-          pcd: "",
-          cod_anterior: "",
         },
   });
 
@@ -222,7 +204,7 @@ const UpsertColaboradorForm = ({
       <DialogContent
         hideCloseButton
         onInteractOutside={(e) => e.preventDefault()}
-        className="max-h-[90vh] w-full max-w-5xl overflow-y-auto"
+        className="max-h-[90vh] w-full max-w-5xl min-h-[70vh] flex flex-col"
       >
         <DialogHeader>
           <DialogTitle>
@@ -235,493 +217,490 @@ const UpsertColaboradorForm = ({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="w-full space-y-4"
+            className="flex h-full w-full flex-1 flex-col overflow-hidden"
           >
-            <Tabs defaultValue="geral" className="w-full">
+            <Tabs
+              defaultValue="geral"
+              className="flex w-full flex-1 flex-col"
+            >
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="geral">Geral</TabsTrigger>
                 <TabsTrigger value="endereco">Endereço</TabsTrigger>
                 <TabsTrigger value="outros">Outros Dados</TabsTrigger>
               </TabsList>
-              <TabsContent value="geral" className="space-y-4 py-4">
-                <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-3">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem className="md:col-span-2">
-                        <FormLabel>Nome Completo</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Nome do Colaborador"
-                            {...field}
-                            value={field.value || ""}
-                            onChange={(e) =>
-                              field.onChange(e.target.value.toUpperCase())
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="sex"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Sexo</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
+              <div className="flex-1 overflow-y-auto p-4">
+                <TabsContent value="geral" className="mt-0 space-y-4">
+                  <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-3">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                          <FormLabel>Nome Completo</FormLabel>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecione o sexo" />
-                            </SelectTrigger>
+                            <Input
+                              placeholder="Nome do Colaborador"
+                              {...field}
+                              value={field.value || ""}
+                              onChange={(e) =>
+                                field.onChange(e.target.value.toUpperCase())
+                              }
+                            />
                           </FormControl>
-                          <SelectContent>
-                            <SelectItem value="male">Masculino</SelectItem>
-                            <SelectItem value="female">Feminino</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-3">
-                  <FormField
-                    control={form.control}
-                    name="cpf"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>CPF</FormLabel>
-                        <FormControl>
-                          <PatternFormat
-                            format="###.###.###-##"
-                            mask="_"
-                            value={field.value || ""}
-                            onValueChange={(values) => {
-                              field.onChange(values.value);
-                            }}
-                            customInput={CustomNumericInput}
-                            placeholder="000.000.000-00"
-                            allowLeadingZeros={true}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="rg"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>RG</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="RG"
-                            {...field}
-                            value={field.value || ""}
-                            onChange={(e) =>
-                              field.onChange(e.target.value.toUpperCase())
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="ctps"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>CTPS</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="CTPS"
-                            {...field}
-                            value={field.value || ""}
-                            onChange={(e) =>
-                              field.onChange(e.target.value.toUpperCase())
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-3">
-                  <FormField
-                    control={form.control}
-                    name="data_nascimento"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Data de Nascimento</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="sex"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Sexo</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
                             <FormControl>
-                              <Button
-                                variant={"outline"}
-                                className={cn_utils(
-                                  "w-[240px] pl-3 text-left font-normal",
-                                  !field.value && "text-muted-foreground"
-                                )}
-                              >
-                                {field.value ? (
-                                  format(field.value, "PPP")
-                                ) : (
-                                  <span>Selecione uma data</span>
-                                )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
+                              <SelectTrigger className="w-full border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1">
+                                <SelectValue placeholder="Selecione o sexo" />
+                              </SelectTrigger>
                             </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value || undefined}
-                              onSelect={field.onChange}
-                              disabled={(date) =>
-                                date > new Date() || date < new Date("1900-01-01")
-                              }
-                              initialFocus
+                            <SelectContent>
+                              <SelectItem value="male">Masculino</SelectItem>
+                              <SelectItem value="female">Feminino</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-3">
+                    <FormField
+                      control={form.control}
+                      name="cpf"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>CPF</FormLabel>
+                          <FormControl>
+                            <PatternFormat
+                              format="###.###.###-##"
+                              mask="_"
+                              value={field.value || ""}
+                              onValueChange={(values) => {
+                                field.onChange(values.value);
+                              }}
+                              customInput={CustomNumericInput}
+                              placeholder="000.000.000-00"
+                              allowLeadingZeros={true}
                             />
-                          </PopoverContent>
-                        </Popover>
-                        <FormDescription>
-                          Sua data de nascimento.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="data_admissao"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Data de Admissão</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant={"outline"}
-                                className={cn_utils(
-                                  "w-[240px] pl-3 text-left font-normal",
-                                  !field.value && "text-muted-foreground"
-                                )}
-                              >
-                                {field.value ? (
-                                  format(field.value, "PPP")
-                                ) : (
-                                  <span>Selecione uma data</span>
-                                )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value || undefined}
-                              onSelect={field.onChange}
-                              disabled={(date) =>
-                                date > new Date() || date < new Date("1900-01-01")
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="rg"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>RG</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="RG"
+                              {...field}
+                              value={field.value || ""}
+                              onChange={(e) =>
+                                field.onChange(e.target.value.toUpperCase())
                               }
-                              initialFocus
                             />
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="data_demissao"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Data de Demissão</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant={"outline"}
-                                className={cn_utils(
-                                  "w-[240px] pl-3 text-left font-normal",
-                                  !field.value && "text-muted-foreground"
-                                )}
-                              >
-                                {field.value ? (
-                                  format(field.value, "PPP")
-                                ) : (
-                                  <span>Selecione uma data</span>
-                                )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value || undefined}
-                              onSelect={field.onChange}
-                              disabled={(date) =>
-                                date > new Date() || date < new Date("1900-01-01")
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="ctps"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>CTPS</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="CTPS"
+                              {...field}
+                              value={field.value || ""}
+                              onChange={(e) =>
+                                field.onChange(e.target.value.toUpperCase())
                               }
-                              initialFocus
                             />
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <FormField
-                  control={form.control}
-                  name="situacao"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Situação</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Situação"
-                          {...field}
-                          value={field.value || ""}
-                          onChange={(e) =>
-                            field.onChange(e.target.value.toUpperCase())}
-                          disabled={!canEditSituacao}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </TabsContent>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-3">
+                    <FormField
+                      control={form.control}
+                      name="data_nascimento"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Data de Nascimento</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant={"outline"}
+                                  className={cn_utils(
+                                    "w-full pl-3 text-left font-normal",
+                                    !field.value && "text-muted-foreground",
+                                  )}
+                                >
+                                  {field.value ? (
+                                    format(field.value, "PPP")
+                                  ) : (
+                                    <span>Selecione uma data</span>
+                                  )}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              className="w-auto p-0"
+                              align="start"
+                            >
+                              <Calendar
+                                mode="single"
+                                selected={field.value || undefined}
+                                onSelect={field.onChange}
+                                disabled={(date) =>
+                                  date > new Date() ||
+                                  date < new Date("1900-01-01")
+                                }
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <FormDescription>
+                            Sua data de nascimento.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="data_admissao"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Data de Admissão</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant={"outline"}
+                                  className={cn_utils(
+                                    "w-full pl-3 text-left font-normal",
+                                    !field.value && "text-muted-foreground",
+                                  )}
+                                >
+                                  {field.value ? (
+                                    format(field.value, "PPP")
+                                  ) : (
+                                    <span>Selecione uma data</span>
+                                  )}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              className="w-auto p-0"
+                              align="start"
+                            >
+                              <Calendar
+                                mode="single"
+                                selected={field.value || undefined}
+                                onSelect={field.onChange}
+                                disabled={(date) =>
+                                  date > new Date() ||
+                                  date < new Date("1900-01-01")
+                                }
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="data_demissao"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Data de Demissão</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant={"outline"}
+                                  className={cn_utils(
+                                    "w-full pl-3 text-left font-normal",
+                                    !field.value && "text-muted-foreground",
+                                  )}
+                                >
+                                  {field.value ? (
+                                    format(field.value, "PPP")
+                                  ) : (
+                                    <span>Selecione uma data</span>
+                                  )}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              className="w-auto p-0"
+                              align="start"
+                            >
+                              <Calendar
+                                mode="single"
+                                selected={field.value || undefined}
+                                onSelect={field.onChange}
+                                disabled={(date) =>
+                                  date > new Date() ||
+                                  date < new Date("1900-01-01")
+                                }
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </TabsContent>
 
-              <TabsContent value="endereco" className="space-y-4 py-4">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
-                  <FormField
-                    control={form.control}
-                    name="cep"
-                    render={({ field }) => (
-                      <FormItem className="col-span-12 md:col-span-2">
-                        <FormLabel>CEP</FormLabel>
-                        <FormControl>
-                          <PatternFormat
-                            format="#####-###"
-                            mask="_"
-                            value={field.value}
-                            onValueChange={(values) => {
-                              field.onChange(values.formattedValue);
-                            }}
-                            customInput={Input}
-                            placeholder="00000-000"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="endereco"
-                    render={({ field }) => (
-                      <FormItem className="col-span-12 md:col-span-8">
-                        <FormLabel>Endereço</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Endereço"
-                            {...field}
-                            value={field.value || ""}
-                            onChange={(e) =>
-                              field.onChange(e.target.value.toUpperCase())
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="numero"
-                    render={({ field }) => (
-                      <FormItem className="col-span-12 md:col-span-2">
-                        <FormLabel>Número</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Número"
-                            {...field}
-                            value={field.value || ""}
-                            onChange={(e) =>
-                              field.onChange(e.target.value.toUpperCase())
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
-                  <FormField
-                    control={form.control}
-                    name="complemento"
-                    render={({ field }) => (
-                      <FormItem className="col-span-12 md:col-span-3">
-                        <FormLabel>Complemento</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Complemento"
-                            {...field}
-                            value={field.value || ""}
-                            onChange={(e) =>
-                              field.onChange(e.target.value.toUpperCase())
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="bairro"
-                    render={({ field }) => (
-                      <FormItem className="col-span-12 md:col-span-3">
-                        <FormLabel>Bairro</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Bairro"
-                            {...field}
-                            value={field.value || ""}
-                            onChange={(e) =>
-                              field.onChange(e.target.value.toUpperCase())
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="cidade"
-                    render={({ field }) => (
-                      <FormItem className="col-span-12 md:col-span-4">
-                        <FormLabel>Cidade</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Cidade"
-                            {...field}
-                            value={field.value || ""}
-                            onChange={(e) =>
-                              field.onChange(e.target.value.toUpperCase())
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="uf"
-                    render={({ field }) => (
-                      <FormItem className="col-span-12 md:col-span-2">
-                        <FormLabel>UF</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="UF"
-                            {...field}
-                            value={field.value || ""}
-                            onChange={(e) =>
-                              field.onChange(e.target.value.toUpperCase())
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </TabsContent>
+                <TabsContent value="endereco" className="mt-0 space-y-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
+                    <FormField
+                      control={form.control}
+                      name="cep"
+                      render={({ field }) => (
+                        <FormItem className="col-span-12 md:col-span-2">
+                          <FormLabel>CEP</FormLabel>
+                          <FormControl>
+                            <PatternFormat
+                              format="#####-###"
+                              mask="_"
+                              value={field.value}
+                              onValueChange={(values) => {
+                                field.onChange(values.formattedValue);
+                              }}
+                              customInput={Input}
+                              placeholder="00000-000"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="endereco"
+                      render={({ field }) => (
+                        <FormItem className="col-span-12 md:col-span-8">
+                          <FormLabel>Endereço</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Endereço"
+                              {...field}
+                              value={field.value || ""}
+                              onChange={(e) =>
+                                field.onChange(e.target.value.toUpperCase())
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="numero"
+                      render={({ field }) => (
+                        <FormItem className="col-span-12 md:col-span-2">
+                          <FormLabel>Número</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Número"
+                              {...field}
+                              value={field.value || ""}
+                              onChange={(e) =>
+                                field.onChange(e.target.value.toUpperCase())
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
+                    <FormField
+                      control={form.control}
+                      name="complemento"
+                      render={({ field }) => (
+                        <FormItem className="col-span-12 md:col-span-3">
+                          <FormLabel>Complemento</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Complemento"
+                              {...field}
+                              value={field.value || ""}
+                              onChange={(e) =>
+                                field.onChange(e.target.value.toUpperCase())
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="bairro"
+                      render={({ field }) => (
+                        <FormItem className="col-span-12 md:col-span-3">
+                          <FormLabel>Bairro</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Bairro"
+                              {...field}
+                              value={field.value || ""}
+                              onChange={(e) =>
+                                field.onChange(e.target.value.toUpperCase())
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="cidade"
+                      render={({ field }) => (
+                        <FormItem className="col-span-12 md:col-span-4">
+                          <FormLabel>Cidade</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Cidade"
+                              {...field}
+                              value={field.value || ""}
+                              onChange={(e) =>
+                                field.onChange(e.target.value.toUpperCase())
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="uf"
+                      render={({ field }) => (
+                        <FormItem className="col-span-12 md:col-span-2">
+                          <FormLabel>UF</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="UF"
+                              {...field}
+                              value={field.value || ""}
+                              onChange={(e) =>
+                                field.onChange(e.target.value.toUpperCase())
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </TabsContent>
 
-              <TabsContent value="outros" className="space-y-4 py-4">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <FormField
-                    control={form.control}
-                    name="phoneNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Telefone Principal</FormLabel>
-                        <FormControl>
-                          <PatternFormat
-                            format="(##) #####-####"
-                            mask="_"
-                            value={field.value}
-                            onValueChange={(values) => {
-                              field.onChange(values.formattedValue);
-                            }}
-                            customInput={Input}
-                            placeholder="(00) 00000-0000"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="telefone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Telefone Fixo</FormLabel>
-                        <FormControl>
-                          <PatternFormat
-                            format="(##) ####-####"
-                            mask="_"
-                            value={field.value}
-                            onValueChange={(values) => {
-                              field.onChange(values.formattedValue);
-                            }}
-                            customInput={Input}
-                            placeholder="(00) 0000-0000"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="celular"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Celular Adicional</FormLabel>
-                        <FormControl>
-                          <PatternFormat
-                            format="(##) #####-####"
-                            mask="_"
-                            value={field.value}
-                            onValueChange={(values) => {
-                              field.onChange(values.formattedValue);
-                            }}
-                            customInput={Input}
-                            placeholder="(00) 00000-0000"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <TabsContent value="outros" className="mt-0 space-y-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <FormField
+                      control={form.control}
+                      name="phoneNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Telefone Principal</FormLabel>
+                          <FormControl>
+                            <PatternFormat
+                              format="(##) #####-####"
+                              mask="_"
+                              value={field.value}
+                              onValueChange={(values) => {
+                                field.onChange(values.formattedValue);
+                              }}
+                              customInput={Input}
+                              placeholder="(00) 00000-0000"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="telefone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Telefone Fixo</FormLabel>
+                          <FormControl>
+                            <PatternFormat
+                              format="(##) ####-####"
+                              mask="_"
+                              value={field.value}
+                              onValueChange={(values) => {
+                                field.onChange(values.formattedValue);
+                              }}
+                              customInput={Input}
+                              placeholder="(00) 0000-0000"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="celular"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Celular Adicional</FormLabel>
+                          <FormControl>
+                            <PatternFormat
+                              format="(##) #####-####"
+                              mask="_"
+                              value={field.value}
+                              onValueChange={(values) => {
+                                field.onChange(values.formattedValue);
+                              }}
+                              customInput={Input}
+                              placeholder="(00) 00000-0000"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                   <FormField
                     control={form.control}
                     name="email"
@@ -735,125 +714,10 @@ const UpsertColaboradorForm = ({
                       </FormItem>
                     )}
                   />
-                </div>
-                <FormField
-                  control={form.control}
-                  name="setor"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Setor</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Setor"
-                          {...field}
-                          value={field.value || ""}
-                          onChange={(e) =>
-                            field.onChange(e.target.value.toUpperCase())}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="cargahoraria"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Carga Horária</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Carga Horária"
-                          {...field}
-                          value={field.value || ""}
-                          onChange={(e) =>
-                            field.onChange(e.target.value.toUpperCase())}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="prontuario"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Prontuário</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Prontuário"
-                          {...field}
-                          value={field.value || ""}
-                          onChange={(e) =>
-                            field.onChange(e.target.value.toUpperCase())}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="observacao"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Observação</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Observação"
-                          {...field}
-                          value={field.value || ""}
-                          onChange={(e) =>
-                            field.onChange(e.target.value.toUpperCase())}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="pcd"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>PCD</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="PCD"
-                          {...field}
-                          value={field.value || ""}
-                          onChange={(e) =>
-                            field.onChange(e.target.value.toUpperCase())}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="cod_anterior"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Código Anterior</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Código Anterior"
-                          {...field}
-                          value={field.value || ""}
-                          onChange={(e) =>
-                            field.onChange(e.target.value.toUpperCase())}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </TabsContent>
+                </TabsContent>
+              </div>
             </Tabs>
-
-            <DialogFooter>
+            <DialogFooter className="border-t pt-4">
               <Button
                 type="button"
                 variant="destructive"

@@ -6,7 +6,8 @@ import { revalidatePath } from "next/cache";
 import { deleteClientSchema } from "./schema";
 
 import { db } from "@/db";
-import { clientsTable, Client } from "@/models/Schema";
+import { clientsTable } from "@/models/Schema";
+type Client = typeof clientsTable.$inferSelect;
 
 import { protectedAction } from "@/libs/safe-action";
 

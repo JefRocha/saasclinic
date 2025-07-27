@@ -222,7 +222,7 @@ export const clientsTable = pgTable("clients", {
   email4: text("email4"),
   email5: text("email5"),
   contribuinte: text("contribuinte"),
-  vlrMens: numeric("vlr_mens", { precision: 15, scale: 2 }),
+  vlrMens: numeric("vlr_mens", { precision: 15, scale: 2, mode: 'number' }),
   observacao: text("observacao"),
   usaFor: integer("usa_for"),
   crt: text("crt"),

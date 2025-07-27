@@ -7,7 +7,7 @@ import { protectedAction, ActionError } from "@/libs/safe-action";
 import { searchExamesSchema } from "@/actions/upsert-exame/schema"; // Reutiliza o schema de busca
 import { buildAbility, Action as CaslAction } from "@/lib/ability";
 import { eq, and, ilike, sql } from "drizzle-orm";
-import { z } from "zod";
+
 
 export const getExames = protectedAction
   .schema(searchExamesSchema)
@@ -31,6 +31,11 @@ export const getExames = protectedAction
       search ? ilike(examesTable.descricao, `%${search}%`) : undefined
     );
 
+    const validOrderByColumns = ['id', 'descricao', 'valor', 'createdAt', 'updatedAt']; // Adicione outras colunas válidas aqui
+    const finalOrderBy = (orderBy && validOrderByColumns.includes(orderBy)) ? orderBy : 'id';
+
+    const orderByColumn = examesTable[finalOrderBy as keyof typeof examesTable];
+
     try {
       const [exames, [{ count } = { count: 0 }]] = await Promise.all([
         db
@@ -39,8 +44,8 @@ export const getExames = protectedAction
           .where(where)
           .orderBy(
             order === "desc"
-              ? sql`${examesTable[orderBy]} DESC`
-              : sql`${examesTable[orderBy]} ASC`
+              ? sql`${orderByColumn} DESC`
+              : sql`${orderByColumn} ASC`
           )
           .limit(limit)
           .offset(offset),

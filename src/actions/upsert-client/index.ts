@@ -1,4 +1,4 @@
-"use server";
+'use server';
 
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/db";
@@ -10,12 +10,18 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { clerkClient } from "@clerk/clerk-sdk-node";
 
+type ClientDataForDrizzle = {
+  [K in keyof typeof clientsTable.$inferInsert]: typeof clientsTable.$inferInsert[K];
+} & {
+  vlrMens?: number | null; // Sobrescreve o tipo para vlrMens
+};
+
 async function handler({
   parsedInput,
-  ctx: { userId, orgId },
+  ctx: { orgId },
 }: {
   parsedInput: z.infer<typeof upsertClientSchema>;
-  ctx: { userId: string; orgId: string };
+  ctx: { orgId: string };
 }) {
   const user = await currentUser();
   const role = user?.publicMetadata?.role as string;
@@ -61,22 +67,15 @@ async function handler({
   }
 
   // 4. Prepara os dados do cliente
-  const clientData = { ...parsedInput, organizationId: finalOrgId };
+  const clientData: ClientDataForDrizzle = {
+    ...parsedInput,
+    organizationId: finalOrgId,
+    id: parsedInput.id ? Number(parsedInput.id) : undefined,
+    createdAt: undefined, // Explicitamente definido como undefined para remover do objeto
+    updatedAt: undefined, // Explicitamente definido como undefined para remover do objeto
+  };
 
-  // Converte booleanos para 0/1 antes de salvar no banco
-  const booleanFields = [
-    "travado",
-    "ativo",
-    "inadimplente",
-    "especial",
-    "bloqueado",
-    "usaFor",
-  ];
-  for (const field of booleanFields) {
-    if (typeof clientData[field] === "boolean") {
-      clientData[field] = clientData[field] ? 1 : 0;
-    }
-  }
+  
 
   try {
     if (isEditing) {

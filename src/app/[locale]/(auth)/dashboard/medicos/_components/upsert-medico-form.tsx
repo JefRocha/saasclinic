@@ -193,7 +193,7 @@ const UpsertMedicoForm = ({
       <DialogContent
         hideCloseButton
         onInteractOutside={(e) => e.preventDefault()}
-        className="max-h-[90vh] w-full max-w-5xl overflow-y-auto"
+        className="flex h-full max-h-[90vh] w-full max-w-5xl flex-col"
       >
         <DialogHeader>
           <DialogTitle>
@@ -206,103 +206,336 @@ const UpsertMedicoForm = ({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="w-full space-y-4"
+            className="flex h-full w-full flex-1 flex-col overflow-hidden"
           >
-            <FormField
-              control={form.control}
-              name="nome"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nome</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Nome do Médico"
-                      {...field}
-                      value={field.value || ""}
-                      onChange={(e) =>
-                        field.onChange(e.target.value.toUpperCase())
-                      }
-                      disabled={!canEditMedico}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {role === "super_admin" && (
+            <div className="flex-1 space-y-4 overflow-y-auto p-4">
               <FormField
                 control={form.control}
-                name="organizationId"
+                name="nome"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Organização</FormLabel>
-                    <Select
-                      onValueChange={(value) => {
-                        console.log("Select onValueChange - value:", value);
-                        field.onChange(value);
-                      }}
-                      value={field.value || ""}
-                      disabled={isLoadingOrganizations}
-                    >
+                    <FormLabel>Nome</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Nome do Médico"
+                        {...field}
+                        value={field.value || ""}
+                        onChange={(e) =>
+                          field.onChange(e.target.value.toUpperCase())
+                        }
+                        disabled={!canEditMedico}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {role === "super_admin" && (
+                <FormField
+                  control={form.control}
+                  name="organizationId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Organização</FormLabel>
+                      <Select
+                        onValueChange={(value) => {
+                          console.log("Select onValueChange - value:", value);
+                          field.onChange(value);
+                        }}
+                        value={field.value || ""}
+                        disabled={isLoadingOrganizations}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione uma organização" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {organizations?.data?.data?.map((org: any) => {
+                            return (
+                              <SelectItem key={org.id} value={org.id}>
+                                {org.nome}
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="cpf"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>CPF</FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione uma organização" />
-                        </SelectTrigger>
+                        <PatternFormat
+                          format="###.###.###-##"
+                          mask="_"
+                          value={field.value || ""}
+                          onValueChange={(values) => {
+                            field.onChange(values.value);
+                          }}
+                          customInput={Input}
+                          placeholder="000.000.000-00"
+                          disabled={!canEditMedico}
+                        />
                       </FormControl>
-                      <SelectContent>
-                        {organizations?.data?.data?.map((org: any) => {
-                          return (
-                            <SelectItem key={org.id} value={org.id}>
-                              {org.nome}
-                            </SelectItem>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="crm"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>CRM</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="CRM"
+                          {...field}
+                          value={field.value || ""}
+                          onChange={(e) =>
+                            field.onChange(e.target.value.toUpperCase())
+                          }
+                          disabled={!canEditMedico}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-6">
+                <FormField
+                  control={form.control}
+                  name="cep"
+                  render={({ field }) => (
+                    <FormItem className="col-span-1">
+                      <FormLabel>CEP</FormLabel>
+                      <FormControl>
+                        <PatternFormat
+                          format="#####-###"
+                          mask="_"
+                          value={field.value}
+                          onValueChange={(values) => {
+                            field.onChange(values.formattedValue);
+                          }}
+                          customInput={Input}
+                          placeholder="00000-000"
+                          disabled={!canEditMedico}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="endereco"
+                  render={({ field }) => (
+                    <FormItem className="col-span-5">
+                      <FormLabel>Endereço</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Endereço"
+                          {...field}
+                          value={field.value || ""}
+                          onChange={(e) =>
+                            field.onChange(e.target.value.toUpperCase())
+                          }
+                          disabled={!canEditMedico}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <FormField
+                  control={form.control}
+                  name="numero"
+                  render={({ field }) => (
+                    <FormItem className="col-span-1">
+                      <FormLabel>Número</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Número"
+                          {...field}
+                          value={field.value || ""}
+                          onChange={(e) =>
+                            field.onChange(e.target.value.toUpperCase())
+                          }
+                          disabled={!canEditMedico}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="complemento"
+                  render={({ field }) => (
+                    <FormItem className="col-span-1">
+                      <FormLabel>Complemento</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Complemento"
+                          {...field}
+                          value={field.value || ""}
+                          onChange={(e) =>
+                            field.onChange(e.target.value.toUpperCase())
+                          }
+                          disabled={!canEditMedico}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="bairro"
+                  render={({ field }) => (
+                    <FormItem className="col-span-1">
+                      <FormLabel>Bairro</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Bairro"
+                          {...field}
+                          value={field.value || ""}
+                          onChange={(e) =>
+                            field.onChange(e.target.value.toUpperCase())
+                          }
+                          disabled={!canEditMedico}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="uf"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>UF</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="UF"
+                          {...field}
+                          value={field.value || ""}
+                          onChange={(e) =>
+                            field.onChange(e.target.value.toUpperCase())
+                          }
+                          disabled={!canEditMedico}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="codiIbge"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Código IBGE</FormLabel>
+                      <FormControl>
+                        <NumericFormat
+                          value={field.value}
+                          onValueChange={(values) => {
+                            field.onChange(values.floatValue);
+                          }}
+                          decimalScale={0}
+                          allowNegative={false}
+                          customInput={Input}
+                          placeholder="Código IBGE"
+                          disabled={!canEditMedico}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="telefone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Telefone</FormLabel>
+                      <FormControl>
+                        <NumericFormat
+                          format="(##) ####-####"
+                          mask="_"
+                          value={field.value}
+                          onValueChange={(values) => {
+                            field.onChange(values.formattedValue);
+                          }}
+                          customInput={Input}
+                          placeholder="(00) 0000-0000"
+                          disabled={!canEditMedico}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="celular"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Celular</FormLabel>
+                      <FormControl>
+                        <NumericFormat
+                          format="(##) #####-####"
+                          mask="_"
+                          value={field.value}
+                          onValueChange={(values) => {
+                            field.onChange(values.formattedValue);
+                          }}
+                          customInput={Input}
+                          placeholder="(00) 00000-0000"
+                          disabled={!canEditMedico}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
               <FormField
                 control={form.control}
-                name="cpf"
+                name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>CPF</FormLabel>
-                    <FormControl>
-                      <PatternFormat
-                        format="###.###.###-##"
-                        mask="_"
-                        value={field.value || ""}
-                        onValueChange={(values) => {
-                          field.onChange(values.value);
-                        }}
-                        customInput={Input}
-                        placeholder="000.000.000-00"
-                        disabled={!canEditMedico}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="crm"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>CRM</FormLabel>
+                    <FormLabel>Email</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="CRM"
+                        placeholder="Email"
                         {...field}
                         value={field.value || ""}
                         onChange={(e) =>
-                          field.onChange(e.target.value.toUpperCase())
+                          field.onChange(e.target.value.toLowerCase())
                         }
                         disabled={!canEditMedico}
                       />
@@ -311,290 +544,59 @@ const UpsertMedicoForm = ({
                   </FormItem>
                 )}
               />
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
               <FormField
                 control={form.control}
-                name="cep"
+                name="usaAgenda"
                 render={({ field }) => (
-                  <FormItem className="col-span-1">
-                    <FormLabel>CEP</FormLabel>
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>Usa Agenda?</FormLabel>
+                      <FormDescription>
+                        Define se o médico utiliza a agenda do sistema.
+                      </FormDescription>
+                    </div>
                     <FormControl>
-                      <PatternFormat
-                        format="#####-###"
-                        mask="_"
-                        value={field.value}
-                        onValueChange={(values) => {
-                          field.onChange(values.formattedValue);
-                        }}
-                        customInput={Input}
-                        placeholder="00000-000"
-                        disabled={!canEditMedico}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="endereco"
-                render={({ field }) => (
-                  <FormItem className="col-span-5">
-                    <FormLabel>Endereço</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Endereço"
-                        {...field}
-                        value={field.value || ""}
-                        onChange={(e) =>
-                          field.onChange(e.target.value.toUpperCase())
+                      <Switch
+                        checked={field.value === 1}
+                        onCheckedChange={(checked) =>
+                          field.onChange(checked ? 1 : 0)
                         }
                         disabled={!canEditMedico}
                       />
                     </FormControl>
-                    <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="numero"
-                render={({ field }) => (
-                  <FormItem className="col-span-1">
-                    <FormLabel>Número</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Número"
-                        {...field}
-                        value={field.value || ""}
-                        onChange={(e) =>
-                          field.onChange(e.target.value.toUpperCase())
-                        }
-                        disabled={!canEditMedico}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="complemento"
-                render={({ field }) => (
-                  <FormItem className="col-span-1">
-                    <FormLabel>Complemento</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Complemento"
-                        {...field}
-                        value={field.value || ""}
-                        onChange={(e) =>
-                          field.onChange(e.target.value.toUpperCase())
-                        }
-                        disabled={!canEditMedico}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="bairro"
-                render={({ field }) => (
-                  <FormItem className="col-span-1">
-                    <FormLabel>Bairro</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Bairro"
-                        {...field}
-                        value={field.value || ""}
-                        onChange={(e) =>
-                          field.onChange(e.target.value.toUpperCase())
-                        }
-                        disabled={!canEditMedico}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="uf"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>UF</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="UF"
-                        {...field}
-                        value={field.value || ""}
-                        onChange={(e) =>
-                          field.onChange(e.target.value.toUpperCase())
-                        }
-                        disabled={!canEditMedico}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="codiIbge"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Código IBGE</FormLabel>
-                    <FormControl>
-                      <NumericFormat
-                        value={field.value}
-                        onValueChange={(values) => {
-                          field.onChange(values.floatValue);
-                        }}
-                        decimalScale={0}
-                        allowNegative={false}
-                        customInput={Input}
-                        placeholder="Código IBGE"
-                        disabled={!canEditMedico}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="telefone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Telefone</FormLabel>
-                    <FormControl>
-                      <NumericFormat
-                        format="(##) ####-####"
-                        mask="_"
-                        value={field.value}
-                        onValueChange={(values) => {
-                          field.onChange(values.formattedValue);
-                        }}
-                        customInput={Input}
-                        placeholder="(00) 0000-0000"
-                        disabled={!canEditMedico}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="celular"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Celular</FormLabel>
-                    <FormControl>
-                      <NumericFormat
-                        format="(##) #####-####"
-                        mask="_"
-                        value={field.value}
-                        onValueChange={(values) => {
-                          field.onChange(values.formattedValue);
-                        }}
-                        customInput={Input}
-                        placeholder="(00) 00000-0000"
-                        disabled={!canEditMedico}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Email"
-                      {...field}
-                      value={field.value || ""}
-                      onChange={(e) =>
-                        field.onChange(e.target.value.toLowerCase())
-                      }
-                      disabled={!canEditMedico}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+              {form.watch("usaAgenda") === 1 && (
+                <FormField
+                  control={form.control}
+                  name="codAgenda"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Código Agenda</FormLabel>
+                      <FormControl>
+                        <NumericFormat
+                          value={field.value}
+                          onValueChange={(values) => {
+                            field.onChange(values.floatValue);
+                          }}
+                          decimalScale={0}
+                          allowNegative={false}
+                          customInput={Input}
+                          placeholder="Código da Agenda"
+                          disabled={!canEditMedico}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               )}
-            />
+            </div>
 
-            <FormField
-              control={form.control}
-              name="usaAgenda"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                  <div className="space-y-0.5">
-                    <FormLabel>Usa Agenda?</FormLabel>
-                    <FormDescription>
-                      Define se o médico utiliza a agenda do sistema.
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value === 1}
-                      onCheckedChange={(checked) =>
-                        field.onChange(checked ? 1 : 0)
-                      }
-                      disabled={!canEditMedico}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            {form.watch("usaAgenda") === 1 && (
-              <FormField
-                control={form.control}
-                name="codAgenda"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Código Agenda</FormLabel>
-                    <FormControl>
-                      <NumericFormat
-                        value={field.value}
-                        onValueChange={(values) => {
-                          field.onChange(values.floatValue);
-                        }}
-                        decimalScale={0}
-                        allowNegative={false}
-                        customInput={Input}
-                        placeholder="Código da Agenda"
-                        disabled={!canEditMedico}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-
-            <DialogFooter>
+            <DialogFooter className="border-t pt-4">
               <Button
                 type="button"
                 variant="destructive"

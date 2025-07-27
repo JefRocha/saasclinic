@@ -1,13 +1,13 @@
 "use server";
 
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { medicosTable } from "@/models/Schema";
 import { protectedAction, ActionError } from "@/libs/safe-action";
 import { searchMedicosSchema } from "@/actions/upsert-medico/schema"; // Reutiliza o schema de busca
 import { buildAbility, Action as CaslAction } from "@/lib/ability";
 import { eq, and, ilike, sql } from "drizzle-orm";
-import { z } from "zod";
+
 
 export const getMedicos = protectedAction
   .schema(searchMedicosSchema)
@@ -31,6 +31,11 @@ export const getMedicos = protectedAction
       search ? ilike(medicosTable.nome, `%${search}%`) : undefined
     );
 
+    const validOrderByColumns = ['id', 'nome', 'crm', 'createdAt', 'updatedAt']; // Adicione outras colunas válidas aqui
+    const finalOrderBy = (orderBy && validOrderByColumns.includes(orderBy)) ? orderBy : 'id';
+
+    const orderByColumn = medicosTable[finalOrderBy as keyof typeof medicosTable];
+
     try {
       const [medicos, [{ count } = { count: 0 }]] = await Promise.all([
         db
@@ -39,8 +44,8 @@ export const getMedicos = protectedAction
           .where(where)
           .orderBy(
             order === "desc"
-              ? sql`${medicosTable[orderBy]} DESC`
-              : sql`${medicosTable[orderBy]} ASC`
+              ? sql`${orderByColumn} DESC`
+              : sql`${orderByColumn} ASC`
           )
           .limit(limit)
           .offset(offset),

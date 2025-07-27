@@ -10,9 +10,11 @@ import { useAction } from "@/hooks/use-action";
 import { getCnpjInfo } from "@/actions/get-cnpj-info";
 import { useFetchWithPopup } from "@/lib/fetchWithPopup";
 
+
+
+
+
 import { upsertClient } from "@/actions/upsert-client";
-
-
 
 import { upsertClientSchema } from "@/actions/upsert-client/schema";
 import { Button } from "@/components/ui/button";
@@ -534,7 +536,7 @@ const UpsertClientForm = ({
       <DialogContent
         hideCloseButton
         onInteractOutside={(e) => e.preventDefault()}
-        className="max-h-[90vh] w-full max-w-5xl overflow-y-auto"
+        className="max-h-[90vh] w-full max-w-5xl min-h-[70vh] flex flex-col"
       >
         <DialogHeader>
           <DialogTitle>
@@ -547,134 +549,140 @@ const UpsertClientForm = ({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="w-full space-y-4"
+            className="flex h-full w-full flex-1 flex-col overflow-hidden"
           >
-            <Tabs defaultValue="geral" className="w-full">
+            <Tabs
+              defaultValue="geral"
+              className="flex w-full flex-1 flex-col"
+            >
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="geral">Geral</TabsTrigger>
                 <TabsTrigger value="endereco">Endereço</TabsTrigger>
                 <TabsTrigger value="contato">Contato</TabsTrigger>
               </TabsList>
-              <TabsContent value="geral" className="space-y-4 py-4">
-                <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-3">
-                  <FormField
-                    control={form.control}
-                    name="pessoa"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Tipo de Pessoa</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value ?? undefined}
-                        >
+              <div className="flex-1 overflow-y-auto p-4">
+                <TabsContent value="geral" className="mt-0 space-y-4">
+                  <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-3">
+                    <FormField
+                      control={form.control}
+                      name="pessoa"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Tipo de Pessoa</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value ?? undefined}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Selecione o tipo" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="J">Jurídica</SelectItem>
+                              <SelectItem value="F">Física</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="cpf"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            {form.watch("pessoa") === "J" ? "CNPJ" : "CPF"}
+                          </FormLabel>
+                          <div className="flex items-center space-x-2">
+                            <FormControl>
+                              <PatternFormat
+                                format={
+                                  form.watch("pessoa") === "J"
+                                    ? "##.###.###/####-##"
+                                    : "###.###.###-##"
+                                }
+                                mask="_"
+                                value={field.value || ""}
+                                onValueChange={(values) => {
+                                  field.onChange(values.value);
+                                }}
+                                customInput={CustomNumericInput}
+                                placeholder={
+                                  form.watch("pessoa") === "J"
+                                    ? "00.000.000/0000-00"
+                                    : "000.000.000-00"
+                                }
+                                allowLeadingZeros={true}
+                              />
+                            </FormControl>
+                            {form.watch("pessoa") === "J" && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      type="button"
+                                      size="icon"
+                                      onClick={handleCnpjSearch}
+                                      disabled={
+                                        isLoadingCnpjSearch ||
+                                        !form.getValues("cpf") ||
+                                        (form.getValues("cpf") || "").replace(
+                                          /\D/g,
+                                          "",
+                                        ).length !== 14
+                                      }
+                                    >
+                                      {isLoadingCnpjSearch ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                      ) : (
+                                        <Search className="h-4 w-4" />
+                                      )}
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Buscar CNPJ</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="ie"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Inscrição Estadual</FormLabel>
                           <FormControl>
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Selecione o tipo" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="J">Jurídica</SelectItem>
-                            <SelectItem value="F">Física</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="cpf"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          {form.watch("pessoa") === "J" ? "CNPJ" : "CPF"}
-                        </FormLabel>
-                        <div className="flex items-center space-x-2">
-                          <FormControl>
-                            <PatternFormat
-                              format={
-                                form.watch("pessoa") === "J"
-                                  ? "##.###.###/####-##"
-                                  : "###.###.###-##"
-                              }
-                              mask="_"
+                            <Input
+                              placeholder="Inscrição Estadual"
+                              {...field}
                               value={field.value || ""}
-                              onValueChange={(values) => {
-                                field.onChange(values.value);
-                              }}
-                              customInput={CustomNumericInput}
-                              placeholder={
-                                form.watch("pessoa") === "J"
-                                  ? "00.000.000/0000-00"
-                                  : "000.000.000-00"
+                              className="w-full"
+                              onChange={(e) =>
+                                field.onChange(e.target.value.toUpperCase())
                               }
-                              allowLeadingZeros={true}
                             />
                           </FormControl>
-                          {form.watch("pessoa") === "J" && (
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    type="button"
-                                    size="icon"
-                                    onClick={handleCnpjSearch}
-                                    disabled={
-                                      isLoadingCnpjSearch ||
-                                      !form.getValues("cpf") ||
-                                      (form.getValues("cpf") || "").replace(/\D/g, "")
-                                        .length !== 14
-                                    }
-                                  >
-                                    {isLoadingCnpjSearch ? (
-                                      <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                      <Search className="h-4 w-4" />
-                                    )}
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Buscar CNPJ</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          )}
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
                   <FormField
                     control={form.control}
-                    name="ie"
+                    name="razaoSocial"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Inscrição Estadual</FormLabel>
+                        <FormLabel>Razão Social</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="Inscrição Estadual"
-                            {...field}
-                            value={field.value || ""}
-                            className="w-full"
-                            onChange={(e) =>
-                              field.onChange(e.target.value.toUpperCase())
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="razaoSocial"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Razão Social</FormLabel>
-                      <FormControl>
-                        <Input
                             placeholder="Razão Social"
                             {...field}
                             value={field.value || ""}
@@ -682,692 +690,694 @@ const UpsertClientForm = ({
                               field.onChange(e.target.value.toUpperCase())
                             }
                           />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="grid grid-cols-10 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="fantasia"
-                    render={({ field }) => (
-                      <FormItem className="col-span-7">
-                        <FormLabel>Nome Fantasia</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Nome Fantasia"
-                            {...field}
-                            value={field.value || ""}
-                            onChange={(e) =>
-                              field.onChange(e.target.value.toUpperCase())
-                            }
-                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={form.control}
-                    name="situacao"
-                    render={({ field }) => (
-                      <FormItem className="col-span-3">
-                        <FormLabel>Situação</FormLabel>
-                        <Select
-                          onValueChange={(value) =>
-                            field.onChange(Number(value))
-                          }
-                          value={String(field.value ?? "")}
-                          disabled={!canEditSituacao}
-                        >
+                  <div className="grid grid-cols-10 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="fantasia"
+                      render={({ field }) => (
+                        <FormItem className="col-span-7">
+                          <FormLabel>Nome Fantasia</FormLabel>
                           <FormControl>
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Selecione a situação" />
-                            </SelectTrigger>
+                            <Input
+                              placeholder="Nome Fantasia"
+                              {...field}
+                              value={field.value || ""}
+                              onChange={(e) =>
+                                field.onChange(e.target.value.toUpperCase())
+                              }
+                            />
                           </FormControl>
-                          <SelectContent>
-                            <SelectItem value="1">CADASTRO APROVADO</SelectItem>
-                            <SelectItem value="2">
-                              CADASTRO EM OBSERVAÇÃO
-                            </SelectItem>
-                            <SelectItem value="3">
-                              CADASTRO BLOQUEADO
-                            </SelectItem>
-                            <SelectItem value="4">INATIVO</SelectItem>
-                            <SelectItem value="5">SPC</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                {/* Resto dos campos da aba Geral */}
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                  <FormField
-                    control={form.control}
-                    name="cnae"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>CNAE</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="CNAE"
-                            {...field}
-                            value={field.value || ""}
-                            onChange={(e) =>
-                              field.onChange(e.target.value.toUpperCase())
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="situacao"
+                      render={({ field }) => (
+                        <FormItem className="col-span-3">
+                          <FormLabel>Situação</FormLabel>
+                          <Select
+                            onValueChange={(value) =>
+                              field.onChange(Number(value))
                             }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="codMunicipioIbge"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Cód. Município IBGE</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Código Município IBGE"
-                            {...field}
-                            value={field.value || ""}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="crt"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Regime Tributário</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value ?? undefined}
-                        >
+                            value={String(field.value ?? "")}
+                            disabled={!canEditSituacao}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Selecione a situação" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="1">
+                                CADASTRO APROVADO
+                              </SelectItem>
+                              <SelectItem value="2">
+                                CADASTRO EM OBSERVAÇÃO
+                              </SelectItem>
+                              <SelectItem value="3">
+                                CADASTRO BLOQUEADO
+                              </SelectItem>
+                              <SelectItem value="4">INATIVO</SelectItem>
+                              <SelectItem value="5">SPC</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Resto dos campos da aba Geral */}
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <FormField
+                      control={form.control}
+                      name="cnae"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>CNAE</FormLabel>
                           <FormControl>
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Selecione o Regime" />
-                            </SelectTrigger>
+                            <Input
+                              placeholder="CNAE"
+                              {...field}
+                              value={field.value || ""}
+                              onChange={(e) =>
+                                field.onChange(e.target.value.toUpperCase())
+                              }
+                            />
                           </FormControl>
-                          <SelectContent>
-                            <SelectItem value="SIMPLES NACIONAL">
-                              SIMPLES NACIONAL
-                            </SelectItem>
-                            <SelectItem value="SIMPLES NACIONAL - EXCESSO DE SUBLIMITE DA RECEITA BRUTA">
-                              SIMPLES NACIONAL - EXCESSO DE SUBLIMITE DA RECEITA
-                              BRUTA
-                            </SelectItem>
-                            <SelectItem value="REGIME NORMAL">
-                              REGIME NORMAL
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="codMunicipioIbge"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Cód. Município IBGE</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Código Município IBGE"
+                              {...field}
+                              value={field.value || ""}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="crt"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Regime Tributário</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value ?? undefined}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Selecione o Regime" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="SIMPLES NACIONAL">
+                                SIMPLES NACIONAL
+                              </SelectItem>
+                              <SelectItem value="SIMPLES NACIONAL - EXCESSO DE SUBLIMITE DA RECEITA BRUTA">
+                                SIMPLES NACIONAL - EXCESSO DE SUBLIMITE DA
+                                RECEITA BRUTA
+                              </SelectItem>
+                              <SelectItem value="REGIME NORMAL">
+                                REGIME NORMAL
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-                {/* Continuar com os outros campos... */}
-                {/* Por brevidade, vou incluir apenas alguns campos principais */}
-                
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                  <FormField
-                    control={form.control}
-                    name="contribuinte"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                        <div className="space-y-0.5">
-                          <FormLabel>Contribuinte</FormLabel>
-                          <FormDescription>
-                            Define se o cliente é contribuinte.
-                          </FormDescription>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value === "S"}
-                            onCheckedChange={(checked) =>
-                              field.onChange(checked ? "S" : "N")
-                            }
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="vlrMens"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Valor Mensal</FormLabel>
-                        <FormControl>
-                          <NumericFormat
-                            value={field.value}
-                            onValueChange={(values) => {
-                              field.onChange(values.floatValue);
-                            }}
-                            decimalScale={2}
-                            fixedDecimalScale
-                            decimalSeparator=","
-                            allowNegative={false}
-                            allowLeadingZeros={false}
-                            thousandSeparator="."
-                            customInput={Input}
-                            prefix="R$"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="melhorDia"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Melhor Dia</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Melhor Dia" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </TabsContent>
+                  {/* Continuar com os outros campos... */}
+                  {/* Por brevidade, vou incluir apenas alguns campos principais */}
 
-              {/* Abas de Endereço e Contato - incluindo apenas estrutura básica */}
-              <TabsContent value="endereco" className="space-y-4 py-4">
-                {/* Campos de endereço aqui */}
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
-                  <FormField
-                    control={form.control}
-                    name="cep"
-                    render={({ field }) => (
-                      <FormItem className="col-span-12 md:col-span-2">
-                        <FormLabel>CEP</FormLabel>
-                        <FormControl>
-                          <PatternFormat
-                            format="#####-###"
-                            mask="_"
-                            value={field.value}
-                            onValueChange={(values) => {
-                              field.onChange(values.formattedValue);
-                            }}
-                            customInput={Input}
-                            placeholder="00000-000"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="endereco"
-                    render={({ field }) => (
-                      <FormItem className="col-span-12 md:col-span-8">
-                        <FormLabel>Endereço</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Endereço"
-                            {...field}
-                            value={field.value || ""}
-                            onChange={(e) =>
-                              field.onChange(e.target.value.toUpperCase())
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="numero"
-                    render={({ field }) => (
-                      <FormItem className="col-span-12 md:col-span-2">
-                        <FormLabel>Número</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Número"
-                            {...field}
-                            value={field.value || ""}
-                            onChange={(e) =>
-                              field.onChange(e.target.value.toUpperCase())
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
-                  <FormField
-                    control={form.control}
-                    name="complemento"
-                    render={({ field }) => (
-                      <FormItem className="col-span-12 md:col-span-3">
-                        <FormLabel>Complemento</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Complemento"
-                            {...field}
-                            value={field.value || ""}
-                            onChange={(e) =>
-                              field.onChange(e.target.value.toUpperCase())
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="bairro"
-                    render={({ field }) => (
-                      <FormItem className="col-span-12 md:col-span-3">
-                        <FormLabel>Bairro</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Bairro"
-                            {...field}
-                            value={field.value || ""}
-                            onChange={(e) =>
-                              field.onChange(e.target.value.toUpperCase())
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="cidade"
-                    render={({ field }) => (
-                      <FormItem className="col-span-12 md:col-span-4">
-                        <FormLabel>Cidade</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Cidade"
-                            {...field}
-                            value={field.value || ""}
-                            onChange={(e) =>
-                              field.onChange(e.target.value.toUpperCase())
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="uf"
-                    render={({ field }) => (
-                      <FormItem className="col-span-12 md:col-span-2">
-                        <FormLabel>UF</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="UF"
-                            {...field}
-                            value={field.value || ""}
-                            onChange={(e) =>
-                              field.onChange(e.target.value.toUpperCase())
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <Separator className="my-4" />
-                <div className="mb-4 rounded-lg border p-4">
-                  <h4 className="text-lg font-semibold">
-                    Endereço de Correspondência
-                  </h4>
-                </div>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
-                  <FormField
-                    control={form.control}
-                    name="correspCep"
-                    render={({ field }) => (
-                      <FormItem className="col-span-12 md:col-span-2">
-                        <FormLabel>CEP</FormLabel>
-                        <FormControl>
-                          <PatternFormat
-                            format="#####-###"
-                            mask="_"
-                            value={field.value}
-                            onValueChange={(values) => {
-                              field.onChange(values.formattedValue);
-                            }}
-                            customInput={Input}
-                            placeholder="00000-000"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="correspEndereco"
-                    render={({ field }) => (
-                      <FormItem className="col-span-12 md:col-span-8">
-                        <FormLabel>Endereço</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Endereço"
-                            {...field}
-                            value={field.value || ""}
-                            onChange={(e) =>
-                              field.onChange(e.target.value.toUpperCase())
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="correspNumero"
-                    render={({ field }) => (
-                      <FormItem className="col-span-12 md:col-span-2">
-                        <FormLabel>Número</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Número"
-                            {...field}
-                            value={field.value || ""}
-                            onChange={(e) =>
-                              field.onChange(e.target.value.toUpperCase())
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
-                  <FormField
-                    control={form.control}
-                    name="correspComplemento"
-                    render={({ field }) => (
-                      <FormItem className="col-span-12 md:col-span-3">
-                        <FormLabel>Complemento</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Complemento"
-                            {...field}
-                            value={field.value || ""}
-                            onChange={(e) =>
-                              field.onChange(e.target.value.toUpperCase())
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="correspBairro"
-                    render={({ field }) => (
-                      <FormItem className="col-span-12 md:col-span-3">
-                        <FormLabel>Bairro</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Bairro"
-                            {...field}
-                            value={field.value || ""}
-                            onChange={(e) =>
-                              field.onChange(e.target.value.toUpperCase())
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="correspCidade"
-                    render={({ field }) => (
-                      <FormItem className="col-span-12 md:col-span-4">
-                        <FormLabel>Cidade</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Cidade"
-                            {...field}
-                            value={field.value || ""}
-                            onChange={(e) =>
-                              field.onChange(e.target.value.toUpperCase())
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="correspUf"
-                    render={({ field }) => (
-                      <FormItem className="col-span-12 md:col-span-2">
-                        <FormLabel>UF</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="UF"
-                            {...field}
-                            value={field.value || ""}
-                            onChange={(e) =>
-                              field.onChange(e.target.value.toUpperCase())
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="contato" className="space-y-4 py-4">
-                {/* Campos de contato aqui */}
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-                  <FormField
-                    control={form.control}
-                    name="telefone1"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Telefone 1</FormLabel>
-                        <FormControl>
-                          <NumericFormat
-                            format="(##) ####-####"
-                            mask="_"
-                            value={field.value}
-                            onValueChange={(values) => {
-                              field.onChange(values.formattedValue);
-                            }}
-                            customInput={Input}
-                            placeholder="(00) 0000-0000"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="telefone2"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Telefone 2</FormLabel>
-                        <FormControl>
-                          <NumericFormat
-                            format="(##) ####-####"
-                            mask="_"
-                            value={field.value}
-                            onValueChange={(values) => {
-                              field.onChange(values.formattedValue);
-                            }}
-                            customInput={Input}
-                            placeholder="(00) 0000-0000"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="telefone3"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Telefone 3</FormLabel>
-                        <FormControl>
-                          <NumericFormat
-                            format="(##) ####-####"
-                            mask="_"
-                            value={field.value}
-                            onValueChange={(values) => {
-                              field.onChange(values.formattedValue);
-                            }}
-                            customInput={Input}
-                            placeholder="(00) 0000-0000"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="celular"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Celular</FormLabel>
-                        <FormControl>
-                          <NumericFormat
-                            format="(##) #####-####"
-                            mask="_"
-                            value={field.value}
-                            onValueChange={(values) => {
-                              field.onChange(values.formattedValue);
-                            }}
-                            customInput={Input}
-                            placeholder="(00) 00000-0000"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email Principal</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Email Principal" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="email1"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email 1</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Email 1" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="email2"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email 2</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Email 2" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="email3"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email 3</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Email 3" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="email4"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email 4</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Email 4" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="email5"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email 5</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Email 5" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </TabsContent>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <FormField
+                      control={form.control}
+                      name="contribuinte"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                          <div className="space-y-0.5">
+                            <FormLabel>Contribuinte</FormLabel>
+                            <FormDescription>
+                              Define se o cliente é contribuinte.
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value === "S"}
+                              onCheckedChange={(checked) =>
+                                field.onChange(checked ? "S" : "N")
+                              }
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="vlrMens"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Valor Mensal</FormLabel>
+                          <FormControl>
+                            <NumericFormat
+                              value={field.value}
+                              onValueChange={(values) => {
+                                field.onChange(values.floatValue);
+                              }}
+                              decimalScale={2}
+                              fixedDecimalScale
+                              decimalSeparator=","
+                              allowNegative={false}
+                              allowLeadingZeros={false}
+                              thousandSeparator="."
+                              customInput={Input}
+                              prefix="R$"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="melhorDia"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Melhor Dia</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Melhor Dia" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </TabsContent>
+
+                {/* Abas de Endereço e Contato - incluindo apenas estrutura básica */}
+                <TabsContent value="endereco" className="mt-0 space-y-4">
+                  {/* Campos de endereço aqui */}
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
+                    <FormField
+                      control={form.control}
+                      name="cep"
+                      render={({ field }) => (
+                        <FormItem className="col-span-12 md:col-span-2">
+                          <FormLabel>CEP</FormLabel>
+                          <FormControl>
+                            <PatternFormat
+                              format="#####-###"
+                              mask="_"
+                              value={field.value}
+                              onValueChange={(values) => {
+                                field.onChange(values.formattedValue);
+                              }}
+                              customInput={Input}
+                              placeholder="00000-000"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="endereco"
+                      render={({ field }) => (
+                        <FormItem className="col-span-12 md:col-span-8">
+                          <FormLabel>Endereço</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Endereço"
+                              {...field}
+                              value={field.value || ""}
+                              onChange={(e) =>
+                                field.onChange(e.target.value.toUpperCase())
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="numero"
+                      render={({ field }) => (
+                        <FormItem className="col-span-12 md:col-span-2">
+                          <FormLabel>Número</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Número"
+                              {...field}
+                              value={field.value || ""}
+                              onChange={(e) =>
+                                field.onChange(e.target.value.toUpperCase())
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
+                    <FormField
+                      control={form.control}
+                      name="complemento"
+                      render={({ field }) => (
+                        <FormItem className="col-span-12 md:col-span-3">
+                          <FormLabel>Complemento</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Complemento"
+                              {...field}
+                              value={field.value || ""}
+                              onChange={(e) =>
+                                field.onChange(e.target.value.toUpperCase())
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="bairro"
+                      render={({ field }) => (
+                        <FormItem className="col-span-12 md:col-span-3">
+                          <FormLabel>Bairro</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Bairro"
+                              {...field}
+                              value={field.value || ""}
+                              onChange={(e) =>
+                                field.onChange(e.target.value.toUpperCase())
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="cidade"
+                      render={({ field }) => (
+                        <FormItem className="col-span-12 md:col-span-4">
+                          <FormLabel>Cidade</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Cidade"
+                              {...field}
+                              value={field.value || ""}
+                              onChange={(e) =>
+                                field.onChange(e.target.value.toUpperCase())
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="uf"
+                      render={({ field }) => (
+                        <FormItem className="col-span-12 md:col-span-2">
+                          <FormLabel>UF</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="UF"
+                              {...field}
+                              value={field.value || ""}
+                              onChange={(e) =>
+                                field.onChange(e.target.value.toUpperCase())
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <Separator className="my-4" />
+                  <div className="mb-4 rounded-lg border p-4">
+                    <h4 className="text-lg font-semibold">
+                      Endereço de Correspondência
+                    </h4>
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
+                    <FormField
+                      control={form.control}
+                      name="correspCep"
+                      render={({ field }) => (
+                        <FormItem className="col-span-12 md:col-span-2">
+                          <FormLabel>CEP</FormLabel>
+                          <FormControl>
+                            <PatternFormat
+                              format="#####-###"
+                              mask="_"
+                              value={field.value}
+                              onValueChange={(values) => {
+                                field.onChange(values.formattedValue);
+                              }}
+                              customInput={Input}
+                              placeholder="00000-000"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="correspEndereco"
+                      render={({ field }) => (
+                        <FormItem className="col-span-12 md:col-span-8">
+                          <FormLabel>Endereço</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Endereço"
+                              {...field}
+                              value={field.value || ""}
+                              onChange={(e) =>
+                                field.onChange(e.target.value.toUpperCase())
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="correspNumero"
+                      render={({ field }) => (
+                        <FormItem className="col-span-12 md:col-span-2">
+                          <FormLabel>Número</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Número"
+                              {...field}
+                              value={field.value || ""}
+                              onChange={(e) =>
+                                field.onChange(e.target.value.toUpperCase())
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
+                    <FormField
+                      control={form.control}
+                      name="correspComplemento"
+                      render={({ field }) => (
+                        <FormItem className="col-span-12 md:col-span-3">
+                          <FormLabel>Complemento</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Complemento"
+                              {...field}
+                              value={field.value || ""}
+                              onChange={(e) =>
+                                field.onChange(e.target.value.toUpperCase())
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="correspBairro"
+                      render={({ field }) => (
+                        <FormItem className="col-span-12 md:col-span-3">
+                          <FormLabel>Bairro</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Bairro"
+                              {...field}
+                              value={field.value || ""}
+                              onChange={(e) =>
+                                field.onChange(e.target.value.toUpperCase())
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="correspCidade"
+                      render={({ field }) => (
+                        <FormItem className="col-span-12 md:col-span-4">
+                          <FormLabel>Cidade</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Cidade"
+                              {...field}
+                              value={field.value || ""}
+                              onChange={(e) =>
+                                field.onChange(e.target.value.toUpperCase())
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="correspUf"
+                      render={({ field }) => (
+                        <FormItem className="col-span-12 md:col-span-2">
+                          <FormLabel>UF</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="UF"
+                              {...field}
+                              value={field.value || ""}
+                              onChange={(e) =>
+                                field.onChange(e.target.value.toUpperCase())
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="contato" className="mt-0 space-y-4">
+                  {/* Campos de contato aqui */}
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+                    <FormField
+                      control={form.control}
+                      name="telefone1"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Telefone 1</FormLabel>
+                          <FormControl>
+                            <NumericFormat
+                              format="(##) ####-####"
+                              mask="_"
+                              value={field.value}
+                              onValueChange={(values) => {
+                                field.onChange(values.formattedValue);
+                              }}
+                              customInput={Input}
+                              placeholder="(00) 0000-0000"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="telefone2"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Telefone 2</FormLabel>
+                          <FormControl>
+                            <NumericFormat
+                              format="(##) ####-####"
+                              mask="_"
+                              value={field.value}
+                              onValueChange={(values) => {
+                                field.onChange(values.formattedValue);
+                              }}
+                              customInput={Input}
+                              placeholder="(00) 0000-0000"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="telefone3"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Telefone 3</FormLabel>
+                          <FormControl>
+                            <NumericFormat
+                              format="(##) ####-####"
+                              mask="_"
+                              value={field.value}
+                              onValueChange={(values) => {
+                                field.onChange(values.formattedValue);
+                              }}
+                              customInput={Input}
+                              placeholder="(00) 0000-0000"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="celular"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Celular</FormLabel>
+                          <FormControl>
+                            <NumericFormat
+                              format="(##) #####-####"
+                              mask="_"
+                              value={field.value}
+                              onValueChange={(values) => {
+                                field.onChange(values.formattedValue);
+                              }}
+                              customInput={Input}
+                              placeholder="(00) 00000-0000"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email Principal</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Email Principal" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="email1"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email 1</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Email 1" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="email2"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email 2</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Email 2" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="email3"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email 3</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Email 3" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="email4"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email 4</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Email 4" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="email5"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email 5</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Email 5" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </TabsContent>
+              </div>
             </Tabs>
-            
-            <DialogFooter>
+            <DialogFooter className="border-t pt-4">
               <Button
                 type="button"
                 variant="destructive"
-                onClick={onSuccess}
+                onClick={onClose}
                 className="w-35"
               >
                 Cancelar
