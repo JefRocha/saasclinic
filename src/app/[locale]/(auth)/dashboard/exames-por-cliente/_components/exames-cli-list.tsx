@@ -16,9 +16,10 @@ import type { SearchExamesCliResult } from "@/actions/get-exames-cli/schema";
 
 interface ExamesCliListProps {
   clientId: string | number | null;
+  onDataLoaded: (data: any[]) => void; // Nova prop
 }
 
-export const ExamesCliList = ({ clientId }: ExamesCliListProps) => {
+export const ExamesCliList = ({ clientId, onDataLoaded }: ExamesCliListProps) => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -45,6 +46,11 @@ export const ExamesCliList = ({ clientId }: ExamesCliListProps) => {
     queryFn: () => getExamesCli({ clientId, search, page, orderBy: sorting[0].id, order: sorting[0].desc ? "desc" : "asc" }),
     enabled: !!clientId, // Só busca se um cliente estiver selecionado
   });
+
+  // Chamar onDataLoaded quando os dados forem carregados ou alterados
+  useEffect(() => {
+    onDataLoaded(data?.data?.data || []);
+  }, [data, onDataLoaded]);
 
   const columns = getExamesCliTableColumns(); // Não precisa de callbacks aqui, pois é só exibição
 

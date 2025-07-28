@@ -65,6 +65,22 @@ export default function DashboardLayout(props: { children: React.ReactNode, para
       ],
     },
     {
+      label: t('financial'), // Nova chave de tradução
+      icon: <FileText className="size-4" />, // Ícone temporário
+      subItems: [
+        {
+          href: '/dashboard/financeiro/contas-a-pagar',
+          label: t('accounts_payable'), // Nova chave de tradução
+          icon: <FileText className="size-4" />,
+        },
+        {
+          href: '/dashboard/financeiro/contas-a-receber',
+          label: t('accounts_receivable'), // Nova chave de tradução
+          icon: <FileText className="size-4" />,
+        },
+      ],
+    },
+    {
       href: '/dashboard/organization-profile',
       label: t('settings'),
       icon: <Settings className="size-4" />,

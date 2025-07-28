@@ -97,7 +97,10 @@
     "doctors": "Médicos",
     "colaboradores": "Colaboradores",
     "registrations": "Cadastros",
-    "exams_by_client": "Exames por Cliente"
+    "exams_by_client": "Exames por Cliente",
+    "financial": "Financeiro",
+    "accounts_payable": "Contas a Pagar",
+    "accounts_receivable": "Contas a Receber"
   },
   "Dashboard": {
     "meta_title": "Dashboard – SaaS Template",
@@ -154,6 +157,10 @@
   "ColaboradoresPage": {
     "title": "Colaboradores",
     "description": "Gerencie os colaboradores da sua clínica"
+  },
+  "ContasAPagarPage": {
+    "title": "Contas a Pagar",
+    "description": "Visualize e gerencie suas contas a pagar."
   },
   "ExamesPorClientePage": {
     "title": "Exames por Cliente",
