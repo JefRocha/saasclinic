@@ -168,6 +168,8 @@
   },
   "ExamesPorCliente": {
     "select_client_placeholder": "Selecione um cliente",
+    "search_client_placeholder": "Pesquisar cliente...",
+    "no_client_found": "Nenhum cliente encontrado.",
     "select_all_clients": "Todos os Clientes"
   },
   "Todos": {

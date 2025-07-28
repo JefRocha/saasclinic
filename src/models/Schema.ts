@@ -10,8 +10,18 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
+  char,
+  date,
   pgEnum,
 } from 'drizzle-orm/pg-core';
+
+
+export const formapagtoEnum = pgEnum("formaPagto", [
+  "CONVENIO",
+  "A VISTA",
+  "C/CORRENTE",
+]);
+
 
 export const exametipoEnum = pgEnum("exame_tipo", [
   "ADMISSIONAL",
@@ -350,3 +360,107 @@ export const examesCliRelations = relations(examesCliTable, ({ one }) => ({
   })
 }));
 
+
+
+// Se seus usuários do Clerk estiverem em uma tabela `users`:
+// import { usersTable }        from "./users";
+
+/* ================================================================== */
+/*  ANAMNESE  – ficha principal                                       */
+/* ================================================================== */
+export const anamneseTable = pgTable("anamnese", {
+  id: serial("id").primaryKey(),
+
+  /* --- Foreign Keys -------------------------------------------------- */
+  clienteId:     integer("id_cliente").notNull()
+                   .references(() => clientsTable.id, { onDelete: "restrict" }),
+
+  colaboradorId: integer("id_colaborador").notNull()
+                   .references(() => colaboradorTable.id, { onDelete: "restrict" }),
+
+  atendenteId:   integer("id_atendente").notNull(),
+  // Se houver tabela de usuários:
+  // atendenteId: integer("id_atendente").notNull()
+  //                .references(() => usersTable.id, { onDelete: "restrict" }),
+
+  /* --- Dados do atendimento ----------------------------------------- */
+  data:          timestamp("data"),
+  formaPagto:    formapagtoEnum("formaPagto").notNull(),
+  total:         numeric("total", { precision: 15, scale: 2 }),
+  tipo:          exametipoEnum("tipo").notNull(),
+  vlCaixa:       numeric("vl_caixa", { precision: 15, scale: 2 }),
+  cargo:         text("cargo"),        // mantive uma única coluna cargo
+  prazo:         char("prazo", { length: 1 }),
+  status:        text("status"),
+  cpf:           text("cpf"),
+  solicitante:   text("solicitante"),
+  situacao:      char("situacao", { length: 1 }),
+  dataLanc:      timestamp("data_lanc"),
+  setor:         text("setor"),
+  efetivo:       text("efetivo"),
+
+  /* --- Auditoria ---------------------------------------------------- */
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+               .defaultNow()
+               .$onUpdate(() => new Date()),
+});
+
+/* =======================================================================
+ *  anamneseItems  (filha) – exames / procedimentos por ficha
+ * ===================================================================== */
+export const anamneseItemsTable = pgTable("anamnese_items", {
+  id: serial("id").primaryKey(),
+
+  /* --- Foreign Keys -------------------------------------------------- */
+  anamneseId: integer("id_anamnese").notNull()
+                .references(() => anamneseTable.id, { onDelete: "cascade" }),
+
+  exameId:     integer("id_exame").notNull()
+                .references(() => examesTable.id, { onDelete: "restrict" }),
+
+  medicoId:    integer("id_medico").notNull()
+                .references(() => medicosTable.id, { onDelete: "restrict" }),
+
+  /* --- Dados do item ------------------------------------------------- */
+  valor:       numeric("valor", { precision: 15, scale: 2 }),
+  faturar:     char("faturar", { length: 1 }),
+  vencto:      date("vencto"),
+  prazo:       char("prazo", { length: 1 }),
+  dataLanc:    timestamp("data_lanc"),
+  data:        date("data"),
+  dataLiberacao: date("data_liberacao"),
+  apto:        integer("apto"),
+  status:      integer("status"),
+
+  /* --- Auditoria ---------------------------------------------------- */
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+               .defaultNow()
+               .$onUpdate(() => new Date()),
+});
+
+/* =======================================================================
+ *  Helpers de relação tipada (Drizzle `relations`)
+ * ===================================================================== */
+export const anamneseRelations = relations(anamneseTable, ({ many }) => ({
+  items: many(anamneseItemsTable),
+}));
+
+export const anamneseItemsRelations = relations(
+  anamneseItemsTable,
+  ({ one }) => ({
+    anamnese: one(anamneseTable, {
+      fields:     [anamneseItemsTable.anamneseId],
+      references: [anamneseTable.id],
+    }),
+    exame: one(examesTable, {
+      fields:     [anamneseItemsTable.exameId],
+      references: [examesTable.id],
+    }),
+    medico: one(medicosTable, {
+      fields:     [anamneseItemsTable.medicoId],
+      references: [medicosTable.id],
+    }),
+  }),
+);
