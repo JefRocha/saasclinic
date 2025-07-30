@@ -8,12 +8,15 @@ import { colaboradorTable } from '@/models/Schema';
 import { db } from '@/libs/DB';
 import { ActionError } from '@/libs/action-error';
 import { protectedAction } from '@/libs/safe-action';
+import { unstable_noStore as noStore } from 'next/cache';
 
 const GetColaboradoresForSelectSchema = z.object({});
 
 export const getColaboradoresForSelect = protectedAction
   .schema(GetColaboradoresForSelectSchema)
   .action(async ({ ctx: { orgId } }) => {
+    noStore(); // Impede o cache da requisição
+
     const t = (key: string) => {
       const keys = key.split('.');
       let current: any = ptBRMessages;
@@ -36,6 +39,7 @@ export const getColaboradoresForSelect = protectedAction
         .select({
           id: colaboradorTable.id,
           name: colaboradorTable.name,
+          cpf: colaboradorTable.cpf,
         })
         .from(colaboradorTable)
         .where(eq(colaboradorTable.organizationId, orgId));

@@ -8,6 +8,7 @@ import { upsertColaboradorSchema } from "./schema";
 import { buildAbility, Action as CaslAction } from "@/lib/ability";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+import { revalidatePath } from "next/cache";
 
 async function handler({
   parsedInput,
@@ -32,6 +33,12 @@ async function handler({
   const finalOrgId = orgId;
 
   // 3. Preparar os dados para o banco (mapeamento explícito para segurança)
+  const sexMapping = {
+    male: 'masculino',
+    female: 'feminino',
+    other: 'outro',
+  } as const;
+
   const colaboradorData = {
     id: parsedInput.id,
     organizationId: finalOrgId,
@@ -61,7 +68,7 @@ async function handler({
     pcd: parsedInput.pcd || null,
     cod_anterior: parsedInput.cod_anterior || null,
     phoneNumber: parsedInput.phoneNumber,
-    sex: parsedInput.sex,
+    sex: sexMapping[parsedInput.sex as keyof typeof sexMapping],
   };
 
   try {
@@ -76,6 +83,8 @@ async function handler({
       if (!updatedColaborador) {
         throw new ActionError("Colaborador não encontrado para atualização.");
       }
+      revalidatePath("/[locale]/dashboard/colaboradores", "page");
+      revalidatePath("/[locale]/dashboard/anamnese", "page");
       return updatedColaborador;
     } else {
       // Inserção
@@ -84,6 +93,8 @@ async function handler({
         .values(colaboradorData)
         .returning();
       
+      revalidatePath("/[locale]/dashboard/colaboradores", "page");
+      revalidatePath("/[locale]/dashboard/anamnese", "page");
       return newColaborador;
     }
   } catch (error) {

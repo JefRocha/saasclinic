@@ -31,7 +31,8 @@ import { exametipoEnum, formapagtoEnum } from '@/models/Schema';
 import { DataTable } from '@/components/ui/data-table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { formatCurrency } from '@/helpers/format';
-import { UpsertColaboradorForm } from '@/app/[locale]/(auth)/dashboard/colaboradores/_components/upsert-colaborador-form';
+import { ValidationErrorsModalProvider } from '@/components/ui/validation-errors-modal';
+import UpsertColaboradorForm from '@/app/[locale]/(auth)/dashboard/colaboradores/_components/upsert-colaborador-form';
 
 import {
   useQuery,
@@ -159,8 +160,11 @@ export function UpsertAnamneseForm({
     ? clients.data.map(client => ({ id: client.id, name: client.name || '' })) 
     : [];
     
-  const colaboradorItems = colaboradores?.data && Array.isArray(colaboradores.data) 
-    ? colaboradores.data.map(colaborador => ({ id: colaborador.id, name: colaborador.name || '' })) 
+  const colaboradorItems = colaboradores?.data && Array.isArray(colaboradores.data.data) 
+    ? colaboradores.data.data.map(colaborador => ({ 
+        id: colaborador.id, 
+        name: `${colaborador.name} - ${colaborador.cpf}` || '' 
+      })) 
     : [];
     
   const exameItems = exames?.data && Array.isArray(exames.data) 
@@ -172,321 +176,335 @@ export function UpsertAnamneseForm({
     : [];
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent 
-        onEscapeKeyDown={(e) => e.preventDefault()} 
-        onPointerDownOutside={(e) => e.preventDefault()} 
-        className="[&>button]:hidden w-full max-w-[1400px] overflow-y-auto focus:outline-none"
-        initialFocus={datePickerRef}
-      >
-        <DialogHeader>
-          <DialogTitle>{t('form_title')}</DialogTitle>
-        </DialogHeader>
-        
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit((data) => {
-              console.log(data)
-              // await upsertAnamnese(data)
-              onSuccess()
-            })}
-            className="space-y-8"
-          >
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('master_section_title')}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 px-4">
-                <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-5">
-                  {/* ✅ DatePicker com ref e props adicionais para debug */}
-                  <FormDatePickerHybrid
-                    ref={datePickerRef}
-                    control={form.control}
-                    name="data"
-                    label="Data"
-                    className="w-full md:max-w-[200px]"
-                    placeholder={tFormFields('placeholder_date')}
-                    required
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="colaboradorId"
-                    render={({ field }) => (
-                      <FormItem className="md:col-span-2">
-                        <FormLabel>Colaborador</FormLabel>
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent
+          onEscapeKeyDown={(e) => e.preventDefault()}
+          onPointerDownOutside={(e) => e.preventDefault()}
+          className="[&>button]:hidden w-full max-w-[1400px] overflow-y-auto focus:outline-none"
+          initialFocus={datePickerRef}
+        >
+          <DialogHeader>
+            <DialogTitle>{t('form_title')}</DialogTitle>
+          </DialogHeader>
 
-                        <SearchableSelect
-                          ref={field.ref}
-                          items={colaboradorItems}
-                          selectedValue={field.value}
-                          onValueChange={field.onChange}
-                          placeholder="Selecione um colaborador"
-                          searchPlaceholder="Pesquisar colaborador..."
-                          noResultsText="Nenhum colaborador encontrado."
-                          isLoading={isLoadingColaboradores}
-                          onCreate={() => setOpenCreate(true)}
-                          createLabel="Cadastrar colaborador"
-                        />
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit((data) => {
+                console.log(data);
+                // await upsertAnamnese(data)
+                onSuccess();
+              })}
+              className="space-y-8"
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t('master_section_title')}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 px-4">
+                  <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-5">
+                    {/* ✅ DatePicker com ref e props adicionais para debug */}
+                    <FormDatePickerHybrid
+                      ref={datePickerRef}
+                      control={form.control}
+                      name="data"
+                      label="Data"
+                      className="w-full md:max-w-[200px]"
+                      placeholder={tFormFields('placeholder_date')}
+                      required
+                    />
 
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    <FormField
+                      control={form.control}
+                      name="colaboradorId"
+                      render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                          <FormLabel>Colaborador</FormLabel>
+
+                          <SearchableSelect
+                            ref={field.ref}
+                            items={colaboradorItems}
+                            selectedValue={field.value}
+                            onValueChange={field.onChange}
+                            placeholder="Selecione um colaborador"
+                            searchPlaceholder="Pesquisar colaborador..."
+                            noResultsText="Nenhum colaborador encontrado."
+                            isLoading={isLoadingColaboradores}
+                            onCreate={() => setOpenCreate(true)}
+                            createLabel="Cadastrar colaborador"
+                          />
+
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormSelect
+                      control={form.control}
+                      name="tipo"
+                      label="Tipo de Exame"
+                      placeholder="Selecione o tipo de exame"
+                      options={exametipoEnum.enumValues.map((value) => ({
+                        label: value,
+                        value,
+                      }))}
+                    />
+
+                    <FormSelect
+                      control={form.control}
+                      name="formaPagto"
+                      label="Forma de Pagto"
+                      placeholder="Selecione a forma de pagamento"
+                      options={formapagtoEnum.enumValues.map((value) => ({
+                        label: value,
+                        value,
+                      }))}
+                    />
+
+                    {/* Campo hidden para atendenteId */}
+                    <FormField
+                      control={form.control}
+                      name="atendenteId"
+                      render={({ field }) => (
+                        <FormItem className="hidden">
+                          <FormControl>
+                            <input {...field} type="hidden" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="clienteId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Cliente</FormLabel>
+                          <SearchableSelect
+                            items={clientItems}
+                            selectedValue={field.value}
+                            onValueChange={field.onChange}
+                            placeholder="Selecione um cliente"
+                            searchPlaceholder="Pesquisar cliente..."
+                            noResultsText="Nenhum cliente encontrado."
+                            isLoading={isLoadingClients}
+                          />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormInput
+                      control={form.control}
+                      name="cargo"
+                      label="Cargo"
+                      placeholder="Informe o cargo"
+                    />
+
+                    <FormInput
+                      control={form.control}
+                      name="setor"
+                      label="Setor"
+                      placeholder="Informe o setor"
+                    />
+
+                    <FormInput
+                      control={form.control}
+                      name="solicitante"
+                      label="Solicitante"
+                      placeholder="Informe o solicitante"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t('detail_section_title')}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <DataTable
+                    columns={[
+                      {
+                        accessorKey: 'exameId',
+                        header: t('item_exam_header'),
+                        cell: ({ row }) => {
+                          const exame = getExameNameById(
+                            row.original.exameId,
+                          );
+                          return exame || '';
+                        },
+                      },
+                      {
+                        accessorKey: 'medicoId',
+                        header: t('item_doctor_header'),
+                        cell: ({ row }) => {
+                          const medico = getMedicoNameById(
+                            row.original.medicoId,
+                          );
+                          return medico || '';
+                        },
+                      },
+                      {
+                        accessorKey: 'valor',
+                        header: t('item_value_header'),
+                        cell: ({ row }) =>
+                          formatCurrency(row.original.valor || 0),
+                      },
+                      {
+                        id: 'actions',
+                        header: t('item_actions_header'),
+                        cell: ({ row }) => (
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditItem(row.index)}
+                            >
+                              {t('edit_item_button')}
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleRemoveItem(row.index)}
+                            >
+                              {t('remove_item_button')}
+                            </Button>
+                          </div>
+                        ),
+                      },
+                    ]}
+                    data={fields}
+                    emptyMessage={t('no_items_found')}
                   />
-                  
-                  <FormSelect
-                    control={form.control}
-                    name="tipo"
-                    label="Tipo de Exame"
-                    placeholder="Selecione o tipo de exame"
-                    options={exametipoEnum.enumValues.map(value => ({ label: value, value }))}
-                  />
-                  
-                  <FormSelect
-                    control={form.control}
-                    name="formaPagto"
-                    label="Forma de Pagto"
-                    placeholder="Selecione a forma de pagamento"
-                    options={formapagtoEnum.enumValues.map(value => ({ label: value, value }))}
-                  />
-                  
-                  {/* Campo hidden para atendenteId */}
+
+                  <Button
+                    type="button"
+                    onClick={handleAddItem}
+                    data-testid="add-item-button"
+                  >
+                    {t('add_item_button')}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={onClose}>
+                  {t('cancel_button')}
+                </Button>
+                <Button type="submit">{t('submit_button')}</Button>
+              </div>
+            </form>
+          </Form>
+
+          {/* Modal para Adicionar/Editar Item */}
+          <Dialog open={isItemModalOpen} onOpenChange={setIsItemModalOpen}>
+            <DialogContent
+              onEscapeKeyDown={(e) => e.preventDefault()}
+              onPointerDownOutside={(e) => e.preventDefault()}
+              className="[&>button]:hidden"
+            >
+              <DialogHeader>
+                <DialogTitle>
+                  {editingItemIndex !== null
+                    ? t('edit_item_title')
+                    : t('add_item_title')}
+                </DialogTitle>
+              </DialogHeader>
+
+              <Form {...itemForm}>
+                <form
+                  onSubmit={itemForm.handleSubmit(onSaveItem)}
+                  className="space-y-4"
+                >
                   <FormField
-                    control={form.control}
-                    name="atendenteId"
-                    render={({ field }) => (
-                      <FormItem className="hidden">
-                        <FormControl>
-                          <input {...field} type="hidden" />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="clienteId"
+                    control={itemForm.control}
+                    name="exameId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Cliente</FormLabel>
+                        <FormLabel>Exame</FormLabel>
                         <SearchableSelect
-                          items={clientItems}
+                          items={exameItems}
                           selectedValue={field.value}
                           onValueChange={field.onChange}
-                          placeholder="Selecione um cliente"
-                          searchPlaceholder="Pesquisar cliente..."
-                          noResultsText="Nenhum cliente encontrado."
-                          isLoading={isLoadingClients}
+                          placeholder="Selecione um exame"
+                          searchPlaceholder="Pesquisar exame..."
+                          noResultsText="Nenhum exame encontrado."
+                          isLoading={isLoadingExames}
                         />
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  
-                  <FormInput
-                    control={form.control}
-                    name="cargo"
-                    label="Cargo"
-                    placeholder="Informe o cargo"
+
+                  <FormField
+                    control={itemForm.control}
+                    name="medicoId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Médico</FormLabel>
+                        <SearchableSelect
+                          items={medicoItems}
+                          selectedValue={field.value}
+                          onValueChange={field.onChange}
+                          placeholder="Selecione um médico"
+                          searchPlaceholder="Pesquisar médico..."
+                          noResultsText="Nenhum médico encontrado."
+                          isLoading={isLoadingMedicos}
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                  
+
                   <FormInput
-                    control={form.control}
-                    name="setor"
-                    label="Setor"
-                    placeholder="Informe o setor"
+                    control={itemForm.control}
+                    name="valor"
+                    label="Valor"
+                    type="number"
+                    placeholder="Informe o valor"
                   />
-                  
-                  <FormInput
-                    control={form.control}
-                    name="solicitante"
-                    label="Solicitante"
-                    placeholder="Informe o solicitante"
-                  />
-                </div>
-              </CardContent>
-            </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('detail_section_title')}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <DataTable
-                  columns={[
-                    {
-                      accessorKey: "exameId",
-                      header: t('item_exam_header'),
-                      cell: ({ row }) => {
-                        const exame = getExameNameById(row.original.exameId);
-                        return exame || "";
-                      },
-                    },
-                    {
-                      accessorKey: "medicoId",
-                      header: t('item_doctor_header'),
-                      cell: ({ row }) => {
-                        const medico = getMedicoNameById(row.original.medicoId);
-                        return medico || "";
-                      },
-                    },
-                    {
-                      accessorKey: "valor",
-                      header: t('item_value_header'),
-                      cell: ({ row }) => formatCurrency(row.original.valor || 0),
-                    },
-                    {
-                      id: "actions",
-                      header: t('item_actions_header'),
-                      cell: ({ row }) => (
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditItem(row.index)}
-                          >
-                            {t('edit_item_button')}
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleRemoveItem(row.index)}
-                          >
-                            {t('remove_item_button')}
-                          </Button>
-                        </div>
-                      ),
-                    },
-                  ]}
-                  data={fields}
-                  emptyMessage={t('no_items_found')}
-                />
-                
-                <Button 
-                  type="button" 
-                  onClick={handleAddItem}
-                  data-testid="add-item-button"
-                >
-                  {t('add_item_button')}
-                </Button>
-              </CardContent>
-            </Card>
-
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={onClose}>
-                {t('cancel_button')}
-              </Button>
-              <Button type="submit">{t('submit_button')}</Button>
-            </div>
-          </form>
-        </Form>
-
-        <Dialog open={openCreate} onOpenChange={setOpenCreate}>
-          <DialogContent initialFocus={createColabRef} className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Novo colaborador</DialogTitle>
-            </DialogHeader>
-
-            <UpsertColaboradorForm
-              ref={createColabRef}
-              onSuccess={(novo) => {
-                /* 1. Cache global: invalida lista de colaboradores */
-                queryClient.invalidateQueries({
-                  queryKey: ['colaboradoresForSelect', orgId],
-                })
-                /* 2. Seleciona o recém-criado no campo */
-                form.setValue('colaboradorId', novo.id, { shouldValidate: true })
-                /* 3. Fecha o diálogo */
-                setOpenCreate(false)
-              }}
-              onCancel={() => setOpenCreate(false)}
-            />
-          </DialogContent>
-        </Dialog>
-
-
-
-
-        {/* Modal para Adicionar/Editar Item */}
-        <Dialog open={isItemModalOpen} onOpenChange={setIsItemModalOpen}>
-          <DialogContent 
-            onEscapeKeyDown={(e) => e.preventDefault()} 
-            onPointerDownOutside={(e) => e.preventDefault()} 
-            className="[&>button]:hidden"
-          >
-            <DialogHeader>
-              <DialogTitle>
-                {editingItemIndex !== null ? t('edit_item_title') : t('add_item_title')}
-              </DialogTitle>
-            </DialogHeader>
-            
-            <Form {...itemForm}>
-              <form onSubmit={itemForm.handleSubmit(onSaveItem)} className="space-y-4">
-                <FormField
-                  control={itemForm.control}
-                  name="exameId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Exame</FormLabel>
-                      <SearchableSelect
-                        items={exameItems}
-                        selectedValue={field.value}
-                        onValueChange={field.onChange}
-                        placeholder="Selecione um exame"
-                        searchPlaceholder="Pesquisar exame..."
-                        noResultsText="Nenhum exame encontrado."
-                        isLoading={isLoadingExames}
-                      />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={itemForm.control}
-                  name="medicoId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Médico</FormLabel>
-                      <SearchableSelect
-                        items={medicoItems}
-                        selectedValue={field.value}
-                        onValueChange={field.onChange}
-                        placeholder="Selecione um médico"
-                        searchPlaceholder="Pesquisar médico..."
-                        noResultsText="Nenhum médico encontrado."
-                        isLoading={isLoadingMedicos}
-                      />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormInput
-                  control={itemForm.control}
-                  name="valor"
-                  label="Valor"
-                  type="number"
-                  placeholder="Informe o valor"
-                />
-                
-                <DialogFooter>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setIsItemModalOpen(false)}
-                  >
-                    {t('cancel_button')}
-                  </Button>
-                  <Button type="submit">
-                    {editingItemIndex !== null ? t('save_changes_button') : t('add_item_button')}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
-      </DialogContent>
-    </Dialog>
+                  <DialogFooter>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsItemModalOpen(false)}
+                    >
+                      {t('cancel_button')}
+                    </Button>
+                    <Button type="submit">
+                      {editingItemIndex !== null
+                        ? t('save_changes_button')
+                        : t('add_item_button')}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+        </DialogContent>
+      </Dialog>
+      
+      {openCreate && (
+        <ValidationErrorsModalProvider>
+          <UpsertColaboradorForm
+            isOpen={openCreate}
+            onClose={() => setOpenCreate(false)}
+            onSuccess={(colaboradorId) => {
+              queryClient.invalidateQueries({
+                queryKey: ['colaboradoresForSelect', orgId],
+              });
+              if (colaboradorId) {
+                form.setValue('colaboradorId', colaboradorId, {
+                  shouldValidate: true,
+                });
+              }
+              setOpenCreate(false);
+            }}
+          />
+        </ValidationErrorsModalProvider>
+      )}
+    </>
   );
 }

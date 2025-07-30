@@ -36,7 +36,7 @@ interface Props {
   isLoading?: boolean
   className?: string
 
-  /** se fornecido, exibe item "+ …" que dispara o callback */
+  /** se fornecido, exibe item “+ …” que dispara o callback */
   onCreate?: () => void
   createLabel?: string
 }
@@ -65,42 +65,25 @@ export const SearchableSelect = React.forwardRef<HTMLButtonElement, Props>(
 
     /* flag p/ distinguir foco via clique */
     const pressedByPointer = React.useRef(false)
-    
-    /* flag para prevenir reabertura após seleção */
-    const justSelected = React.useRef(false)
-    
-    /* flag para detectar mudanças do React Hook Form */
-    const previousValue = React.useRef(selectedValue)
 
     const handleOpenChange = (newOpen: boolean) => {
-      setOpen(newOpen);
-      if (newOpen) {
-        console.log("SearchableSelect: Popover opened. Attempting to focus CommandInput...");
-        // Pequeno delay para garantir que o CommandInput esteja renderizado
-        setTimeout(() => {
-          inputRef.current?.focus();
-          console.log("SearchableSelect: Elemento focado após setTimeout:", document.activeElement);
-          if (inputRef.current && document.activeElement === inputRef.current) {
-            console.log("SearchableSelect: CommandInput focado com sucesso!");
-          } else {
-            console.log("SearchableSelect: Falha ao focar CommandInput ou foco movido.");
-          }
-        }, 100);
-      } else {
-        console.log("SearchableSelect: Popover closed.");
-      }
-    };
-
-    /* Detecta mudanças de valor (útil para React Hook Form) */
-    React.useEffect(() => {
-      if (previousValue.current !== selectedValue && selectedValue !== undefined) {
-        justSelected.current = true
-        setTimeout(() => {
-          justSelected.current = false
-        }, 200)
-      }
-      previousValue.current = selectedValue
-    }, [selectedValue])
+    setOpen(newOpen);
+    if (newOpen) {
+      console.log("SearchableSelect: Popover opened. Attempting to focus CommandInput...");
+      // Pequeno delay para garantir que o CommandInput esteja renderizado
+      setTimeout(() => {
+        inputRef.current?.focus();
+        console.log("SearchableSelect: Elemento focado após setTimeout:", document.activeElement);
+        if (inputRef.current && document.activeElement === inputRef.current) {
+          console.log("SearchableSelect: CommandInput focado com sucesso!");
+        } else {
+          console.log("SearchableSelect: Falha ao focar CommandInput ou foco movido.");
+        }
+      }, 100);
+    } else {
+      console.log("SearchableSelect: Popover closed.");
+    }
+  };
 
     /* loader */
     if (isLoading) return <Skeleton className={cn("h-10 w-full", className)} />
@@ -109,15 +92,7 @@ export const SearchableSelect = React.forwardRef<HTMLButtonElement, Props>(
       <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           <Button
-            ref={(node) => {
-              // Combina a ref interna com a ref externa (React Hook Form)
-              triggerRef.current = node
-              if (typeof ref === 'function') {
-                ref(node)
-              } else if (ref) {
-                ref.current = node
-              }
-            }}
+            ref={ref} // Atribui a ref diretamente aqui
             variant="outline"
             role="combobox"
             aria-expanded={open}
@@ -131,16 +106,7 @@ export const SearchableSelect = React.forwardRef<HTMLButtonElement, Props>(
               setTimeout(() => (pressedByPointer.current = false), 0)
             }}
             onFocus={() => {
-              // Previne reabertura se acabou de selecionar um item
-              if (justSelected.current) {
-                console.log("SearchableSelect: Blocked focus event due to recent selection")
-                return
-              }
-              
-              if (!pressedByPointer.current) {
-                console.log("SearchableSelect: Opening via focus (not pointer)")
-                handleOpenChange(true)
-              }
+              if (!pressedByPointer.current) handleOpenChange(true)
             }}
           >
             {selectedValue
@@ -186,18 +152,9 @@ export const SearchableSelect = React.forwardRef<HTMLButtonElement, Props>(
                     key={item.id}
                     value={item.name}
                     onSelect={() => {
-                      console.log("SearchableSelect: Item selected, closing popover")
                       onValueChange(item.id)
                       setOpen(false)
-                      
-                      // Marca que acabou de selecionar um item
-                      justSelected.current = true
-                      
-                      // Reset da flag após um delay maior para React Hook Form
-                      setTimeout(() => {
-                        justSelected.current = false
-                        console.log("SearchableSelect: Selection flag reset")
-                      }, 300)
+                      ref.current?.blur() // Adiciona o blur aqui
                     }}
                   >
                     <Check

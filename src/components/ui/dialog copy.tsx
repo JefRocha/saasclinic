@@ -51,18 +51,13 @@ export const DialogContent = React.forwardRef<
   { className, children, hideCloseButton, initialFocus, ...p },
   ref,
 ) {
-  React.useEffect(() => {
-    if (initialFocus?.current) {
-      initialFocus.current.focus();
-    }
-  }, [initialFocus]);
-
   return (
     <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Content
         ref={ref}
         data-slot="dialog-content"
+        initialFocus={initialFocus}
         className={cn(
           "fixed left-1/2 top-1/2 z-50 grid w-full max-w-[calc(100%-2rem)]",
           "-translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border bg-background p-6 shadow-lg",
