@@ -4,6 +4,10 @@ Atualizar banco de dados:
 npx drizzle-kit push 
 
 
+Remove-Item -Recurse -Force .\node_modules, .\ignored_node_modules -ErrorAction SilentlyContinue
+Remove-Item -Force .\package-lock.json, .\pnpm-lock.yaml, .\yarn.lock -ErrorAction SilentlyContinue
+
+
 crie um módulo "Médicos" baseado no módulo "Clientes". O formulário │
 │     de medicos tem um campo CPF que iráreceber mascara conforme clientes. Tem tambem um campo CEP que irá  │
 │    consumir um API assim como clientes, e através do CEP preencher o endereço. analise o shema e me diga   │

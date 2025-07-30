@@ -31,7 +31,7 @@ import { exametipoEnum, formapagtoEnum } from '@/models/Schema';
 import { DataTable } from '@/components/ui/data-table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { formatCurrency } from '@/helpers/format';
-import { UpsertColaboradorForm } from '@/app/[locale]/(auth)/dashboard/colaboradores/_components/upsert-colaborador-form';
+import { UpsertColaboradorForm } from   '@app/[locale]/(auth)/dashboard/colaboradores/_components/upsert-colaborador-form';
 
 import {
   useQuery,
@@ -380,32 +380,6 @@ export function UpsertAnamneseForm({
             </div>
           </form>
         </Form>
-
-        <Dialog open={openCreate} onOpenChange={setOpenCreate}>
-          <DialogContent initialFocus={createColabRef} className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Novo colaborador</DialogTitle>
-            </DialogHeader>
-
-            <UpsertColaboradorForm
-              ref={createColabRef}
-              onSuccess={(novo) => {
-                /* 1. Cache global: invalida lista de colaboradores */
-                queryClient.invalidateQueries({
-                  queryKey: ['colaboradoresForSelect', orgId],
-                })
-                /* 2. Seleciona o recém-criado no campo */
-                form.setValue('colaboradorId', novo.id, { shouldValidate: true })
-                /* 3. Fecha o diálogo */
-                setOpenCreate(false)
-              }}
-              onCancel={() => setOpenCreate(false)}
-            />
-          </DialogContent>
-        </Dialog>
-
-
-
 
         {/* Modal para Adicionar/Editar Item */}
         <Dialog open={isItemModalOpen} onOpenChange={setIsItemModalOpen}>
