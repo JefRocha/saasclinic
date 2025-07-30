@@ -24,12 +24,10 @@ async function ClientsPage() {
   if (!orgId)            redirect('/clinic-form');
 
   return (
-    <PageContainer>
       
       <PageContent>
         <ClientsPageContent />
       </PageContent>
-    </PageContainer>
   );
 }
 

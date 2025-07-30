@@ -7,6 +7,7 @@ import { AdminOrgSwitcher } from '@/components/AdminOrgSwitcher';
 
 import { ActiveLink } from '@/components/ActiveLink';
 import { LocaleSwitcher } from '@/components/LocaleSwitcher';
+import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { ToggleMenuButton } from '@/components/ToggleMenuButton';
 import {
   DropdownMenu,
@@ -37,11 +38,10 @@ export const DashboardHeader = (props: {
   const isSuper  = user?.publicMetadata?.role === 'super_admin';
 
   return (
-    <>
+    <div className="w-full flex justify-between items-center shadow-2xl">
       <div className="flex items-center">
         <Link href="/dashboard" className="max-sm:hidden">
           <Logo />
-          <AdminOrgSwitcher /> 
         </Link>
 
         <svg
@@ -121,6 +121,15 @@ export const DashboardHeader = (props: {
           {/* PRO: Dark mode toggle button */}
 
           <li data-fade>
+            <AdminOrgSwitcher />
+          </li>
+
+          {/* PRO: Dark mode toggle button */}
+          <li data-fade>
+            <ThemeSwitcher />
+          </li>
+
+          <li data-fade>
             <LocaleSwitcher />
           </li>
 
@@ -141,6 +150,6 @@ export const DashboardHeader = (props: {
           </li>
         </ul>
       </div>
-    </>
+    </div>
   );
 };

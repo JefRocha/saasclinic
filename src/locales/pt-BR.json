@@ -100,7 +100,9 @@
     "exams_by_client": "Exames por Cliente",
     "financial": "Financeiro",
     "accounts_payable": "Contas a Pagar",
-    "accounts_receivable": "Contas a Receber"
+    "accounts_receivable": "Contas a Receber",
+    "movimento": "Movimento",
+    "anamnese": "Anamnese"
   },
   "Dashboard": {
     "meta_title": "Dashboard – SaaS Template",
@@ -172,34 +174,58 @@
     "no_client_found": "Nenhum cliente encontrado.",
     "select_all_clients": "Todos os Clientes"
   },
-  "Todos": {
-    "title_bar": "Lista de tarefas",
-    "title_bar_description": "Visualize e gerencie suas tarefas",
-    "add_todo_button": "Nova tarefa"
+  "AtendimentosPage": {
+    "title": "Lançamento de Atendimento",
+    "description": "Preencha os dados para registrar um novo atendimento."
   },
-  "TodoTableColumns": {
-    "open_menu": "Abrir menu",
-    "edit": "Editar",
-    "delete": "Excluir",
-    "title_header": "Título",
-    "message_header": "Mensagem",
-    "created_at_header": "Criado em"
+  "AnamnesePage": {
+    "title": "Lançamento de Anamnese",
+    "description": "Preencha os dados para registrar uma nova anamnese."
   },
-  "AddTodo": {
-    "title_bar": "Adicionar tarefa",
-    "add_todo_section_title": "Criar nova tarefa",
-    "add_todo_section_description": "Preencha o formulário abaixo para criar uma nova tarefa"
+  "AnamneseForm": {
+    "master_section_title": "Dados da Anamnese",
+    "detail_section_title": "Exames e Procedimentos",
+    "submit_button": "Salvar Anamnese",
+    "cancel_button": "Cancelar",
+    "item_exam_header": "Exame",
+    "item_doctor_header": "Médico",
+    "item_value_header": "Valor",
+    "item_actions_header": "Ações",
+    "edit_item_button": "Editar",
+    "remove_item_button": "Remover",
+    "no_items_found": "Nenhum item adicionado.",
+    "add_item_button": "Adicionar Item",
+    "edit_item_title": "Editar Item da Anamnese",
+    "add_item_title": "Adicionar Item à Anamnese",
+    "save_changes_button": "Salvar Alterações",
+    "form_title": "Formulário de Anamnese"
   },
-  "EditTodo": {
-    "title_bar": "Editar tarefa",
-    "edit_todo_section_title": "Modificar tarefa",
-    "edit_todo_section_description": "Preencha o formulário abaixo para editar a tarefa"
+  "AnamneseListPage": {
+    "title": "Anamneses",
+    "description": "Visualize e gerencie as anamneses registradas."
   },
-  "TodoForm": {
-    "title_label": "Título",
-    "title_description": "Insira um título descritivo para sua tarefa.",
-    "message_title": "Mensagem",
-    "message_description": "Insira uma mensagem detalhada para sua tarefa.",
-    "submit_button": "Enviar"
+  "AnamneseFormPage": {
+    "title": "Lançamento de Anamnese",
+    "description": "Preencha os dados para registrar uma nova anamnese."
+  },
+  "FormFields": {
+    "placeholder_text": "Digite {label}",
+    "placeholder_date": "Selecione uma data",
+    "placeholder_select": "Selecione uma opção"
+  },
+  "AnamneseTable": {
+    "id_header": "ID",
+    "client_name_header": "Cliente",
+    "colaborador_name_header": "Colaborador",
+    "total_header": "Total",
+    "type_header": "Tipo",
+    "cargo_header": "Cargo",
+    "no_results": "Nenhuma anamnese encontrada.",
+    "add_anamnese_button": "Adicionar Anamnese",
+    "select_date_range_placeholder": "Selecione o período"
+  },
+  "Errors": {
+    "unauthorized": "Você não está autorizado a realizar esta ação.",
+    "database_error": "Ocorreu um erro ao acessar o banco de dados."
   }
 }

@@ -4,6 +4,7 @@ import '@/styles/global.css'
 import { ClerkProvider } from '@clerk/nextjs';
 import { dark } from '@clerk/themes';
 import { ptBR } from '@clerk/localizations'; // Importar ptBR aqui
+import { ThemeProvider } from "next-themes";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,21 +27,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html>
+    <html suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ClerkProvider
-          localization={ptBR} // Usar ptBR para localização
-          appearance={{ baseTheme: dark }}
-          signInUrl={'/sign-in'}
-          signUpUrl={'/sign-up'}
-          signInFallbackRedirectUrl={'/dashboard'} // Redirecionar para dashboard
-          signUpFallbackRedirectUrl={'/dashboard'} // Redirecionar para dashboard
-          afterSignOutUrl={'/'}
-        >
-          {children}
-        </ClerkProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <ClerkProvider
+            localization={ptBR} // Usar ptBR para localização
+            appearance={{ baseTheme: dark }}
+            signInUrl={'/sign-in'}
+            signUpUrl={'/sign-up'}
+            signInFallbackRedirectUrl={'/dashboard'} // Redirecionar para dashboard
+            signUpFallbackRedirectUrl={'/dashboard'} // Redirecionar para dashboard
+            afterSignOutUrl={'/'}
+          >
+            {children}
+          </ClerkProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

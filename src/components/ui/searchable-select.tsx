@@ -1,11 +1,8 @@
-'use client';
+import * as React from "react"
+import { Check, ChevronsUpDown } from "lucide-react"
 
-import * as React from "react";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { useTranslations } from "next-intl";
-
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/libs/utils"
+import { Button } from "@/components/ui/button"
 import {
   Command,
   CommandEmpty,
@@ -13,108 +10,101 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Skeleton } from "@/components/ui/skeleton";
+} from "@/components/ui/command"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Skeleton } from "@/components/ui/skeleton"
 
-interface SearchableSelectItem {
-  id: string | number;
-  name: string;
+/* ─ tipagens ─ */
+interface Item {
+  id: string | number
+  name: string
+}
+interface Props {
+  items: Item[]
+  selectedValue: string | number | undefined
+  onValueChange: (v: string | number) => void
+  placeholder?: string
+  searchPlaceholder?: string
+  noResultsText?: string
+  isLoading?: boolean
+  className?: string
 }
 
-interface SearchableSelectProps {
-  items: SearchableSelectItem[];
-  selectedValue: string | number | null;
-  onValueChange: (value: string | number | null) => void;
-  placeholder?: string;
-  searchPlaceholder?: string;
-  noResultsText?: string;
-  selectAllText?: string;
-  isLoading?: boolean;
-  className?: string;
-}
+/* ─ componente ─ */
+/* src/components/ui/searchable-select.tsx */
 
-export function SearchableSelect({
-  items,
-  selectedValue,
-  onValueChange,
-  placeholder = "Selecione um item...",
-  searchPlaceholder = "Buscar item...",
-  noResultsText = "Nenhum item encontrado.",
-  selectAllText = "Todos",
-  isLoading = false,
-  className = "",
-}: SearchableSelectProps) {
-  const [open, setOpen] = React.useState(false);
+export const SearchableSelect = React.forwardRef<HTMLButtonElement, Props>(
+  (
+    { items, selectedValue, onValueChange, placeholder = "Select", ...rest },
+    ref,
+  ) => {
+    const [open, setOpen] = React.useState(false)
+    const inputRef = React.useRef<HTMLInputElement>(null)
+    const pressedByPointer = React.useRef(false)   // 👈 flag
 
-  if (isLoading) {
-    return <Skeleton className={cn("h-10 w-full", className)} />;
-  }
+    const handleOpenChange = (next: boolean) => {
+      setOpen(next)
+      if (next) requestAnimationFrame(() => inputRef.current?.focus())
+    }
 
-  const selectedItem = items.find((item) => item.id === selectedValue);
+    /* ───────────────── render ───────────────── */
+    return (
+      <Popover open={open} onOpenChange={handleOpenChange}>
+        <PopoverTrigger asChild>
+          <Button
+            ref={ref}
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            /* 1️⃣  mar­ca que foi clique/touch */
+            onPointerDown={() => {
+              pressedByPointer.current = true
+              setTimeout(() => (pressedByPointer.current = false), 0)
+            }}
+            /* 2️⃣  abre só se NÃO foi clique */
+            onFocus={() => {
+              if (!pressedByPointer.current) handleOpenChange(true)
+            }}
+            className="flex h-9 w-full items-center justify-between rounded-md border px-3 py-1 text-sm shadow-sm"
+          >
+            {selectedValue
+              ? items.find((i) => i.id === selectedValue)?.name
+              : placeholder}
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
 
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className={cn("w-full justify-between shadow-md border border-gray-400", className)}
-        >
-          {selectedValue ? selectedItem?.name : placeholder}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className={cn("w-full p-0", className)}>
-        <Command>
-          <CommandInput placeholder={searchPlaceholder} />
-          <CommandList>
-            <CommandEmpty>{noResultsText}</CommandEmpty>
-            <CommandGroup>
-              <CommandItem
-                onSelect={() => {
-                  onValueChange(null);
-                  setOpen(false);
-                }}
-              >
-                <Check
-                  className={cn(
-                    "mr-2 h-4 w-4",
-                    selectedValue === null ? "opacity-100" : "opacity-0"
-                  )}
-                />
-                {selectAllText}
-              </CommandItem>
-              {items.map((item) => (
-                <CommandItem
-                  key={item.id}
-                  value={item.name || ""}
-                  onSelect={(currentValue) => {
-                    const selected = items.find(i => i.name.toLowerCase() === currentValue.toLowerCase());
-                    if (selected) {
-                      onValueChange(selected.id);
-                    }
-                    setOpen(false);
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      selectedValue === item.id ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  {item.name}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
-  );
-}
+        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+          <Command>
+            <CommandInput ref={inputRef} placeholder="Search…" />
+            <CommandList>
+              <CommandEmpty>No results.</CommandEmpty>
+              <CommandGroup>
+                {items.map((item) => (
+                  <CommandItem
+                    key={item.id}
+                    value={item.name}
+                    onSelect={() => {
+                      onValueChange(item.id)
+                      setOpen(false)
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        selectedValue === item.id ? "opacity-100" : "opacity-0",
+                      )}
+                    />
+                    {item.name}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+    )
+  },
+)
+SearchableSelect.displayName = "SearchableSelect"
+

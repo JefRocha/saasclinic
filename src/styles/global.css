@@ -84,8 +84,9 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.21 0.006 285.885);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.546 0.245 262.881);
-  --primary-foreground: oklch(0.379 0.146 265.522);
+  --form-bg: oklch(1 0 0); /* Branco puro para formulários no modo escuro (teste) */
+  --primary: oklch(0.62 0.15 260);
+  --primary-foreground: oklch(0.98 0 0);
   --secondary: oklch(0.274 0.006 286.033);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.274 0.006 286.033);
@@ -137,6 +138,15 @@
 
   .login-input:-webkit-autofill::placeholder {
     color: #9ca3af;
+  }
+
+  .clerk-warning-pattern {
+    background: repeating-linear-gradient(-45deg,
+      color-mix(in srgb, transparent, #F36B16 7%),
+      color-mix(in srgb, transparent, #F36B16 7%) 6px,
+      color-mix(in srgb, transparent, #F36B16 11%) 6px,
+      color-mix(in srgb, transparent, #F36B16 11%) 12px);
+    mask-image: linear-gradient(transparent 60%, black);
   }
 }
 

@@ -8,7 +8,7 @@ export enum Action {
   Delete = 'delete',
 }
 
-export type Subjects = 'Client' | 'Organization' | 'Exame' | 'Medico' | 'Colaborador' | 'all';
+export type Subjects = 'Client' | 'Organization' | 'Exame' | 'Medico' | 'Colaborador' | 'ExameCli' | 'ContasAPagar' | 'all';
 export type AppAbility = Ability<[Action, Subjects]>;
 
 /* recebe `orgId` para saber qual org pertence ao usuário */

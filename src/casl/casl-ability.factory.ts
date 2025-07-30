@@ -10,7 +10,7 @@ export enum Action {
   Delete = 'delete',
 }
 
-type Subjects = 'Client' | 'all'          // 🔸 Strings, não classes
+type Subjects = 'Client' | 'ExameCli' | 'all'          // 🔸 Strings, não classes
 export type AppAbility = Ability<[Action, Subjects]>
 
 @Injectable()

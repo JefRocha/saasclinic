@@ -12,8 +12,6 @@ import { clerkClient } from "@clerk/clerk-sdk-node";
 
 type ClientDataForDrizzle = {
   [K in keyof typeof clientsTable.$inferInsert]: typeof clientsTable.$inferInsert[K];
-} & {
-  vlrMens?: number | null; // Sobrescreve o tipo para vlrMens
 };
 
 async function handler({
@@ -71,6 +69,8 @@ async function handler({
     ...parsedInput,
     organizationId: finalOrgId,
     id: parsedInput.id ? Number(parsedInput.id) : undefined,
+    vlrMens: parsedInput.vlrMens !== undefined && parsedInput.vlrMens !== null ? String(parsedInput.vlrMens) : undefined,
+    travado: parsedInput.travado !== undefined && parsedInput.travado !== null ? Boolean(parsedInput.travado) : undefined,
     createdAt: undefined, // Explicitamente definido como undefined para remover do objeto
     updatedAt: undefined, // Explicitamente definido como undefined para remover do objeto
   };

@@ -4,6 +4,7 @@ import * as React from "react";
 import { Search } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
+import { cn } from "@/libs/utils";
 
 interface SearchInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   onSearchChange?: (value: string) => void;
@@ -25,12 +26,12 @@ export function SearchInput({
   };
 
   return (
-    <div className="relative">
+    <div className={cn("relative w-full", className)}> {/* Adicionado w-full e cn para aplicar className */}
       <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
       <Input
         type="search"
         placeholder="Buscar..."
-        className="pl-8"
+        className={cn("pl-8 w-full", className)}
         value={searchValue}
         onChange={handleInputChange}
         {...props}

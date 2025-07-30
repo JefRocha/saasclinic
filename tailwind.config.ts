@@ -7,6 +7,7 @@ const config = {
   theme: {
     extend: {
       colors: {
+        clerkStripe: "#b45309", 
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
@@ -40,6 +41,9 @@ const config = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
+        'form-bg': {
+          DEFAULT: 'hsl(var(--form-bg))',
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -62,7 +66,12 @@ const config = {
       },
     },
   },
-  plugins: [require('tailwindcss-animate')],
-} satisfies Config;
+  
+  plugins: [
+    require("tailwindcss-animate"),
+    // opcional: se instalar, remova a safelist acima
+    require("@tailwindcss/masks"),
+  ],
+}
 
 export default config;

@@ -4,11 +4,23 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { ptBR } from "@clerk/localizations";
 import type { Metadata } from "next";
 import { getMessages } from "next-intl/server";
+import { Geist, Geist_Mono } from "next/font/google";
 
 import ClientIntlProvider from "@/components/ClientIntlProvider";
+import { PermissionModalProvider } from "@/components/PermissionModal";
 import ReactQueryProvider from "@/components/providers/react-query-provider";
-import { PermissionModalProvider } from "@/components/PermissionModal"; // Importado novamente
+import { ThemeProvider } from "@/components/providers/theme-provider";
 import { AppConfig } from "@/utils/AppConfig";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   icons: [
@@ -56,18 +68,29 @@ export default async function LocaleLayout({
   const timeZone = "America/Sao_Paulo";
 
   return (
-    <ClerkProvider localization={ptBR}>
-      <ClientIntlProvider
-        locale={locale}
-        messages={messages}
-        timeZone={timeZone}
+    <html lang={locale} suppressHydrationWarning>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ReactQueryProvider>
-          <PermissionModalProvider> {/* Descomentado */}
-            {children}
-          </PermissionModalProvider>
-        </ReactQueryProvider>
-      </ClientIntlProvider>
-    </ClerkProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ClerkProvider localization={ptBR}>
+            <ClientIntlProvider
+              locale={locale}
+              messages={messages}
+              timeZone={timeZone}
+            >
+              <ReactQueryProvider>
+                <PermissionModalProvider>{children}</PermissionModalProvider>
+              </ReactQueryProvider>
+            </ClientIntlProvider>
+          </ClerkProvider>
+        </ThemeProvider>
+      </body>
+    </html>
   );
 }

@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1753710734176,
+      "tag": "0000_bouncy_dark_phoenix",
+      "breakpoints": true
+    }
+  ]
+}

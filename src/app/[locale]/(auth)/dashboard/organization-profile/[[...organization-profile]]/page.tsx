@@ -1,10 +1,12 @@
 import { OrganizationProfile } from '@clerk/nextjs';
 import { useTranslations } from 'next-intl';
+import React from 'react';
 
 import { TitleBar } from '@/features/dashboard/TitleBar';
 import { getI18nPath } from '@/utils/Helpers';
 
-const OrganizationProfilePage = (props: { params: any }) => {
+const OrganizationProfilePage = (props: { params: Promise<any> }) => {
+  const actualParams = React.use(props.params);
   const t = useTranslations('OrganizationProfile');
 
   return (
@@ -18,7 +20,7 @@ const OrganizationProfilePage = (props: { params: any }) => {
         routing="path"
         path={getI18nPath(
           '/dashboard/organization-profile',
-          props.params.locale,
+          actualParams.locale,
         )}
         afterLeaveOrganizationUrl="/onboarding/organization-selection"
         appearance={{

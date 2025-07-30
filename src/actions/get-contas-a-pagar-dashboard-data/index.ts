@@ -1,17 +1,17 @@
 'use server';
 
 import { currentUser } from "@clerk/nextjs/server";
-import { db } from "@/db";
-import { contasAPagarTable } from "@/models/Schema"; // Certifique-se de que esta importação está correta
+// import { db } from "@/db";
+// import { contasAPagarTable } from "@/models/Schema"; // Certifique-se de que esta importação está correta
 import { protectedAction, ActionError } from "@/libs/safe-action";
 import { getContasAPagarDashboardDataSchema, GetContasAPagarDashboardDataResult } from "./schema";
 import { buildAbility, Action as CaslAction } from "@/lib/ability";
-import { eq, and, gte, lte, sql } from "drizzle-orm";
-import dayjs from 'dayjs';
+// import { eq, and, gte, lte, sql } from "drizzle-orm";
+// import dayjs from 'dayjs';
 
 export const getContasAPagarDashboardData = protectedAction
   .schema(getContasAPagarDashboardDataSchema)
-  .action(async ({ parsedInput, ctx: { orgId } }) => {
+  .action(async ({ ctx: { orgId } }) => {
     const user = await currentUser();
     const role = user?.publicMetadata?.role as string;
 
@@ -20,7 +20,7 @@ export const getContasAPagarDashboardData = protectedAction
       throw new ActionError("Você não tem permissão para ler dados de contas a pagar.");
     }
 
-    const { startDate, endDate } = parsedInput;
+    // const { startDate, endDate } = parsedInput;
 
     let totalAPagar = 0;
     let vencidas = 0;

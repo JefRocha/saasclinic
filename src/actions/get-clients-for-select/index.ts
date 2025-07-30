@@ -1,37 +1,48 @@
 'use server';
 
-import { currentUser } from "@clerk/nextjs/server";
-import { db } from "@/db";
-import { clientsTable } from "@/models/Schema";
-import { protectedAction, ActionError } from "@/libs/safe-action";
-import { buildAbility, Action as CaslAction } from "@/lib/ability";
-import { eq } from "drizzle-orm";
-import { z } from "zod";
+import { eq } from 'drizzle-orm';
+import ptBRMessages from '@/locales/pt-BR.json';
+import { z } from 'zod';
+
+import { clientsTable } from '@/models/Schema';
+import { db } from '@/libs/DB';
+import { ActionError } from '@/libs/action-error';
+import { protectedAction } from '@/libs/safe-action';
+
+const GetClientsForSelectSchema = z.object({});
 
 export const getClientsForSelect = protectedAction
-  .schema(z.object({})) // Não precisa de input específico, apenas o orgId do contexto
+  .schema(GetClientsForSelectSchema)
   .action(async ({ ctx: { orgId } }) => {
-    const user = await currentUser();
-    const role = user?.publicMetadata?.role as string;
+    const t = (key: string) => {
+      const keys = key.split('.');
+      let current: any = ptBRMessages;
+      for (const k of keys) {
+        if (current && typeof current === 'object' && k in current) {
+          current = current[k];
+        } else {
+          return key; // Fallback para a chave se não encontrada
+        }
+      }
+      return current;
+    };
 
-    const ability = buildAbility(role, orgId);
-    if (!ability.can(CaslAction.Read, "Client")) {
-      throw new ActionError("Você não tem permissão para ler dados de clientes.");
+    if (!orgId) {
+      throw new ActionError(t('Errors.unauthorized'));
     }
 
     try {
       const clients = await db
         .select({
           id: clientsTable.id,
-          name: clientsTable.razaoSocial, // Ou fantasia, dependendo do que você quer exibir
+          name: clientsTable.fantasia,
         })
         .from(clientsTable)
-        .where(eq(clientsTable.organizationId, orgId))
-        .orderBy(clientsTable.razaoSocial);
+        .where(eq(clientsTable.organizationId, orgId));
 
-      return clients;
-    } catch (e) {
-      console.error("Erro ao buscar clientes para select:", e);
-      throw new ActionError("Erro interno ao buscar clientes para seleção.");
+      return { success: true, data: clients };
+    } catch (error) {
+      console.error("Erro ao buscar clientes para select:", error);
+      throw new ActionError(t('Errors.database_error'));
     }
   });

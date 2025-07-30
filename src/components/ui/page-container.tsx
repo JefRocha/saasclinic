@@ -1,5 +1,7 @@
-export const PageContainer = ({ children }: { children: React.ReactNode }) => {
-  return <div className="w-full space-y-6 p-6">{children}</div>;
+import { cn } from "@/libs/utils";
+
+export const PageContainer = ({ children, className }: { children: React.ReactNode, className?: string }) => {
+  return <div className={cn("w-full space-y-6 p-6 mt-6 mb-6 rounded-lg border border-gray-200 dark:border-black/50 shadow-lg shadow-gray-500/20 dark:shadow-gray-900/50 flex-1", className)}>{children}</div>;
 };
 
 export const PageHeader = ({ children }: { children: React.ReactNode }) => {
