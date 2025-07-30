@@ -44,6 +44,9 @@ const config = {
         'form-bg': {
           DEFAULT: 'hsl(var(--form-bg))',
         },
+        'minha-nova-cor': {
+          DEFAULT: 'hsl(var(--foreground-header))',
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',

@@ -172,7 +172,7 @@ export const SearchableSelect = React.forwardRef<HTMLButtonElement, Props>(
                       setOpen(false)
                       onCreate()
                     }}
-                    className="mt-2 flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50"
+                    className="mt-2 flex w-full items-center justify-center gap-2 bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                   >
                     <Plus className="size-4" />
                     {createLabel}

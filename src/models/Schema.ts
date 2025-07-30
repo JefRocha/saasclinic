@@ -424,3 +424,22 @@ export const anamneseItemsRelations = relations(
     }),
   }),
 );
+
+export const employmentTable = pgTable("colaborador_clientes", {
+  id:            serial("id").primaryKey(),
+  colaboradorId: integer("colaborador_id")
+                   .references(() => colaboradorTable.id, { onDelete: "cascade" })
+                   .notNull(),
+  clientId:      integer("client_id")
+                   .references(() => clientsTable.id, { onDelete: "cascade" })
+                   .notNull(),
+  dataAdmissao:  date("data_admissao").notNull(),
+  dataDemissao:  date("data_demissao"),            // null = vínculo ativo
+  createdAt:     timestamp("created_at").defaultNow().notNull(),
+  updatedAt:     timestamp("updated_at")
+                   .defaultNow()
+                   .$onUpdate(() => new Date()),
+}, tbl => ({
+  uniq: uniqueIndex("uniq_colab_client_adm")
+          .on(tbl.colaboradorId, tbl.clientId, tbl.dataAdmissao),
+}));

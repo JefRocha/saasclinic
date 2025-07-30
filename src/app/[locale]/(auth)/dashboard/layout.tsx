@@ -120,20 +120,20 @@ export default function DashboardLayout({
 
   /* ----------------------------------------------------------------------- */
   return (
-    <div className="flex h-screen flex-col bg-muted">
+    <div className="flex h-screen flex-col bg-sidebar">
       {/* Header fixo */}
-      <header
-        className="sticky top-0 z-10 h-[--header-height] bg-background shadow-lg"
-        style={{ "--header-height": "80px" } as React.CSSProperties}
-      >
-        <div className="mx-auto flex max-w-screen-xl items-center justify-between px-3 py-4">
-          <DashboardHeader menu={menu} />
-        </div>
-      </header>
+      <header 
+  className="sticky top-0 z-10 h-[--header-height] bg-sidebar shadow-lg"
+  style={{ "--header-height": "80px" } as React.CSSProperties}
+>
+  <div className="flex items-center px-3 py-4">
+    <DashboardHeader menu={menu} className="w-full" />
+  </div>
+</header>
 
       {/* Layout principal */}
       <SidebarProvider>
-        <div className="flex flex-1 overflow-hidden ">
+        <div className="flex flex-1 overflow-hidden  ">
           <Sidebar variant="inset" collapsible>
             <SidebarContent>
               <div className="flex justify-end py-2 pr-1">

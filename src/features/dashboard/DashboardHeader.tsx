@@ -8,6 +8,7 @@ import { AdminOrgSwitcher } from '@/components/AdminOrgSwitcher';
 import { ActiveLink } from '@/components/ActiveLink';
 import { LocaleSwitcher } from '@/components/LocaleSwitcher';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
+import { WeatherClock } from '@/components/WeatherClock';
 import { ToggleMenuButton } from '@/components/ToggleMenuButton';
 import {
   DropdownMenu,
@@ -38,7 +39,7 @@ export const DashboardHeader = (props: {
   const isSuper  = user?.publicMetadata?.role === 'super_admin';
 
   return (
-    <div className="w-full flex justify-between items-center shadow-2xl">
+    <div className="w-full flex max justify-between items-center shadow-2xl bg-sidebar px-[30px]">
       <div className="flex items-center">
         <Link href="/dashboard" className="max-sm:hidden">
           <Logo />
@@ -69,15 +70,15 @@ export const DashboardHeader = (props: {
             appearance={{
               elements: {
                 organizationSwitcherTrigger: 'max-w-28 sm:max-w-52 text-foreground',
-                organizationPreviewMainIdentifier: { color: 'var(--foreground)', __css: { color: 'var(--foreground) !important' } },
+                organizationPreviewMainIdentifier: { color: 'var(--foreground-header)', __css: { color: 'var(--foreground-header) !important' } },
               },
               variables: {
-                colorText: 'var(--foreground)',
+                colorText: 'var(--foreground-header)',
               },
             }}
           />
         )}
-
+        
         <nav className="ml-3 max-lg:hidden">
           <ul className="flex flex-row items-center gap-x-3 text-lg font-medium [&_a:hover]:opacity-100 [&_a]:opacity-75">
             {props.menu.map(item => (
@@ -127,6 +128,10 @@ export const DashboardHeader = (props: {
           {/* PRO: Dark mode toggle button */}
           <li data-fade>
             <ThemeSwitcher />
+          </li>
+
+          <li data-fade>
+            <WeatherClock />
           </li>
 
           <li data-fade>
