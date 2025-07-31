@@ -35,6 +35,7 @@ interface Props {
   noResultsText?: string
   isLoading?: boolean
   className?: string
+  searchKeys?: string[]
 
   /** se fornecido, exibe item "+ …" que dispara o callback */
   onCreate?: () => void
@@ -55,10 +56,12 @@ export const SearchableSelect = React.forwardRef<HTMLButtonElement, Props>(
       className,
       onCreate,
       createLabel = "Cadastrar novo",
+      searchKeys = ["name"], // Default to searching by name
     },
     ref,
   ) => {
     const [open, setOpen] = React.useState(false)
+    const [searchQuery, setSearchQuery] = React.useState(""); // Novo estado para o termo de busca
     const inputRef = React.useRef<HTMLInputElement>(null)
 
     const triggerRef = React.useRef<HTMLButtonElement>(null)
@@ -75,20 +78,27 @@ export const SearchableSelect = React.forwardRef<HTMLButtonElement, Props>(
     const handleOpenChange = (newOpen: boolean) => {
       setOpen(newOpen);
       if (newOpen) {
-        console.log("SearchableSelect: Popover opened. Attempting to focus CommandInput...");
         // Pequeno delay para garantir que o CommandInput esteja renderizado
         setTimeout(() => {
           inputRef.current?.focus();
-          console.log("SearchableSelect: Elemento focado após setTimeout:", document.activeElement);
-          if (inputRef.current && document.activeElement === inputRef.current) {
-            console.log("SearchableSelect: CommandInput focado com sucesso!");
-          } else {
-            console.log("SearchableSelect: Falha ao focar CommandInput ou foco movido.");
-          }
         }, 100);
-      } else {
-        console.log("SearchableSelect: Popover closed.");
       }
+    };
+
+    const customFilter = (value: string, search: string) => {
+      const currentSearchTerm = searchQuery.toLowerCase(); // Usar o estado controlado
+      const item = items.find(i => i.name === value); // Find the actual item by its name (value in CommandItem)
+      if (!item) {
+        return 0; // If item not found, don't include in results
+      }
+
+      for (const key of searchKeys) {
+        const itemValue = (item as any)[key];
+        if (itemValue && String(itemValue).toLowerCase().includes(currentSearchTerm)) {
+          return 1; // Match found
+        }
+      }
+      return 0; // No match
     };
 
     /* Detecta mudanças de valor (útil para React Hook Form) */
@@ -133,12 +143,10 @@ export const SearchableSelect = React.forwardRef<HTMLButtonElement, Props>(
             onFocus={() => {
               // Previne reabertura se acabou de selecionar um item
               if (justSelected.current) {
-                console.log("SearchableSelect: Blocked focus event due to recent selection")
                 return
               }
               
               if (!pressedByPointer.current) {
-                console.log("SearchableSelect: Opening via focus (not pointer)")
                 handleOpenChange(true)
               }
             }}
@@ -155,11 +163,13 @@ export const SearchableSelect = React.forwardRef<HTMLButtonElement, Props>(
           sideOffset={4}
           className="w-[var(--radix-popover-trigger-width)] p-0"
         >
-          <Command className="w-full">
+          <Command className="w-full" filter={customFilter}>
             <CommandInput
               ref={inputRef}
               placeholder={searchPlaceholder}
               className="w-full max-w-none px-3 py-2"
+              value={searchQuery} // Controlado pelo estado
+              onValueChange={setSearchQuery} // Atualiza o estado
             />
 
             <CommandList>
@@ -186,7 +196,6 @@ export const SearchableSelect = React.forwardRef<HTMLButtonElement, Props>(
                     key={item.id}
                     value={item.name}
                     onSelect={() => {
-                      console.log("SearchableSelect: Item selected, closing popover")
                       onValueChange(item.id)
                       setOpen(false)
                       
@@ -196,7 +205,6 @@ export const SearchableSelect = React.forwardRef<HTMLButtonElement, Props>(
                       // Reset da flag após um delay maior para React Hook Form
                       setTimeout(() => {
                         justSelected.current = false
-                        console.log("SearchableSelect: Selection flag reset")
                       }, 300)
                     }}
                   >

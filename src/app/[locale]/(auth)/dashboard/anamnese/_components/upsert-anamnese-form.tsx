@@ -134,9 +134,9 @@ export function UpsertAnamneseForm({
   const handleAddItem = () => {
     setEditingItemIndex(null);
     itemForm.reset({
-      exameId: null,
-      medicoId: null,
-      valor: null,
+      exameId: undefined,
+      medicoId: undefined,
+      valor: undefined,
     });
     setIsItemModalOpen(true);
   };
@@ -198,12 +198,12 @@ export function UpsertAnamneseForm({
       })) 
     : [];
     
-  const exameItems = exames?.data && Array.isArray(exames.data) 
-    ? exames.data.map(exame => ({ id: exame.id, name: exame.descricao || '' })) 
+  const exameItems = exames?.data && Array.isArray(exames.data.data) 
+    ? exames.data.data.map(exame => ({ id: exame.id, name: exame.name || '' })) 
     : [];
     
-  const medicoItems = medicos?.data && Array.isArray(medicos.data) 
-    ? medicos.data.map(medico => ({ id: medico.id, name: medico.nome || '' })) 
+  const medicoItems = medicos?.data && Array.isArray(medicos.data.data) 
+    ? medicos.data.data.map(medico => ({ id: medico.id, name: medico.name || '' })) 
     : [];
 
   return (
@@ -229,14 +229,14 @@ export function UpsertAnamneseForm({
                   <CardTitle>{t('master_section_title')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 px-4">
-                  <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-5">
+                  <div className="grid w-full grid-cols-1 gap-2 md:grid-cols-5">
                     {/* ✅ DatePicker com ref e props adicionais para debug */}
                     <FormDatePickerHybrid
                       ref={datePickerRef}
                       control={form.control}
                       name="data"
                       label="Data"
-                      className="w-full md:max-w-[200px]"
+                      className="w-full"
                       placeholder={tFormFields('placeholder_date')}
                       required
                     />
@@ -305,7 +305,7 @@ export function UpsertAnamneseForm({
                       control={form.control}
                       name="clienteId"
                       render={({ field }) => (
-                        <FormItem>
+                        <FormItem className="md:col-span-2">
                           <FormLabel>Cliente</FormLabel>
                           <SearchableSelect
                             items={clientItems}
@@ -348,8 +348,15 @@ export function UpsertAnamneseForm({
               </Card>
 
               <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle>{t('detail_section_title')}</CardTitle>
+                  <Button
+                    type="button"
+                    onClick={handleAddItem}
+                    data-testid="add-item-button"
+                  >
+                    {t('add_item_button')}
+                  </Button>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <DataTable
@@ -407,13 +414,11 @@ export function UpsertAnamneseForm({
                     emptyMessage={t('no_items_found')}
                   />
 
-                  <Button
-                    type="button"
-                    onClick={handleAddItem}
-                    data-testid="add-item-button"
-                  >
-                    {t('add_item_button')}
-                  </Button>
+                  <div className="flex justify-end pt-4 pr-4">
+                    <span className="text-lg font-semibold">
+                      Valor Total dos Exames: {formatCurrency(fields.reduce((acc, item) => acc + (item.valor || 0), 0))}
+                    </span>
+                  </div>
                 </CardContent>
               </Card>
 
@@ -431,7 +436,7 @@ export function UpsertAnamneseForm({
             <DialogContent
               onEscapeKeyDown={(e) => e.preventDefault()}
               onPointerDownOutside={(e) => e.preventDefault()}
-              className="[&>button]:hidden"
+              className="[&>button]:hidden max-w-3xl"
             >
               <DialogHeader>
                 <DialogTitle>
@@ -460,6 +465,7 @@ export function UpsertAnamneseForm({
                           searchPlaceholder="Pesquisar exame..."
                           noResultsText="Nenhum exame encontrado."
                           isLoading={isLoadingExames}
+                          searchKeys={['name', 'id']}
                         />
                         <FormMessage />
                       </FormItem>
@@ -480,6 +486,7 @@ export function UpsertAnamneseForm({
                           searchPlaceholder="Pesquisar médico..."
                           noResultsText="Nenhum médico encontrado."
                           isLoading={isLoadingMedicos}
+                          searchKeys={['name', 'id']}
                         />
                         <FormMessage />
                       </FormItem>
