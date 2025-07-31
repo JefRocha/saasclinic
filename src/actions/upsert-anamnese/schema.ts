@@ -24,10 +24,10 @@ export const upsertAnamneseSchema = z.object({
 
   // --- Dados do atendimento ---
   data: z.date({ required_error: 'A data do atendimento é obrigatória.' }),
-  formaPagto: z.enum(formapagtoEnum.enumValues),
-  tipo: z.enum(exametipoEnum.enumValues),
-  cargo: z.string().min(1, 'O cargo é obrigatório.'),
-  setor: z.string().min(1, 'O setor é obrigatório.'),
+  formaPagto: z.enum(formapagtoEnum.enumValues, { required_error: 'Selecione a forma de pagamento.' }),
+  tipo: z.enum(exametipoEnum.enumValues, { required_error: 'Selecione o tipo de exame.' }),
+  cargo: z.string({ required_error: 'O cargo é obrigatório.'}),
+  setor: z.string().optional(),
   solicitante: z.string().optional(),
 
   // --- Itens da Anamnese (Detalhe) ---

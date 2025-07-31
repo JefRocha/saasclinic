@@ -5,6 +5,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
+import { useAction } from "@/hooks/use-action";
+import { useValidationErrorsModal } from "@/components/ui/validation-errors-modal";
 
 import { upsertAnamneseSchema, anamneseItemSchema, AnamneseItemForm } from '@/actions/upsert-anamnese/schema';
 import { upsertAnamnese} from '@/actions/upsert-anamnese';
@@ -31,9 +33,6 @@ import { exametipoEnum, formapagtoEnum } from '@/models/Schema';
 import { DataTable } from '@/components/ui/data-table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { formatCurrency } from '@/helpers/format';
-import { ValidationErrorsModalProvider } from '@/components/ui/validation-errors-modal';
-import UpsertColaboradorForm from '@/app/[locale]/(auth)/dashboard/colaboradores/_components/upsert-colaborador-form';
-import UpsertClientForm from '@/app/[locale]/(auth)/dashboard/clients/_components/upsert-client-form';
 
 import {
   useQuery,
@@ -55,6 +54,7 @@ export function UpsertAnamneseForm({
   const router = useRouter()
   const { orgId, userId } = useAuth();
   const queryClient = useQueryClient()
+  const openValidationErrorsModal = useValidationErrorsModal();
   
   // ✅ Ref para o DatePicker híbrido (agora é um input)
   const datePickerRef = useRef<HTMLInputElement>(null);
@@ -97,24 +97,28 @@ export function UpsertAnamneseForm({
     queryKey: ["clientsForSelect", orgId],
     queryFn: () => getClientsForSelect({}),
     enabled: !!orgId,
+    refetchOnWindowFocus: false,
   });
 
   const { data: colaboradores, isLoading: isLoadingColaboradores } = useQuery({
     queryKey: ["colaboradoresForSelect", orgId],
     queryFn: () => getColaboradoresForSelect({}),
     enabled: !!orgId,
+    refetchOnWindowFocus: false,
   });
 
   const { data: exames, isLoading: isLoadingExames } = useQuery({
     queryKey: ["examesForSelect", orgId],
     queryFn: () => getExamesForSelect({}),
     enabled: !!orgId,
+    refetchOnWindowFocus: false,
   });
 
   const { data: medicos, isLoading: isLoadingMedicos } = useQuery({
     queryKey: ["medicosForSelect", orgId],
     queryFn: () => getMedicosForSelect({}),
     enabled: !!orgId,
+    refetchOnWindowFocus: false,
   });
 
   // Funções auxiliares
@@ -129,7 +133,11 @@ export function UpsertAnamneseForm({
   // Handlers para itens
   const handleAddItem = () => {
     setEditingItemIndex(null);
-    itemForm.reset();
+    itemForm.reset({
+      exameId: null,
+      medicoId: null,
+      valor: null,
+    });
     setIsItemModalOpen(true);
   };
 
@@ -152,10 +160,30 @@ export function UpsertAnamneseForm({
     setIsItemModalOpen(false);
   };
 
+  const { execute, status } = useAction(upsertAnamnese, {
+    onSuccess: (data) => {
+      toast.success(initialData ? 'Anamnese atualizada' : 'Anamnese criada');
+      onSuccess(data.id);
+      onClose();
+    },
+    onError: (error) => {
+      
+    },
+  });
+
   const onSubmit = (data: UpsertAnamneseForm) => {
-    console.log(data);
-    // Chamar a server action aqui
-    // upsertAnamnese(data);
+    execute(data);
+  };
+
+  const onInvalid = (errors: typeof form.formState.errors) => {
+    const errorMessages: string[] = [];
+    for (const fieldName in errors) {
+      const error = errors[fieldName as keyof typeof errors];
+      if (error && error.message) {
+        errorMessages.push(error.message);
+      }
+    }
+    openValidationErrorsModal(errorMessages);
   };
 
   // Transformar dados para os selects
@@ -193,11 +221,7 @@ export function UpsertAnamneseForm({
 
           <Form {...form}>
             <form
-              onSubmit={form.handleSubmit((data) => {
-                console.log(data);
-                // await upsertAnamnese(data)
-                onSuccess();
-              })}
+              onSubmit={form.handleSubmit(onSubmit, onInvalid)}
               className="space-y-8"
             >
               <Card>
@@ -493,21 +517,7 @@ export function UpsertAnamneseForm({
       
       {openCreate && (
         <ValidationErrorsModalProvider>
-          <UpsertColaboradorForm
-            isOpen={openCreate}
-            onClose={() => setOpenCreate(false)}
-            onSuccess={async (colaboradorId) => {
-              await queryClient.invalidateQueries({
-                queryKey: ['colaboradoresForSelect', orgId],
-              });
-              if (colaboradorId) {
-                form.setValue('colaboradorId', colaboradorId, {
-                  shouldValidate: true,
-                });
-              }
-              setOpenCreate(false);
-            }}
-          />
+          
         </ValidationErrorsModalProvider>
       )}
 

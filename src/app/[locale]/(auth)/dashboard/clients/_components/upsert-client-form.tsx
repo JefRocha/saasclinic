@@ -186,7 +186,7 @@ const UpsertClientForm = ({
       onSuccess(data); // Passa o objeto completo do cliente
     },
     onError: (error) => {
-      toast.error(error.message);
+      openValidationErrorsModal([error.message]);
     },
   });
 

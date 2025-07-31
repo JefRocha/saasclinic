@@ -73,6 +73,7 @@ export function AnamneseList() {
       startDate: dateRange?.from?.toISOString(),
       endDate: dateRange?.to?.toISOString(),
     }),
+    refetchOnWindowFocus: false,
   });
 
   // Função para ser chamada em caso de sucesso (criação/edição/exclusão)

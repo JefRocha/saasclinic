@@ -114,7 +114,7 @@ const UpsertColaboradorForm = ({
       onSuccess(data.id); // Passa o ID do colaborador salvo
     },
     onError: (error) => {
-      toast.error(error.message);
+      openValidationErrorsModal([error.message]);
     },
   });
 
@@ -138,7 +138,7 @@ const UpsertColaboradorForm = ({
           name: "",
           email: "",
           phoneNumber: "",
-          sex: undefined,
+          sex: null,
           endereco: "",
           numero: "",
           complemento: "",
@@ -151,9 +151,9 @@ const UpsertColaboradorForm = ({
           cpf: "",
           rg: "",
           ctps: "",
-          data_admissao: undefined,
-          data_demissao: undefined,
-          data_nascimento: undefined,
+          data_admissao: null,
+          data_demissao: null,
+          data_nascimento: null,
         },
   });
 

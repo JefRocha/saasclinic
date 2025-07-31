@@ -116,7 +116,7 @@ const UpsertExameForm = ({
       onSuccess(data.id);
     },
     onError: ({ serverError }) => {
-      toast.error(serverError || "Erro inesperado ao salvar exame.");
+      openValidationErrorsModal([serverError || "Erro inesperado ao salvar exame."]);
     },
   });
 

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 
 import { UpsertAnamneseForm } from "./upsert-anamnese-form";
+import { ValidationErrorsModalProvider } from "@/components/ui/validation-errors-modal";
 
 interface AddAnamneseButtonProps {
   onAnamneseUpsertSuccess: (anamneseId?: string | number) => void;
@@ -25,14 +26,16 @@ export default function AddAnamneseButton({ onAnamneseUpsertSuccess }: AddAnamne
           {t("add_anamnese_button")}
         </Button>
       </DialogTrigger>
-      <UpsertAnamneseForm
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-        onSuccess={(anamneseId) => {
-          setIsOpen(false);
-          onAnamneseUpsertSuccess(anamneseId);
-        }}
-      />
+      <ValidationErrorsModalProvider>
+        <UpsertAnamneseForm
+          isOpen={isOpen}
+          onClose={() => setIsOpen(false)}
+          onSuccess={(anamneseId) => {
+            setIsOpen(false);
+            onAnamneseUpsertSuccess(anamneseId);
+          }}
+        />
+      </ValidationErrorsModalProvider>
     </Dialog>
   );
 }

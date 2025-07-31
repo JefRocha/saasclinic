@@ -1,25 +1,24 @@
-import { AnamneseList } from "./_components/anamnese-list";
-import {
-  PageContainer,
-  PageHeader,
-  PageHeaderContent,
-  PageTitle,
-  PageDescription,
-  PageContent,
-} from '@/components/ui/page-container';
+import { redirect } from 'next/navigation';
+import { auth, currentUser } from '@clerk/nextjs/server';
 
-export default function AnamnesePage() {
-  return (
-    <PageContainer>
-      <PageHeader>
-        <PageHeaderContent>
-          <PageTitle>Anamneses</PageTitle>
-          <PageDescription>Gerencie as anamneses dos seus pacientes.</PageDescription>
-        </PageHeaderContent>
-      </PageHeader>
-      <PageContent>
-        <AnamneseList />
-      </PageContent>
-    </PageContainer>
-  );
+import { withPolicy } from '@/lib/withPolicy';
+import { Action }      from '@/lib/ability';
+
+import { AnamnesePageContent } from './_components/AnamnesePageContent';
+
+/* ---------- Server Component ---------- */
+async function AnamnesePage() {
+  const { userId, orgId } = await auth();
+  const user = await currentUser();
+
+  if (!userId || !user)  redirect('/authentication');
+  if (!orgId)            redirect('/clinic-form');
+
+  return <AnamnesePageContent />;
 }
+
+/* ---------- Proteção RBAC/CASL ---------- */
+export default withPolicy(
+  AnamnesePage,
+  (ab) => ab.can(Action.Read, 'Anamnese'),
+);

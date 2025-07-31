@@ -126,10 +126,10 @@ const UpsertMedicoForm = ({
           celular: "",
           crm: "",
           usaAgenda: 0,
-          codAgenda: undefined,
+          codAgenda: null,
           numero: "",
           complemento: "",
-          codiIbge: undefined,
+          codiIbge: null,
           email: "",
           organizationId: role === "super_admin" ? "" : orgId, // Define orgId padrão para não-super_admin
         },
@@ -141,7 +141,7 @@ const UpsertMedicoForm = ({
       onSuccess(data.id);
     },
     onError: ({ serverError }) => {
-      toast.error(serverError || "Erro inesperado ao salvar médico.");
+      openValidationErrorsModal([serverError || "Erro inesperado ao salvar médico."]);
     },
   });
 
