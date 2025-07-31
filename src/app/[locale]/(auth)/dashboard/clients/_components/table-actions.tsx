@@ -62,7 +62,7 @@ const ClientsTableActions = ({ client, onClientUpsertSuccess, onRowClick }: Clie
 
   return (
     <>
-      <Sheet open={upsertSheetIsOpen} onOpenChange={setUpsertSheetIsOpen}>
+      <>
         <DropdownMenu>
           <DropdownMenuTrigger asChild onPointerDownCapture={() => onRowClick(client.id)}>
             <Button variant="ghost" size="icon">
@@ -103,16 +103,20 @@ const ClientsTableActions = ({ client, onClientUpsertSuccess, onRowClick }: Clie
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <UpsertClientForm
-          initialData={client}
-          isOpen={upsertSheetIsOpen}
-          onClose={() => setUpsertSheetIsOpen(false)} 
-          onSuccess={(clientId) => {
-            setUpsertSheetIsOpen(false);
-            onClientUpsertSuccess(clientId);
-          }}
-        />
-      </Sheet>
+                {upsertSheetIsOpen && (
+          <UpsertClientForm
+            initialData={client}
+            isOpen={upsertSheetIsOpen}
+            onClose={() => setUpsertSheetIsOpen(false)}
+            onSuccess={(client) => {
+              setUpsertSheetIsOpen(false);
+              setTimeout(() => {
+                onClientUpsertSuccess(client.id);
+              }, 100);
+            }}
+          />
+        )}
+      </>
     </>
   );
 };

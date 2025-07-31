@@ -1,10 +1,10 @@
 'use server';
 
 /* ------------------------------------------------------------------
- * upsertAnamnese.ts – refatorado para alinhar 100 % aos tipos Drizzle
+ * upsertAnamnese.ts – versão consolidada e sem duplicações
  * ------------------------------------------------------------------ */
 
-import { and, eq, notInArray, isNull, not, sql } from 'drizzle-orm';
+import { and, eq, notInArray, not, isNull, sql } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import ptBRMessages from '@/locales/pt-BR.json';
 
@@ -23,7 +23,7 @@ import { upsertAnamneseSchema } from './schema';
 
 const buildSuccess = <T,>(data: T) => ({ success: true, data });
 
-/** Helper: soma meses sem libs externas */
+/** Soma meses sem libs externas */
 const addMonths = (d: Date, m: number) => {
   const x = new Date(d);
   x.setMonth(x.getMonth() + m);
@@ -31,7 +31,7 @@ const addMonths = (d: Date, m: number) => {
 };
 
 /* ================================================================
- * ACTION 1 → Upsert da ficha + itens
+ * ACTION 1 → upsertAnamnese
  * ============================================================== */
 export const upsertAnamnese = protectedAction
   .schema(upsertAnamneseSchema)
@@ -39,15 +39,15 @@ export const upsertAnamnese = protectedAction
     const t = (k: string) => k.split('.').reduce((a: any, p) => a?.[p] ?? k, ptBRMessages);
     if (!orgId) throw new ActionError(t('Errors.unauthorized'));
 
-    /* desestrutura – converte atendenteId (string?) em number */
+    // extrai e normaliza
     const { id: anamneseId, items, atendenteId, ...raw } = parsedInput;
     const atId = atendenteId ? Number(atendenteId) : undefined;
-    const anamneseData = { ...raw, ...(atId ? { atendenteId: atId } : {}) };
+    const anamneseData = { ...raw, ...(atId ? { atendenteId: atId } : {}) } as typeof anamneseTable.$inferInsert;
 
     try {
       const result = await db.transaction(async (tx) => {
-        /* ---------------- ficha mestre ---------------- */
-        const saved = anamneseId
+        /* ------------ ficha mestre ------------- */
+        const savedRows = anamneseId
           ? await tx
               .update(anamneseTable)
               .set({ ...anamneseData, updatedAt: new Date() })
@@ -58,18 +58,21 @@ export const upsertAnamnese = protectedAction
               .values({ ...anamneseData, organizationId: orgId, atendenteId: atId ?? 1 })
               .returning();
 
-        const [anamnese] = saved;
+        const anamnese = savedRows[0];
         if (!anamnese) throw new ActionError(t('Errors.database_error'));
 
-        /* ----------- vínculo colaborador × cliente ------------- */
+        /* -------- vínculo colaborador × cliente -------- */
         if (anamnese.colaboradorId && anamnese.clienteId) {
+          const admDate = anamnese.data ? new Date(anamnese.data as Date) : new Date();
+          const dataAdmissao = admDate.toISOString().slice(0, 10);
+
           await tx
             .insert(employmentTable)
             .values({
               colaboradorId: anamnese.colaboradorId,
               clientId: anamnese.clienteId,
-              dataAdmissao: new Date(anamnese.data),
-            })
+              dataAdmissao,
+            } as typeof employmentTable.$inferInsert)
             .onConflictDoNothing();
 
           await tx
@@ -84,8 +87,8 @@ export const upsertAnamnese = protectedAction
             );
         }
 
-        /* ---------------- itens ------------------ */
-        const keepIds = items.map((i) => i.id).filter((x): x is number => !!x);
+        /* ------------- itens ------------- */
+        const keepIds = items.flatMap((i) => (i.id ? [i.id] : []));
         if (anamneseId && keepIds.length) {
           await tx
             .delete(anamneseItemsTable)
@@ -98,7 +101,7 @@ export const upsertAnamnese = protectedAction
         }
 
         for (const item of items) {
-          /* validade / validade1 */
+          // busca validade/validade1
           const [v] = await tx
             .select({ v0: ex.validade, v1: ex.validade1 })
             .from(ex)
@@ -106,8 +109,8 @@ export const upsertAnamnese = protectedAction
             .limit(1);
           if (!v) throw new ActionError(t('Errors.exam_not_found'));
 
-          /* count anteriores (JOIN anamnese para pegar colab) */
-          const [{ cnt }] = await tx
+          // conta exames anteriores
+          const cntRows = await tx
             .select({ cnt: sql<number>`count(*)`.as('cnt') })
             .from(anamneseItemsTable)
             .innerJoin(anamneseTable, eq(anamneseTable.id, anamneseItemsTable.anamneseId))
@@ -118,14 +121,16 @@ export const upsertAnamnese = protectedAction
                 eq(anamneseTable.clienteId, anamnese.clienteId),
               ),
             );
+          const prevCount = cntRows[0]?.cnt ?? 0;
 
-          const months = (cnt ?? 0) === 0 ? v.v0 : v.v1;
-          const vencto = addMonths(new Date(anamnese.data), months);
+          const months = prevCount === 0 ? v.v0 : v.v1;
+          const baseDate = anamnese.data ? new Date(anamnese.data as Date) : new Date();
+          const vencto = addMonths(baseDate, months).toISOString().slice(0, 10);
 
           const payload = {
             ...item,
             vencto,
-            valor: item.valor !== undefined ? String(item.valor) : undefined,
+            valor: item.valor != null ? String(item.valor) : undefined,
           } as typeof anamneseItemsTable.$inferInsert;
 
           if (item.id) {
@@ -138,7 +143,7 @@ export const upsertAnamnese = protectedAction
         return buildSuccess(anamnese);
       });
 
-      revalidatePath('/[locale]/dashboard/anamnese');
+      revalidatePath('/dashboard/anamnese');
       return result;
     } catch (e) {
       console.error('upsertAnamnese', e);
@@ -147,7 +152,7 @@ export const upsertAnamnese = protectedAction
   });
 
 /* ================================================================
- * ACTION 2 → deleteAnamnese (soft‑delete)
+ * ACTION 2 → deleteAnamnese (soft-delete)
  * ============================================================== */
 export const deleteAnamnese = protectedAction
   .schema(z.object({ id: z.number() }))
@@ -167,7 +172,7 @@ export const deleteAnamnese = protectedAction
         await tx.delete(anamneseItemsTable).where(eq(anamneseItemsTable.anamneseId, id));
       });
 
-      revalidatePath('/[locale]/dashboard/anamnese');
+      revalidatePath('/dashboard/anamnese');
       return { success: true };
     } catch (e) {
       console.error('deleteAnamnese', e);

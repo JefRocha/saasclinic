@@ -133,7 +133,7 @@ interface Client {
 interface UpsertClientFormProps {
   initialData?: Client;
   isOpen: boolean;
-  onSuccess: (clientId?: string | number) => void; // Alterado para aceitar clientId
+  onSuccess: (client: Client) => void;
   onClose: () => void;
 }
 
@@ -183,8 +183,7 @@ const UpsertClientForm = ({
   const { execute, isLoading: isSubmitting } = useAction(upsertClient, {
     onSuccess: (data) => {
       toast.success(initialData ? 'Cliente atualizado' : 'Cliente criado');
-      onSuccess(data.id); // Passa o ID do cliente salvo
-      onClose();
+      onSuccess(data); // Passa o objeto completo do cliente
     },
     onError: (error) => {
       toast.error(error.message);
@@ -535,10 +534,8 @@ const UpsertClientForm = ({
   };
 
   return (
-    //<Dialog open={isOpen} onOpenChange={onSuccess}>
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        hideCloseButton
         onInteractOutside={(e) => e.preventDefault()}
         className="max-h-[90vh] w-full max-w-5xl min-h-[70vh] flex flex-col"
       >

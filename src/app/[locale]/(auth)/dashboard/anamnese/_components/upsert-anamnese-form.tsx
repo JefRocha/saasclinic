@@ -33,6 +33,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { formatCurrency } from '@/helpers/format';
 import { ValidationErrorsModalProvider } from '@/components/ui/validation-errors-modal';
 import UpsertColaboradorForm from '@/app/[locale]/(auth)/dashboard/colaboradores/_components/upsert-colaborador-form';
+import UpsertClientForm from '@/app/[locale]/(auth)/dashboard/clients/_components/upsert-client-form';
 
 import {
   useQuery,
@@ -59,9 +60,11 @@ export function UpsertAnamneseForm({
   const datePickerRef = useRef<HTMLInputElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const createColabRef = useRef<HTMLInputElement>(null)
+  const createClientRef = useRef<HTMLInputElement>(null)
   
   /* diálogo de cadastro do colaborador */
   const [openCreate, setOpenCreate] = useState(false)
+  const [openCreateClient, setOpenCreateClient] = useState(false)
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
   const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
 
@@ -156,8 +159,8 @@ export function UpsertAnamneseForm({
   };
 
   // Transformar dados para os selects
-  const clientItems = clients?.data && Array.isArray(clients.data) 
-    ? clients.data.map(client => ({ id: client.id, name: client.name || '' })) 
+  const clientItems = clients?.data && Array.isArray(clients.data.data) 
+    ? clients.data.data.map(client => ({ id: client.id, name: client.name || '' })) 
     : [];
     
   const colaboradorItems = colaboradores?.data && Array.isArray(colaboradores.data.data) 
@@ -288,6 +291,8 @@ export function UpsertAnamneseForm({
                             searchPlaceholder="Pesquisar cliente..."
                             noResultsText="Nenhum cliente encontrado."
                             isLoading={isLoadingClients}
+                            onCreate={() => setOpenCreateClient(true)}
+                            createLabel="Cadastrar cliente"
                           />
                           <FormMessage />
                         </FormItem>
@@ -491,8 +496,8 @@ export function UpsertAnamneseForm({
           <UpsertColaboradorForm
             isOpen={openCreate}
             onClose={() => setOpenCreate(false)}
-            onSuccess={(colaboradorId) => {
-              queryClient.invalidateQueries({
+            onSuccess={async (colaboradorId) => {
+              await queryClient.invalidateQueries({
                 queryKey: ['colaboradoresForSelect', orgId],
               });
               if (colaboradorId) {
@@ -501,6 +506,26 @@ export function UpsertAnamneseForm({
                 });
               }
               setOpenCreate(false);
+            }}
+          />
+        </ValidationErrorsModalProvider>
+      )}
+
+      {openCreateClient && (
+        <ValidationErrorsModalProvider>
+          <UpsertClientForm
+            isOpen={openCreateClient}
+            onClose={() => setOpenCreateClient(false)}
+            onSuccess={async (client) => {
+              await queryClient.invalidateQueries({
+                queryKey: ['clientsForSelect', orgId],
+              });
+              if (client && client.id) {
+                form.setValue('clienteId', client.id, {
+                  shouldValidate: true,
+                });
+              }
+              setOpenCreateClient(false);
             }}
           />
         </ValidationErrorsModalProvider>

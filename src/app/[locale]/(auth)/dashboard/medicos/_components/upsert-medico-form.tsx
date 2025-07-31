@@ -139,7 +139,6 @@ const UpsertMedicoForm = ({
     onSuccess: (data) => {
       toast.success(initialData ? "Médico atualizado" : "Médico criado");
       onSuccess(data.id);
-      onClose();
     },
     onError: ({ serverError }) => {
       toast.error(serverError || "Erro inesperado ao salvar médico.");

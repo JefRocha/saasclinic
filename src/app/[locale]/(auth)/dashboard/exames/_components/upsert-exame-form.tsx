@@ -114,7 +114,6 @@ const UpsertExameForm = ({
     onSuccess: (data) => {
       toast.success(initialData ? "Exame atualizado" : "Exame criado");
       onSuccess(data.id);
-      onClose();
     },
     onError: ({ serverError }) => {
       toast.error(serverError || "Erro inesperado ao salvar exame.");

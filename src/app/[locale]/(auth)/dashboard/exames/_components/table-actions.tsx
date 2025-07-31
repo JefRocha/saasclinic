@@ -62,57 +62,59 @@ const ExamesTableActions = ({ exame, onExameUpsertSuccess, onRowClick }: ExamesT
 
   return (
     <>
-      <Sheet open={upsertSheetIsOpen} onOpenChange={setUpsertSheetIsOpen}>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild onPointerDownCapture={() => onRowClick(exame.id as number)}>
-            <Button variant="ghost" size="icon">
-              <MoreVerticalIcon className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuLabel>{exame.descricao}</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setUpsertSheetIsOpen(true)}>
-              <EditIcon className="mr-2 h-4 w-4" />
-              Editar
-            </DropdownMenuItem>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                  <TrashIcon className="mr-2 h-4 w-4" />
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild onPointerDownCapture={() => onRowClick(exame.id as number)}>
+          <Button variant="ghost" size="icon">
+            <MoreVerticalIcon className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuLabel>{exame.descricao}</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setUpsertSheetIsOpen(true)}>
+            <EditIcon className="mr-2 h-4 w-4" />
+            Editar
+          </DropdownMenuItem>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <TrashIcon className="mr-2 h-4 w-4" />
+                Excluir
+              </DropdownMenuItem>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  Tem certeza que deseja excluir esse exame?
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  Essa ação não pode ser revertida.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeleteExameClick}>
                   Excluir
-                </DropdownMenuItem>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    Tem certeza que deseja excluir esse exame?
-                  </AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Essa ação não pode ser revertida.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDeleteExameClick}>
-                    Excluir
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </DropdownMenuContent>
-        </DropdownMenu>
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
+      {upsertSheetIsOpen && (
         <UpsertExameForm
           initialData={exame}
           isOpen={upsertSheetIsOpen}
-          onClose={() => setUpsertSheetIsOpen(false)} 
+          onClose={() => setUpsertSheetIsOpen(false)}
           onSuccess={(exameId) => {
             setUpsertSheetIsOpen(false);
-            onExameUpsertSuccess(exameId);
+            setTimeout(() => {
+              onExameUpsertSuccess(exameId);
+            }, 100);
           }}
         />
-      </Sheet>
+      )}
     </>
   );
 };

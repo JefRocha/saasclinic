@@ -25,7 +25,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Sheet } from "@/components/ui/sheet";
 
 import UpsertColaboradorForm from "./upsert-colaborador-form";
 import { deleteColaborador } from "@/actions/delete-colaborador";
@@ -60,57 +59,59 @@ const ColaboradoresTableActions = ({ colaborador, onColaboradorUpsertSuccess, on
 
   return (
     <>
-      <Sheet open={upsertSheetIsOpen} onOpenChange={setUpsertSheetIsOpen}>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild onPointerDownCapture={() => onRowClick(colaborador.id)}>
-            <Button variant="ghost" size="icon">
-              <MoreVerticalIcon className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuLabel>{colaborador.name}</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setUpsertSheetIsOpen(true)}>
-              <EditIcon className="mr-2 h-4 w-4" />
-              Editar
-            </DropdownMenuItem>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                  <TrashIcon className="mr-2 h-4 w-4" />
-                  Excluir
-                </DropdownMenuItem>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    Tem certeza que deseja excluir esse colaborador?
-                  </AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Essa ação não pode ser revertida.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDeleteColaboradorClick} disabled={isDeleting}>
-                    {isDeleting ? "Excluindo..." : "Excluir"}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </DropdownMenuContent>
-        </DropdownMenu>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild onPointerDownCapture={() => onRowClick(colaborador.id)}>
+          <Button variant="ghost" size="icon">
+            <MoreVerticalIcon className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuLabel>{colaborador.name}</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setUpsertSheetIsOpen(true)}>
+            <EditIcon className="mr-2 h-4 w-4" />
+            Editar
+          </DropdownMenuItem>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <TrashIcon className="mr-2 h-4 w-4" />
+                Excluir
+              </DropdownMenuItem>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  Tem certeza que deseja excluir esse colaborador?
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  Essa ação não pode ser revertida.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeleteColaboradorClick} disabled={isDeleting}>
+                  {isDeleting ? "Excluindo..." : "Excluir"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
+      {upsertSheetIsOpen && (
         <UpsertColaboradorForm
           initialData={colaborador}
           isOpen={upsertSheetIsOpen}
-          onClose={() => setUpsertSheetIsOpen(false)} 
+          onClose={() => setUpsertSheetIsOpen(false)}
           onSuccess={(colaboradorId) => {
             setUpsertSheetIsOpen(false);
-            onColaboradorUpsertSuccess(colaboradorId);
+            setTimeout(() => {
+              onColaboradorUpsertSuccess(colaboradorId);
+            }, 100);
           }}
         />
-      </Sheet>
+      )}
     </>
   );
 };

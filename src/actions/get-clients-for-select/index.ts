@@ -8,12 +8,15 @@ import { clientsTable } from '@/models/Schema';
 import { db } from '@/libs/DB';
 import { ActionError } from '@/libs/action-error';
 import { protectedAction } from '@/libs/safe-action';
+import { unstable_noStore as noStore } from 'next/cache';
 
 const GetClientsForSelectSchema = z.object({});
 
 export const getClientsForSelect = protectedAction
   .schema(GetClientsForSelectSchema)
   .action(async ({ ctx: { orgId } }) => {
+    noStore(); // Impede o cache da requisição
+
     const t = (key: string) => {
       const keys = key.split('.');
       let current: any = ptBRMessages;
@@ -36,6 +39,7 @@ export const getClientsForSelect = protectedAction
         .select({
           id: clientsTable.id,
           name: clientsTable.fantasia,
+          cpf: clientsTable.cpf,
         })
         .from(clientsTable)
         .where(eq(clientsTable.organizationId, orgId));

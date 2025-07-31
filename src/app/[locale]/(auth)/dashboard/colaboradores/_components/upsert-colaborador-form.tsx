@@ -112,7 +112,6 @@ const UpsertColaboradorForm = ({
     onSuccess: (data) => {
       toast.success(initialData ? 'Colaborador atualizado' : 'Colaborador criado');
       onSuccess(data.id); // Passa o ID do colaborador salvo
-      onClose();
     },
     onError: (error) => {
       toast.error(error.message);

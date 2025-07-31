@@ -62,57 +62,59 @@ const MedicosTableActions = ({ medico, onMedicoUpsertSuccess, onRowClick }: Medi
 
   return (
     <>
-      <Sheet open={upsertSheetIsOpen} onOpenChange={setUpsertSheetIsOpen}>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild onPointerDownCapture={() => onRowClick(medico.id as number)}>
-            <Button variant="ghost" size="icon">
-              <MoreVerticalIcon className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuLabel>{medico.nome}</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setUpsertSheetIsOpen(true)}>
-              <EditIcon className="mr-2 h-4 w-4" />
-              Editar
-            </DropdownMenuItem>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                  <TrashIcon className="mr-2 h-4 w-4" />
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild onPointerDownCapture={() => onRowClick(medico.id as number)}>
+          <Button variant="ghost" size="icon">
+            <MoreVerticalIcon className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuLabel>{medico.nome}</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setUpsertSheetIsOpen(true)}>
+            <EditIcon className="mr-2 h-4 w-4" />
+            Editar
+          </DropdownMenuItem>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <TrashIcon className="mr-2 h-4 w-4" />
+                Excluir
+              </DropdownMenuItem>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  Tem certeza que deseja excluir esse médico?
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  Essa ação não pode ser revertida.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeleteMedicoClick}>
                   Excluir
-                </DropdownMenuItem>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    Tem certeza que deseja excluir esse médico?
-                  </AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Essa ação não pode ser revertida.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDeleteMedicoClick}>
-                    Excluir
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </DropdownMenuContent>
-        </DropdownMenu>
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
+      {upsertSheetIsOpen && (
         <UpsertMedicoForm
           initialData={medico}
           isOpen={upsertSheetIsOpen}
-          onClose={() => setUpsertSheetIsOpen(false)} 
+          onClose={() => setUpsertSheetIsOpen(false)}
           onSuccess={(medicoId) => {
             setUpsertSheetIsOpen(false);
-            onMedicoUpsertSuccess(medicoId);
+            setTimeout(() => {
+              onMedicoUpsertSuccess(medicoId);
+            }, 100);
           }}
         />
-      </Sheet>
+      )}
     </>
   );
 };
