@@ -1,0 +1,64 @@
+Processo Completo: Do Lançamento à Notificação de Vencimentos
+
+Este documento descreve o ciclo de vida completo de um exame ocupacional no sistema, desde o seu registro inicial até a notificação automática de seu vencimento.
+
+------------------------------------------------------------------
+
+### Etapa 1: Criação da Anamnese (A Entrada de Dados)
+
+Tudo começa quando um atendente da clínica registra um novo atendimento no sistema.
+
+1.  **Acesso ao Formulário:** O usuário navega para a seção de "Anamnese" e inicia o processo de criação de uma nova ficha.
+
+2.  **Preenchimento dos Dados:** O atendente informa os dados essenciais do atendimento:
+    *   O **Colaborador** (o funcionário que está sendo atendido).
+    *   O **Cliente** (a empresa empregadora do colaborador).
+    *   A **Data** em que o atendimento foi realizado.
+
+3.  **Lançamento dos Exames:** Na seção de "Exames e Procedimentos" do formulário, o atendente adiciona cada um dos exames que foram efetivamente realizados durante o atendimento (ex: Audiometria, Acuidade Visual, Hemograma Completo, etc.).
+
+4.  **Ação Final do Usuário:** Ao clicar em "Salvar Anamnese", os dados do formulário são enviados para a `server action` correspondente no backend para processamento.
+
+------------------------------------------------------------------
+
+### Etapa 2: A Lógica no Servidor (O Cálculo da Validade)
+
+Esta é a etapa central, onde a inteligência do sistema é aplicada. A `server action` `upsertAnamnese` recebe os dados e executa a seguinte lógica para CADA exame lançado:
+
+1.  **Busca das Regras de Validade:** O sistema consulta a tabela `exames` no banco de dados para encontrar as regras de validade específicas para aquele tipo de exame. Ele busca dois valores:
+    *   `validade`: A validade para a primeira vez que o exame é feito (ex: 12 meses).
+    *   `validade1`: A validade para exames periódicos subsequentes (ex: 6 meses).
+
+2.  **Análise do Histórico:** O sistema verifica o histórico do colaborador para contar quantas vezes aquele mesmo exame já foi realizado para ele no contexto da mesma empresa.
+
+3.  **Cálculo da Data de Vencimento (`vencto`):** Com base no histórico, o sistema calcula a data de vencimento futura:
+    *   **Se for o primeiro exame (contagem = 0):** A data de vencimento é calculada usando a validade principal. Ex: `vencto = data_do_atendimento + 12 meses`.
+    *   **Se for um exame periódico (contagem > 0):** A data de vencimento é calculada usando a validade secundária. Ex: `vencto = data_do_atendimento + 6 meses`.
+
+------------------------------------------------------------------
+
+### Etapa 3: O Armazenamento no Banco de Dados (A Fonte da Verdade)
+
+Após os cálculos, a `server action` salva todas as informações de forma segura e transacional no banco de dados.
+
+*   A informação mais importante para este fluxo é a inserção de uma nova linha na tabela `anamnese_items` para cada exame realizado.
+*   A coluna `vencto` nesta nova linha armazena a data de vencimento exata que foi calculada na Etapa 2. 
+
+A partir deste ponto, a data de vencimento está oficialmente registrada no sistema, servindo como a fonte da verdade para todas as consultas futuras.
+
+------------------------------------------------------------------
+
+### Etapa 4: O Job Mensal (A Notificação Automática)
+
+Esta é a etapa final e totalmente automatizada do processo.
+
+1.  **O Gatilho (Trigger):** No primeiro dia de cada mês, pontualmente às 7h da manhã, o agendador de tarefas (`node-cron`) ativa o job `sendMonthlyExpiryReport`.
+
+2.  **A Consulta (Query):** O job executa uma consulta no banco de dados com o seguinte comando: "Selecione todos os exames da tabela `anamnese_items` cuja data na coluna `vencto` esteja dentro do intervalo do primeiro e do último dia do mês corrente".
+
+3.  **A Geração e Envio do Relatório:**
+    *   Se a consulta encontrar exames vencendo, o job agrupa os resultados por cliente.
+    *   Para cada cliente, ele formata um corpo de e-mail personalizado, seguindo a estrutura solicitada: cabeçalho da empresa, lista de funcionários ordenados por nome, e para cada funcionário, a lista de seus exames vencendo, também ordenados.
+    *   Finalmente, o job envia este relatório por e-mail para o cliente correspondente, notificando-o proativamente sobre as pendências.
+
+Este ciclo garante que, a partir de um simples lançamento de atendimento, o sistema gerencia de forma autônoma todo o ciclo de vida da validade dos exames, culminando em uma notificação automática e precisa para o cliente final.

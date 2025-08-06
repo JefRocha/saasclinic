@@ -1,0 +1,256 @@
+{
+  "Index": {
+    "meta_title": "SaaS Template – O template perfeito para criar e escalar seu negócio com facilidade.",
+    "meta_description": "Um template de landing page gratuito e open-source para o seu SaaS, construído com React, TypeScript, Shadcn UI e Tailwind CSS."
+  },
+  "Navbar": {
+    "sign_in": "Entrar",
+    "sign_up": "Criar conta",
+    "product": "Produto",
+    "docs": "Docs",
+    "blog": "Blog",
+    "community": "Comunidade",
+    "company": "Empresa"
+  },
+  "Hero": {
+    "follow_twitter": "Siga @Ixartz no Twitter",
+    "title": "O <important>template SaaS</important> perfeito para criar e escalar seu negócio com facilidade.",
+    "description": "Um template de landing page gratuito e open-source para o seu SaaS, construído com React, TypeScript, Shadcn UI e Tailwind CSS.",
+    "primary_button": "Começar agora",
+    "secondary_button": "Dar estrela no GitHub"
+  },
+  "Sponsors": {
+    "title": "Patrocinado por"
+  },
+  "Features": {
+    "section_subtitle": "Recursos",
+    "section_title": "Desbloqueie todo o potencial do SaaS Template",
+    "section_description": "Um template de landing page gratuito e open-source para o seu SaaS, construído com React, TypeScript, Shadcn UI e Tailwind CSS.",
+    "feature1_title": "Node.js",
+    "feature2_title": "React",
+    "feature3_title": "Tailwind CSS",
+    "feature4_title": "TypeScript",
+    "feature5_title": "Shadcn UI",
+    "feature6_title": "ESLint",
+    "feature_description": "Um template de landing page gratuito e open-source para o seu SaaS, construído com React, TypeScript, Shadcn UI e Tailwind CSS."
+  },
+  "Pricing": {
+    "section_subtitle": "Recursos",
+    "section_title": "Desbloqueie todo o potencial do SaaS Template",
+    "section_description": "Um template de landing page gratuito e open-source para o seu SaaS, construído com React, TypeScript, Shadcn UI e Tailwind CSS.",
+    "button_text": "Começar agora"
+  },
+  "PricingPlan": {
+    "free_plan_name": "Gratuito",
+    "premium_plan_name": "Premium",
+    "enterprise_plan_name": "Enterprise",
+    "free_plan_description": "Para indivíduos",
+    "premium_plan_description": "Para pequenas equipes",
+    "enterprise_plan_description": "Para líderes de mercado",
+    "feature_team_member": "{number} membros na equipe",
+    "feature_website": "{number} sites",
+    "feature_storage": "{number} GB de armazenamento",
+    "feature_transfer": "{number} TB de transferência",
+    "feature_email_support": "Suporte por e-mail",
+    "plan_interval_month": "mês",
+    "plan_interval_year": "ano",
+    "next_renew_date": "Sua assinatura renova em {date}"
+  },
+  "FAQ": {
+    "question": "Lorem ipsum dolor sit amet, consectetur adipiscing elit?",
+    "answer": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam aliquam enim dui, id consequat turpis ullamcorper ac. Mauris id quam dolor. Nullam eu egestas turpis. Proin risus elit, sollicitudin in mi a, accumsan euismod turpis. In euismod mi sed diam tristique hendrerit."
+  },
+  "CTA": {
+    "title": "Você está pronto?",
+    "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    "button_text": "Dar estrela no GitHub"
+  },
+  "Footer": {
+    "product": "Produto",
+    "docs": "Docs",
+    "blog": "Blog",
+    "community": "Comunidade",
+    "company": "Empresa",
+    "terms_of_service": "Termos de serviço",
+    "privacy_policy": "Política de privacidade",
+    "designed_by": "Desenhado por <author></author>."
+  },
+  "ProtectFallback": {
+    "not_enough_permission": "Você não tem permissão para realizar esta ação"
+  },
+  "SignIn": {
+    "meta_title": "Entrar",
+    "meta_description": "Faça login na sua conta de forma simples e rápida."
+  },
+  "SignUp": {
+    "meta_title": "Criar conta",
+    "meta_description": "Crie sua conta de maneira fácil e intuitiva."
+  },
+  "DashboardLayout": {
+    "home": "Início",
+    "todos": "Tarefas",
+    "members": "Membros",
+    "billing": "Cobrança",
+    "settings": "Configurações",
+    "clients": "Clientes",
+    "exams": "Exames",
+    "doctors": "Médicos",
+    "colaboradores": "Colaboradores",
+    "registrations": "Cadastros",
+    "exams_by_client": "Exames por Cliente",
+    "financial": "Financeiro",
+    "accounts_payable": "Contas a Pagar",
+    "accounts_receivable": "Contas a Receber",
+    "movimento": "Movimento",
+    "anamnese": "Anamnese",
+    "reports": "Relatórios",
+    "expiring_exams": "Exames a Vencer"
+  },
+  "Dashboard": {
+    "meta_title": "Dashboard – SaaS Template",
+    "meta_description": "Um template de landing page gratuito e open-source para o seu SaaS, construído com Next.js, TypeScript, Shadcn UI e Tailwind CSS."
+  },
+  "DashboardIndex": {
+    "title_bar": "Dashboard",
+    "title_bar_description": "Bem-vindo ao seu dashboard",
+    "message_state_title": "Vamos começar",
+    "message_state_description": "Você pode personalizar esta página editando o arquivo em <code>dashboard/page.tsx</code>",
+    "message_state_button": "Dar estrela no GitHub",
+    "message_state_alternative": "Quer mais recursos usando a mesma stack? Experimente <url></url>."
+  },
+  "UserProfile": {
+    "title_bar": "Perfil do usuário",
+    "title_bar_description": "Visualize e gerencie seu perfil"
+  },
+  "OrganizationProfile": {
+    "title_bar": "Gestão da organização",
+    "title_bar_description": "Gerencie sua organização"
+  },
+  "Billing": {
+    "title_bar": "Cobrança",
+    "title_bar_description": "Gerencie sua assinatura e pagamento",
+    "current_section_title": "Plano atual",
+    "current_section_description": "Ajuste seu plano de acordo com suas necessidades",
+    "manage_subscription_button": "Gerenciar assinatura"
+  },
+  "BillingOptions": {
+    "current_plan": "Plano atual",
+    "upgrade_plan": "Começar agora"
+  },
+  "CheckoutConfirmation": {
+    "title_bar": "Confirmação de pagamento",
+    "message_state_title": "Pagamento realizado",
+    "message_state_description": "Seu pagamento foi processado com sucesso. Obrigado pela compra!",
+    "message_state_button": "Voltar para Cobrança"
+  },
+  "DataTable": {
+    "no_results": "Nenhum resultado."
+  },
+  "ExamesPage": {
+    "title": "Exames",
+    "description": "Gerencie os exames da sua clínica"
+  },
+  "MedicosPage": {
+    "title": "Médicos",
+    "description": "Gerencie os médicos da sua clínica"
+  },
+  "ColaboradoresPage": {
+    "title": "Colaboradores",
+    "description": "Gerencie os colaboradores da sua clínica"
+  },
+  "ColaboradoresPage": {
+    "title": "Colaboradores",
+    "description": "Gerencie os colaboradores da sua clínica"
+  },
+  "ContasAPagarPage": {
+    "title": "Contas a Pagar",
+    "description": "Visualize e gerencie suas contas a pagar."
+  },
+  "ExamesPorClientePage": {
+    "title": "Exames por Cliente",
+    "description": "Visualize e gerencie os exames vinculados aos clientes."
+  },
+  "ExamesPorCliente": {
+    "select_client_placeholder": "Selecione um cliente",
+    "search_client_placeholder": "Pesquisar cliente...",
+    "no_client_found": "Nenhum cliente encontrado.",
+    "select_all_clients": "Todos os Clientes"
+  },
+  "AtendimentosPage": {
+    "title": "Lançamento de Atendimento",
+    "description": "Preencha os dados para registrar um novo atendimento."
+  },
+  "AnamnesePage": {
+    "title": "Lançamento de Anamnese",
+    "description": "Preencha os dados para registrar uma nova anamnese."
+  },
+  "AnamneseForm": {
+    "master_section_title": "Dados da Anamnese",
+    "detail_section_title": "Exames e Procedimentos",
+    "submit_button": "Salvar Anamnese",
+    "cancel_button": "Cancelar",
+    "item_exam_header": "Exame",
+    "item_doctor_header": "Médico",
+    "item_value_header": "Valor",
+    "item_actions_header": "Ações",
+    "edit_item_button": "Editar",
+    "remove_item_button": "Remover",
+    "no_items_found": "Nenhum item adicionado.",
+    "add_item_button": "Adicionar Item",
+    "edit_item_title": "Editar Item da Anamnese",
+    "add_item_title": "Adicionar Item à Anamnese",
+    "save_changes_button": "Salvar Alterações",
+    "form_title": "Formulário de Anamnese",
+    "open_menu": "Abrir menu",
+    "actions": "Ações",
+    "delete_item_confirm_title": "Você tem certeza?",
+    "delete_item_confirm_description": "Este item será removido da anamnese. Esta ação não pode ser desfeita.",
+    "add_anamnese_button": "Adicionar Anamnese",
+    "cancel": "Cancelar",
+    "continue": "Continuar",
+    "exam_value_update_confirm_title": "Atualizar Valor do Exame?",
+    "exam_value_update_confirm_description": "O valor do exame na anamnese é diferente do valor registrado para este cliente. Deseja atualizar o valor na tabela de exames por cliente?",
+    "exam_value_update_item": "Exame: {exameName} (Valor Atual: {currentValue}, Novo Valor: {newValue})",
+    "confirm_update": "Confirmar Atualização",
+    "exam_values_updated_success": "Valores dos exames atualizados com sucesso!"
+  },
+  "AnamneseListPage": {
+    "title": "Anamneses",
+    "description": "Visualize e gerencie as anamneses registradas."
+  },
+  "AnamneseFormPage": {
+    "title": "Lançamento de Anamnese",
+    "description": "Preencha os dados para registrar uma nova anamnese."
+  },
+  "FormFields": {
+    "placeholder_text": "Digite {label}",
+    "placeholder_date": "Selecione uma data",
+    "placeholder_select": "Selecione uma opção"
+  },
+  "AnamneseTable": {
+    "id_header": "ID",
+    "client_name_header": "Cliente",
+    "colaborador_name_header": "Colaborador",
+    "total_header": "Total",
+    "type_header": "Tipo",
+    "cargo_header": "Cargo",
+    "no_results": "Nenhuma anamnese encontrada.",
+    "select_date_range_placeholder": "Selecione o período"
+  },
+  "Errors": {
+    "unauthorized": "Você não está autorizado a realizar esta ação.",
+    "database_error": "Ocorreu um erro ao acessar o banco de dados."
+  },
+  "AnamneseTableActions": {
+    "delete_success": "Anamnese excluída com sucesso.",
+    "open_menu": "Abrir menu",
+    "actions": "Ações",
+    "view": "Visualizar",
+    "edit": "Editar",
+    "delete": "Excluir",
+    "delete_confirm_title": "Você tem certeza?",
+    "delete_confirm_description": "A anamnese com ID {id} será excluída permanentemente. Esta ação não pode ser desfeita.",
+    "cancel": "Cancelar",
+    "continue": "Continuar"
+  }
+}

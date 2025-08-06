@@ -1,0 +1,9 @@
+/* src/styles/clerk-theme.css */
+:root {
+  --clerk-background:        hsl(240 4% 70%);
+  --clerk-surface:           hsl(0 0% 100%);
+  --clerk-border:            hsl(240 5% 90%);
+  --clerk-brand-primary:     hsl(222  95% 55%);
+  --clerk-text-primary:      hsl(240 10% 10%);
+  --clerk-text-on-primary:   hsl(0   0% 100%);
+}

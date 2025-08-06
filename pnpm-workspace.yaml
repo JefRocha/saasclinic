@@ -1,0 +1,14 @@
+ignoredBuiltDependencies:
+  - yarn
+
+onlyBuiltDependencies:
+  - '@clerk/shared'
+  - '@percy/core'
+  - '@sentry/cli'
+  - '@swc/core'
+  - '@tailwindcss/oxide'
+  - core-js
+  - core-js-pure
+  - esbuild
+  - sharp
+  - unrs-resolver
