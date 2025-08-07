@@ -25,6 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useAction } from '@/hooks/use-action';
 import { useValidationErrorsModal, ValidationErrorsModalProvider } from "@/components/ui/validation-errors-modal";
 import { toast } from "sonner";
@@ -62,6 +63,7 @@ import { UpsertColaboradorForm } from '@/app/[locale]/(auth)/dashboard/colaborad
 import UpsertClientForm from '@/app/[locale]/(auth)/dashboard/clients/_components/upsert-client-form';
 import { GetExamValueInput } from '@/actions/get-exam-value/schema';
 import { upsertClientExam } from '@/actions/upsert-client-exam';
+import { checkAndSuggestClientExamValueUpdate, type CheckAndSuggestClientExamValueUpdateResult } from '@/actions/check-and-suggest-client-exam-value-update';
 
 import {
   useQuery,
@@ -107,6 +109,8 @@ export function UpsertAnamneseForm({
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
   const [showExamValueUpdateConfirmation, setShowExamValueUpdateConfirmation] = useState(false);
   const [examUpdatesToConfirm, setExamUpdatesToConfirm] = useState<any[]>([]);
+  const [selectedExamsToUpdate, setSelectedExamsToUpdate] = useState<Set<number>>(new Set());
+  const [pendingAnamneseItem, setPendingAnamneseItem] = useState<AnamneseItemForm | null>(null);
 
   const form = useForm<z.infer<typeof upsertAnamneseSchema>>({
     resolver: zodResolver(upsertAnamneseSchema),
@@ -235,7 +239,27 @@ export function UpsertAnamneseForm({
     remove(index);
   };
 
-  const onSaveItem = (itemData: AnamneseItemForm) => {
+  const onSaveItem = async (itemData: AnamneseItemForm) => {
+    const currentClientId = form.getValues('clienteId'); // Get clientId from main form
+
+    if (currentClientId && itemData.exameId && itemData.valor !== undefined && itemData.valor !== null) {
+      const suggestion = await checkAndSuggestClientExamValueUpdate({
+        clientId: currentClientId,
+        exameId: itemData.exameId,
+        newAnamneseItemValue: itemData.valor,
+      });
+
+      if (suggestion) {
+        setExamUpdatesToConfirm([suggestion]); // Only one suggestion at a time
+        setSelectedExamsToUpdate(new Set([suggestion.exameId])); // Pre-select the current exam
+        setPendingAnamneseItem(itemData); // Store itemData for later
+        setShowExamValueUpdateConfirmation(true);
+        // Do not close item modal yet, wait for user confirmation
+        return;
+      }
+    }
+
+    // If no suggestion or no client/exam/value, proceed with saving item
     if (editingItemIndex !== null) {
       update(editingItemIndex, itemData);
     } else {
@@ -246,14 +270,9 @@ export function UpsertAnamneseForm({
 
   const { execute, status } = useAction(upsertAnamnese, {
     onSuccess: (data) => {
-      if (data.examValueUpdatesNeeded && data.examValueUpdatesNeeded.length > 0) {
-        setExamUpdatesToConfirm(data.examValueUpdatesNeeded);
-        setShowExamValueUpdateConfirmation(true);
-      } else {
-        toast.success(initialData ? 'Anamnese atualizada' : 'Anamnese criada');
-        onSuccess(data.data.anamnese?.id);
-        onClose();
-      }
+      toast.success(initialData ? 'Anamnese atualizada' : 'Anamnese criada');
+      onSuccess(data.data.anamnese?.id);
+      onClose();
     },
     onError: (error) => {
       openValidationErrorsModal([error]);
@@ -299,22 +318,37 @@ export function UpsertAnamneseForm({
 
   const handleConfirmExamValueUpdate = async () => {
     for (const update of examUpdatesToConfirm) {
-      await upsertClientExam({
-        clientId: update.clientId,
-        exameId: update.exameId,
-        valor: update.newAnamneseItemValue,
-      });
+      if (selectedExamsToUpdate.has(update.exameId)) {
+        await upsertClientExam({
+          clientId: update.clientId,
+          exameId: update.exameId,
+          valor: update.newAnamneseItemValue,
+        });
+      }
     }
     toast.success(t('exam_values_updated_success'));
     setShowExamValueUpdateConfirmation(false);
     setExamUpdatesToConfirm([]);
-    onClose(); // Fechar o formulário principal após a atualização
+    setSelectedExamsToUpdate(new Set()); // Clear selected exams
+
+    // Save the pending item after confirmation
+    if (pendingAnamneseItem) {
+      if (editingItemIndex !== null) {
+        update(editingItemIndex, pendingAnamneseItem);
+      } else {
+        append(pendingAnamneseItem);
+      }
+      setPendingAnamneseItem(null); // Clear pending item
+    }
+    setIsItemModalOpen(false); // Close item modal
   };
 
   const handleCancelExamValueUpdate = () => {
     setShowExamValueUpdateConfirmation(false);
     setExamUpdatesToConfirm([]);
-    onClose(); // Fechar o formulário principal mesmo se o usuário cancelar a atualização
+    setSelectedExamsToUpdate(new Set()); // Clear selected exams
+    setPendingAnamneseItem(null); // Discard pending item
+    setIsItemModalOpen(false); // Close item modal
   };
 
   return (
@@ -684,17 +718,34 @@ export function UpsertAnamneseForm({
       <AlertDialog open={showExamValueUpdateConfirmation} onOpenChange={setShowExamValueUpdateConfirmation}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <DialogTitle>{t('exam_value_update_confirm_title')}</DialogTitle>
+            <AlertDialogTitle>{t('exam_value_update_confirm_title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              <p>{t('exam_value_update_confirm_description')}</p>
+              {t('exam_value_update_confirm_description')}
               <ul className="list-disc pl-5 mt-2">
                 {examUpdatesToConfirm.map((update, index) => (
-                  <li key={index}>
-                    {t('exam_value_update_item', {
-                      exameName: getExameNameById(update.exameId),
-                      currentValue: formatCurrency(update.currentClientExamValue),
-                      newValue: formatCurrency(update.newAnamneseItemValue),
-                    })}
+                  <li key={index} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`exam-update-${index}`}
+                      checked={selectedExamsToUpdate.has(update.exameId)}
+                      onCheckedChange={(checked) => {
+                        setSelectedExamsToUpdate((prev) => {
+                          const newSet = new Set(prev);
+                          if (checked) {
+                            newSet.add(update.exameId);
+                          } else {
+                            newSet.delete(update.exameId);
+                          }
+                          return newSet;
+                        });
+                      }}
+                    />
+                    <label htmlFor={`exam-update-${index}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                      {t('exam_value_update_item', {
+                        exameName: getExameNameById(update.exameId),
+                        currentValue: formatCurrency(update.currentClientExamValue),
+                        newValue: formatCurrency(update.newAnamneseItemValue),
+                      })}
+                    </label>
                   </li>
                 ))}
               </ul>
@@ -702,7 +753,7 @@ export function UpsertAnamneseForm({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={handleCancelExamValueUpdate}>{t('cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmExamValueUpdate}>{t('confirm_update')}</AlertDialogAction>
+            <AlertDialogAction onClick={handleConfirmExamValueUpdate} disabled={selectedExamsToUpdate.size === 0}>{t('confirm_update')}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

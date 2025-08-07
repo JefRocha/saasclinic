@@ -71,8 +71,7 @@ export const getAnamneses = protectedClient.schema(
         orderBy: (order === "desc" ? desc(orderByColumn) : asc(orderByColumn)),
       });
 
-      console.log("Anamneses fetched from DB (with items):", anamneses);
-
+      
       const data = anamneses.map(a => ({
         ...a,
         clienteRazaoSocial: a.cliente?.razaoSocial ?? '',
