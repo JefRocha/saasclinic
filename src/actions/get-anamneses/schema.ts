@@ -30,6 +30,7 @@ export type Anamnese = {
   clienteRazaoSocial: string;
   clienteFantasia: string | null;
   colaboradorNome: string;
+  valor: number;
   items: z.infer<typeof anamneseItemSchema>[]; // Adicionado o array de itens
 };
 

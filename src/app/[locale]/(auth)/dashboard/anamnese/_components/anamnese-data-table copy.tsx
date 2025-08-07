@@ -34,30 +34,32 @@ type DataTableProps<TData, TValue> = {
   highlightedClientId?: string | number | null; // Adicionado
   selectedRowId?: string | number | null; // Adicionado
   onRowClick?: (id: string | number) => void; // Adicionado
+  emptyMessage?: string; // Adicionado
 };
 
 export function DataTable<TData, TValue>({
   columns,
-  data: propData,
+  data: propData, // Renomeado para evitar conflito com a variável interna
   pagination: propPagination,
   onSortingChange,
   sorting,
   isFetching = false,
-  highlightedClientId = null,
-  selectedRowId = null,
+  highlightedAnamneseId = null,
+  selectedAnamneseId = null,
   onRowClick,
+  emptyMessage,
 }: DataTableProps<TData, TValue>) {
   const actualData = (propData as any)?.data || propData;
   const actualPagination = propPagination || (propData as any)?.pagination;
 
   const table = useReactTable({
-    data: actualData,
+    data: actualData, // Passar o array de dados extraído
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(), // Adicionado
-    onSortingChange: onSortingChange, // Adicionado
+    getSortedRowModel: getSortedRowModel(), // Reativado
+    onSortingChange: onSortingChange, // Reativado
     state: {
-      sorting: sorting, // Adicionado
+      sorting: sorting, // Reativado
     },
   });
   const t = useTranslations('DataTable');
@@ -85,17 +87,16 @@ export function DataTable<TData, TValue>({
         </TableHeader>
         <TableBody>
           {table.getRowModel().rows?.length
-            ? (
-                table.getRowModel().rows.map(row => (
+            ? table.getRowModel().rows.map(row => (
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && 'selected'}
-                    onClick={() => onRowClick && row.original && row.original.id && onRowClick(row.original.id)}
+                    onClick={() => onRowClick && row.original && (row.original as any).id && onRowClick((row.original as any).id)}
                     className={cn(
                       "hover:bg-blue-100 dark:hover:bg-blue-900/20 transition-colors duration-200",
-                      row.original && row.original.id === highlightedClientId && "bg-blue-100 dark:bg-blue-900/20",
-                      row.original && row.original.id === selectedRowId && "bg-gray-200 dark:bg-gray-700",
-                      !(row.original && (row.original.id === highlightedClientId || row.original.id === selectedRowId)) && "odd:bg-muted/50"
+                      row.original && (row.original as any).id === highlightedAnamneseId && "bg-blue-100 dark:bg-blue-900/20",
+                      row.original && (row.original as any).id === selectedAnamneseId && "bg-gray-200 dark:bg-gray-700",
+                      !(row.original && ((row.original as any).id === highlightedAnamneseId || (row.original as any).id === selectedAnamneseId)) && "odd:bg-muted/50"
                     )}
                   >
                     {row.getVisibleCells().map(cell => (
@@ -105,11 +106,10 @@ export function DataTable<TData, TValue>({
                     ))}
                   </TableRow>
                 ))
-              )
             : (
                 <TableRow>
                   <TableCell colSpan={columns.length} className="h-24 text-center">
-                    {t('no_results')}
+                    {emptyMessage || t('no_results')}
                   </TableCell>
                 </TableRow>
               )}

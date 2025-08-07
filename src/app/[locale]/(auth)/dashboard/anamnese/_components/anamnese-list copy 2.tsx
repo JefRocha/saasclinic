@@ -10,7 +10,7 @@ import { format, startOfMonth, endOfMonth } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { DateRange } from "react-day-picker";
 
-import { DataTable as AnamneseDataTable } from "./anamnese-data-table";
+import { DataTable } from "./anamnese-data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,8 @@ export function AnamneseList() {
   const [isPending, startTransition] = useTransition();
   const { orgId } = useAuth();
 
+  console.log("orgId:", orgId);
+
   const search = searchParams.get("search") || "";
   const initialOrderBy = searchParams.get("orderBy") || "id";
   const initialOrder = searchParams.get("order") || "asc";
@@ -42,6 +44,8 @@ export function AnamneseList() {
   const [sorting, setSorting] = useState<SortingState>([
     { id: initialOrderBy, desc: initialOrder === "desc" },
   ]);
+  const [highlightedAnamneseId, setHighlightedAnamneseId] = useState<string | number | null>(null);
+  const [selectedAnamneseId, setSelectedAnamneseId] = useState<string | number | null>(null);
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
     const today = new Date();
@@ -79,7 +83,7 @@ export function AnamneseList() {
     isError,
     error,
   } = useQuery<SearchAnamnesesResult, Error>({
-    queryKey: ["anamneses", orgId, search, sorting[0].id, (sorting[0].desc ? "desc" : "asc"), dateRange?.from?.toISOString(), dateRange?.to?.toISOString()],
+    queryKey: ["anamneses", orgId],
     queryFn: () => getAnamneses({
       search,
       orderBy: sorting[0].id,
@@ -94,16 +98,26 @@ export function AnamneseList() {
   // Função para ser chamada em caso de sucesso (criação/edição/exclusão)
   const handleSuccess = (anamneseId?: string | number) => {
     queryClient.invalidateQueries({ queryKey: ["anamneses", orgId] });
-    // if (anamneseId) {
-    //   setHighlightedAnamneseId(anamneseId);
-    //   setSelectedAnamneseId(anamneseId);
-    // }
+    if (anamneseId) {
+      setHighlightedAnamneseId(anamneseId);
+      setSelectedAnamneseId(anamneseId);
+    }
   };
 
   // Função para lidar com o clique na linha da tabela
   const handleRowClick = (anamneseId: string | number) => {
-    // setSelectedAnamneseId(anamneseId);
+    setSelectedAnamneseId(anamneseId);
   };
+
+  // Limpa o destaque após alguns segundos
+  useEffect(() => {
+    if (highlightedAnamneseId) {
+      const timer = setTimeout(() => {
+        setHighlightedAnamneseId(null);
+      }, 3000); // 3 segundos
+      return () => clearTimeout(timer);
+    }
+  }, [highlightedAnamneseId]);
 
   const handleOpenUpsertForm = (anamnese?: Anamnese) => {
     setInitialAnamneseData(anamnese);
@@ -119,7 +133,6 @@ export function AnamneseList() {
 
   // Renderiza o Skeleton apenas no carregamento inicial
   if (isLoading && !data) return <Skeleton className="h-[300px] w-full" />;
-  
 
   if (isError) {
     return (
@@ -170,7 +183,7 @@ export function AnamneseList() {
         </div>
         <UpsertAnamneseButton onAnamneseUpsertSuccess={handleSuccess} onOpenForm={handleOpenUpsertForm} />
       </div>
-      <AnamneseDataTable
+      <DataTable
         columns={columns}
         data={data?.data || []}
         emptyMessage={t("no_results")}
@@ -192,6 +205,9 @@ export function AnamneseList() {
         }}
         sorting={sorting}
         isFetching={isPending}
+        highlightedAnamneseId={highlightedAnamneseId}
+        selectedAnamneseId={selectedAnamneseId}
+        onRowClick={handleRowClick}
       />
       <Dialog open={isUpsertFormOpen} onOpenChange={handleCloseUpsertForm}>
         <DialogContent

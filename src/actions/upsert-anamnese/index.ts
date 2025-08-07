@@ -39,18 +39,21 @@ export const upsertAnamnese = protectedClient
     // extrai e normaliza
     const { id: anamneseId, items, ...anamneseData } = parsedInput;
 
+    // Calcula o valor total dos exames
+    const totalExamsValue = items.reduce((sum, item) => sum + (item.valor || 0), 0);
+
     try {
       const result = await db.transaction(async (tx) => {
         /* ------------ ficha mestre ------------- */
         const savedRows = anamneseId
           ? await tx
               .update(anamneseTable)
-              .set({ ...anamneseData, updatedAt: new Date() })
+              .set({ ...anamneseData, total: totalExamsValue, updatedAt: new Date() })
               .where(and(eq(anamneseTable.id, anamneseId), eq(anamneseTable.organizationId, orgId)))
               .returning()
           : await tx
               .insert(anamneseTable)
-              .values({ ...anamneseData, organizationId: orgId, atendenteId: userId })
+              .values({ ...anamneseData, total: totalExamsValue, organizationId: orgId, atendenteId: userId })
               .returning();
 
         const anamnese = savedRows[0];

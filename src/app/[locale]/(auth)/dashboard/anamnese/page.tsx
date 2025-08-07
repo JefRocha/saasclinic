@@ -4,6 +4,10 @@ import { auth, currentUser } from '@clerk/nextjs/server';
 import { withPolicy } from '@/lib/withPolicy';
 import { Action }      from '@/lib/ability';
 
+import {
+  PageContent,
+} from '@/components/ui/page-container';
+
 import { AnamnesePageContent } from './_components/AnamnesePageContent';
 
 /* ---------- Server Component ---------- */
@@ -14,7 +18,11 @@ async function AnamnesePage() {
   if (!userId || !user)  redirect('/authentication');
   if (!orgId)            redirect('/clinic-form');
 
-  return <AnamnesePageContent />;
+  return (
+      <PageContent>
+        <AnamnesePageContent />
+      </PageContent>
+  );
 }
 
 /* ---------- Proteção RBAC/CASL ---------- */
