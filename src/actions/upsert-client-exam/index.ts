@@ -5,11 +5,16 @@ import { examesCliTable } from '@/models/Schema';
 import { protectedClient } from '@/libs/safe-action';
 import { eq } from 'drizzle-orm';
 import { upsertClientExamSchema } from './schema';
+import { auth } from "@clerk/nextjs/server";
 
 export const upsertClientExam = protectedClient
   .schema(upsertClientExamSchema)
   .action(
-  async ({ id, clientId, exameId, valor }, { userId, orgId }) => {
+  async (actionInput) => {
+    console.log("upsertClientExam actionInput:", actionInput);
+    const { id, clientId, exameId, valor } = actionInput.parsedInput;
+    const { userId, orgId } = await auth();
+    console.log("upsertClientExam auth context:", { userId, orgId });
     if (!orgId) {
       throw new Error("Organization ID is required.");
     }
@@ -18,18 +23,13 @@ export const upsertClientExam = protectedClient
       idcliente: clientId,
       idexame: exameId,
       valor: valor,
-      // A descrição e o cargo não são obrigatórios para esta tabela
-      // e podem ser inferidos do exame principal se necessário.
-      // codExameAnt também não é obrigatório.
     };
 
     if (id) {
-      // Atualiza o registro existente
       await db.update(examesCliTable)
         .set(data)
         .where(eq(examesCliTable.id, id));
     } else {
-      // Insere um novo registro
       await db.insert(examesCliTable).values(data);
     }
 

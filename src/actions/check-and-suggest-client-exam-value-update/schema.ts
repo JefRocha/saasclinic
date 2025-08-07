@@ -8,10 +8,11 @@ export const checkAndSuggestClientExamValueUpdateSchema = z.object({
 export type CheckAndSuggestClientExamValueUpdateInput = z.infer<typeof checkAndSuggestClientExamValueUpdateSchema>;
 
 export type ExamValueUpdateSuggestion = {
+  id?: number; // Adicionar esta propriedade
   clientId: number;
   exameId: number;
-  currentClientExamValue: string;
-  newAnamneseItemValue: string;
+  currentClientExamValue: number;
+  newAnamneseItemValue: number;
 };
 
 export type CheckAndSuggestClientExamValueUpdateResult = {

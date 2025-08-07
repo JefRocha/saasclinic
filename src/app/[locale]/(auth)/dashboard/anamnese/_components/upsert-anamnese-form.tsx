@@ -241,6 +241,7 @@ export function UpsertAnamneseForm({
 
   const onSaveItem = async (itemData: AnamneseItemForm) => {
     const currentClientId = form.getValues('clienteId'); // Get clientId from main form
+    console.log("currentClientId in onSaveItem:", currentClientId);
 
     if (currentClientId && itemData.exameId && itemData.valor !== undefined && itemData.valor !== null) {
       const suggestion = await checkAndSuggestClientExamValueUpdate({
@@ -316,13 +317,23 @@ export function UpsertAnamneseForm({
 
   
 
+  const { execute: executeUpsertClientExam } = useAction(upsertClientExam, {
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["examValue"] }); // Invalidate exam value cache
+      queryClient.invalidateQueries({ queryKey: ["examesForSelect"] }); // Invalidate examesForSelect cache
+    },
+    onError: (error) => {
+      toast.error(`Erro ao atualizar valor do exame do cliente: ${error}`);
+    },
+  });
+
   const handleConfirmExamValueUpdate = async () => {
     for (const update of examUpdatesToConfirm) {
       if (selectedExamsToUpdate.has(update.exameId)) {
-        await upsertClientExam({
-          clientId: update.clientId,
-          exameId: update.exameId,
-          valor: update.newAnamneseItemValue,
+        await executeUpsertClientExam({
+                    clientId: update.data.clientId,
+          exameId: update.data.exameId,
+          valor: Number(update.data.newAnamneseItemValue),
         });
       }
     }

@@ -29,10 +29,11 @@ export const checkAndSuggestClientExamValueUpdate = protectedClient
         const currentClientExamValue = Number(existingClientExam[0].valor || 0);
         if (currentClientExamValue !== newAnamneseItemValue) {
           suggestion = {
+            id: existingClientExam[0].id, // Incluir o ID do registro existente
             clientId,
             exameId,
-            currentClientExamValue: currentClientExamValue.toFixed(2),
-            newAnamneseItemValue: newAnamneseItemValue.toFixed(2),
+            currentClientExamValue,
+            newAnamneseItemValue,
           };
         }
       } else {
@@ -40,8 +41,8 @@ export const checkAndSuggestClientExamValueUpdate = protectedClient
         suggestion = {
           clientId,
           exameId,
-          currentClientExamValue: (0).toFixed(2), // Indica uma nova entrada
-          newAnamneseItemValue: newAnamneseItemValue.toFixed(2),
+          currentClientExamValue: 0, // Indica uma nova entrada
+          newAnamneseItemValue,
         };
       }
 
