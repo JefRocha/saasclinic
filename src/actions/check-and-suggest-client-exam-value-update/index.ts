@@ -26,15 +26,13 @@ export const checkAndSuggestClientExamValueUpdate = protectedClient
       let suggestion: CheckAndSuggestClientExamValueUpdateResult['suggestion'] = null;
 
       if (existingClientExam.length > 0) {
-        const currentClientExamValue = Number(existingClientExam[0].valor);
-        console.log("Raw value from DB:", existingClientExam[0].valor);
-        console.log("Converted value:", currentClientExamValue);
+        const currentClientExamValue = Number(existingClientExam[0].valor || 0);
         if (currentClientExamValue !== newAnamneseItemValue) {
           suggestion = {
             clientId,
             exameId,
-            currentClientExamValue,
-            newAnamneseItemValue,
+            currentClientExamValue: currentClientExamValue.toFixed(2),
+            newAnamneseItemValue: newAnamneseItemValue.toFixed(2),
           };
         }
       } else {
@@ -42,8 +40,8 @@ export const checkAndSuggestClientExamValueUpdate = protectedClient
         suggestion = {
           clientId,
           exameId,
-          currentClientExamValue: 0, // Indica uma nova entrada
-          newAnamneseItemValue,
+          currentClientExamValue: (0).toFixed(2), // Indica uma nova entrada
+          newAnamneseItemValue: newAnamneseItemValue.toFixed(2),
         };
       }
 

@@ -721,35 +721,35 @@ export function UpsertAnamneseForm({
             <AlertDialogTitle>{t('exam_value_update_confirm_title')}</AlertDialogTitle>
             <AlertDialogDescription>
               {t('exam_value_update_confirm_description')}
-              <ul className="list-disc pl-5 mt-2">
-                {examUpdatesToConfirm.map((update, index) => (
-                  <li key={index} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`exam-update-${index}`}
-                      checked={selectedExamsToUpdate.has(update.exameId)}
-                      onCheckedChange={(checked) => {
-                        setSelectedExamsToUpdate((prev) => {
-                          const newSet = new Set(prev);
-                          if (checked) {
-                            newSet.add(update.exameId);
-                          } else {
-                            newSet.delete(update.exameId);
-                          }
-                          return newSet;
-                        });
-                      }}
-                    />
-                    <label htmlFor={`exam-update-${index}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                      {t('exam_value_update_item', {
-                        exameName: getExameNameById(update.exameId),
-                        currentValue: formatCurrency(update.currentClientExamValue),
-                        newValue: formatCurrency(update.newAnamneseItemValue),
-                      })}
-                    </label>
-                  </li>
-                ))}
-              </ul>
             </AlertDialogDescription>
+            <ul className="list-disc pl-5 mt-2">
+              {examUpdatesToConfirm.map((update, index) => (
+                <li key={index} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`exam-update-${index}`}
+                    checked={selectedExamsToUpdate.has(update.exameId)}
+                    onCheckedChange={(checked) => {
+                      setSelectedExamsToUpdate((prev) => {
+                        const newSet = new Set(prev);
+                        if (checked) {
+                          newSet.add(update.exameId);
+                        } else {
+                          newSet.delete(update.exameId);
+                        }
+                        return newSet;
+                      });
+                    }}
+                  />
+                  <label htmlFor={`exam-update-${index}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                      {t('exam_value_update_item', {
+                      exameName: getExameNameById(update.data.exameId),
+                      currentValue: formatCurrency(Number(update.data.currentClientExamValue)),
+                      newValue: formatCurrency(Number(update.data.newAnamneseItemValue)),
+                    })}
+                  </label>
+                </li>
+              ))}
+            </ul>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={handleCancelExamValueUpdate}>{t('cancel')}</AlertDialogCancel>

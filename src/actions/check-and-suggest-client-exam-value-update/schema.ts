@@ -10,8 +10,8 @@ export type CheckAndSuggestClientExamValueUpdateInput = z.infer<typeof checkAndS
 export type ExamValueUpdateSuggestion = {
   clientId: number;
   exameId: number;
-  currentClientExamValue: number;
-  newAnamneseItemValue: number;
+  currentClientExamValue: string;
+  newAnamneseItemValue: string;
 };
 
 export type CheckAndSuggestClientExamValueUpdateResult = {
