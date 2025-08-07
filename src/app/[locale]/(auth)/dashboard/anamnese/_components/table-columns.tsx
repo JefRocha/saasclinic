@@ -17,7 +17,7 @@ export const getAnamnesesTableColumns = (
 ): ColumnDef<Anamnese>[] => [
   {
     accessorKey: "id",
-    size: 80,
+    size: 50,
     header: ({ column }) => (
       <Button
         variant="ghost"
@@ -30,7 +30,7 @@ export const getAnamnesesTableColumns = (
   },
   {
     accessorKey: "data",
-    size: 120,
+    size: 80,
     header: ({ column }) => (
       <Button
         variant="ghost"
@@ -42,7 +42,7 @@ export const getAnamnesesTableColumns = (
     ),
     cell: ({ row }) => format(new Date(row.original.data), "dd/MM/yyyy"),
   },
-    {
+  {
     accessorKey: "clienteRazaoSocial",
     size: 300,
     header: ({ column }) => (
@@ -69,16 +69,30 @@ export const getAnamnesesTableColumns = (
   },
   {
     accessorKey: "colaboradorNome",
+    size: 250,
     header: ({ column }) => (
       <Button
         variant="ghost"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       >
-        Colaborador
+        Razão Social
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
+    cell: ({ row }) => (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="w-full truncate">{row.original.colaboradorNome}</div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{row.original.colaboradorNome}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    ),
   },
+  
   {
     accessorKey: "tipo",
     header: ({ column }) => (
@@ -105,6 +119,7 @@ export const getAnamnesesTableColumns = (
   },
   {
     accessorKey: "total",
+    size: 100,
     header: ({ column }) => (
       <Button
         variant="ghost"
@@ -114,10 +129,20 @@ export const getAnamnesesTableColumns = (
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => formatCurrency(row.original.total),
+    cell: ({ row }) => {
+      const formattedValue = formatCurrency(row.original.total);
+      const [currencySymbol, value] = formattedValue.split(/\s(?=\d)/);
+      return (
+        <div className="flex justify-between w-full">
+          <span className="text-left">{currencySymbol}</span>
+          <span className="text-right">{value}</span>
+        </div>
+      );
+    },
   },
   {
     id: "actions",
+    size: 50,
     cell: ({ row }) => (
       <AnamneseTableActions
         anamnese={row.original}
