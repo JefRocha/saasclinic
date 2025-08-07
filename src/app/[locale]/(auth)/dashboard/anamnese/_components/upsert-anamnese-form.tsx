@@ -331,9 +331,10 @@ export function UpsertAnamneseForm({
     for (const update of examUpdatesToConfirm) {
       if (selectedExamsToUpdate.has(update.exameId)) {
         await executeUpsertClientExam({
-                    clientId: update.data.clientId,
+          clientId: update.data.clientId,
           exameId: update.data.exameId,
           valor: Number(update.data.newAnamneseItemValue),
+          id: update.data.id, // Passar o ID para a action
         });
       }
     }

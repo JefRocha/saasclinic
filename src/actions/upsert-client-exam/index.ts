@@ -12,6 +12,7 @@ export const upsertClientExam = protectedClient
   .action(
   async (actionInput) => {
     console.log("upsertClientExam actionInput:", actionInput);
+    console.log("ID received in upsertClientExam action:", actionInput.parsedInput.id);
     const { id, clientId, exameId, valor } = actionInput.parsedInput;
     const { userId, orgId } = await auth();
     console.log("upsertClientExam auth context:", { userId, orgId });
