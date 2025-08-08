@@ -392,7 +392,9 @@ export const anamneseItemsTable = pgTable("anamnese_items", {
   updatedAt: timestamp("updated_at")
                .defaultNow()
                .$onUpdate(() => new Date()),
-});
+}, (table) => ({
+  uniq: uniqueIndex("uniq_anamnese_exame").on(table.anamneseId, table.exameId),
+}));
 
 /* =======================================================================
  *  Helpers de relação tipada (Drizzle `relations`)

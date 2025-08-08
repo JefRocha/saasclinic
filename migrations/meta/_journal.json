@@ -8,6 +8,13 @@
       "when": 1754497343562,
       "tag": "0000_breezy_miracleman",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1754656033435,
+      "tag": "0001_tired_mentallo",
+      "breakpoints": true
     }
   ]
 }

@@ -164,5 +164,18 @@
     "message_title": "Message",
     "message_description": "Enter a detailed message for your todo.",
     "submit_button": "Submit"
+  },
+  "DateRangePicker": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "this_week": "This Week",
+    "this_month": "This Month",
+    "this_year": "This Year",
+    "pick_a_date": "Pick a date",
+    "cancel": "Cancel",
+    "apply": "Apply",
+    "days": "days",
+    "last_7_days": "Last 7 days",
+    "last_30_days": "Last 30 days"
   }
 }

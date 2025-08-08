@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const expiringExamSchema = z.object({
   id: z.number(),
   vencimento: z.date(),
+  dataRealizacao: z.date(), // Adicionado o campo dataRealizacao
   colaboradorNome: z.string(),
   clienteNome: z.string(),
   exameNome: z.string(),

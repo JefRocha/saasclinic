@@ -39,6 +39,8 @@ interface SidebarCtx {
   setOpenMobile: (v: boolean) => void
   toggle: () => void
   expand: () => void
+  activeSubmenuId: string | null;
+  setActiveSubmenuId: (id: string | null) => void;
 }
 
 const SidebarContext = React.createContext<SidebarCtx | null>(null)
@@ -55,12 +57,13 @@ interface SidebarProviderProps {
   children: React.ReactNode
 }
 
-export function SidebarProvider({ defaultOpen = true, children }: SidebarProviderProps) {
+  export function SidebarProvider({ defaultOpen = true, children }: SidebarProviderProps) {
   const isMobile = useIsMobile()
   const [state, setState] = React.useState<SidebarState>(
     defaultOpen ? "expanded" : "collapsed",
   )
   const [openMobile, setOpenMobile] = React.useState(false)
+  const [activeSubmenuId, setActiveSubmenuId] = React.useState<string | null>(null);
 
   const toggle = React.useCallback(() => {
     if (isMobile) setOpenMobile((v) => !v)
@@ -72,8 +75,8 @@ export function SidebarProvider({ defaultOpen = true, children }: SidebarProvide
   }, [isMobile])
 
   const value = React.useMemo<SidebarCtx>(
-    () => ({ state, openMobile, setOpenMobile, toggle, expand }),
-    [state, openMobile, toggle, expand],
+    () => ({ state, openMobile, setOpenMobile, toggle, expand, activeSubmenuId, setActiveSubmenuId }),
+    [state, openMobile, toggle, expand, activeSubmenuId, setActiveSubmenuId],
   )
 
   return (
@@ -254,6 +257,7 @@ export function SidebarEntry(props: SidebarEntryProps) {
 
 /* -- submenu colapsável --------------------------------------------------- */
 interface SubmenuProps {
+  id: string;
   label: string
   icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>
   defaultOpen?: boolean
@@ -261,26 +265,27 @@ interface SubmenuProps {
 }
 
 export function SidebarSubmenu({
+  id,
   label,
   icon: Icon,
   defaultOpen = false,
   children,
 }: SubmenuProps) {
-  const { state, expand } = useSidebar()
-  const [open, setOpen] = React.useState(defaultOpen)
+  const { state, expand, activeSubmenuId, setActiveSubmenuId } = useSidebar();
+  const open = activeSubmenuId === id;
 
   React.useEffect(() => {
-    if (state === "collapsed") {
-      setOpen(false)
+    if (state === "collapsed" && activeSubmenuId === id) {
+      setActiveSubmenuId(null);
     }
-  }, [state])
+  }, [state, activeSubmenuId, id, setActiveSubmenuId]);
 
   const handleClick = () => {
     if (state === "collapsed") {
-      expand()
+      expand();
     }
-    setOpen((v) => !v)
-  }
+    setActiveSubmenuId(open ? null : id);
+  };
 
   return (
     <>

@@ -101,9 +101,9 @@ export const upsertAnamnese = protectedClient
         const examValueUpdatesNeeded: { clientId: number; exameId: number; currentClientExamValue: number; newAnamneseItemValue: number; }[] = [];
 
         for (const item of items) {
-          // Busca validade/validade1
+          // Busca validade/validade1 e tipo do exame
           const [v] = await tx
-            .select({ v0: ex.validade, v1: ex.validade1 })
+            .select({ v0: ex.validade, v1: ex.validade1, tipo: ex.tipo })
             .from(ex)
             .where(eq(ex.id, item.exameId))
             .limit(1);
@@ -159,7 +159,8 @@ export const upsertAnamnese = protectedClient
             );
           const prevCount = cntRows[0]?.cnt ?? 0;
 
-          const months = prevCount === 0 ? v.v0 : v.v1;
+          // Determina o número de meses para o vencimento com base no tipo de exame
+          const months = v.tipo === "ADMISSIONAL" ? v.v0 : v.v1;
           const baseDate = anamnese.data ? new Date(anamnese.data as Date) : new Date();
           const vencto = addMonths(baseDate, months).toISOString().slice(0, 10);
 

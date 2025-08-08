@@ -139,6 +139,31 @@
     box-shadow: 0 0 0px 1000px rgba(0, 0, 0, 0.2) inset;
   }
 
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+      width: 8px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+      background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+      background-color: var(--border);
+      border-radius: 20px;
+      border: 3px solid transparent;
+      background-clip: content-box;
+  }
+  .scrollbar-thin {
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+  }
+
   .login-input:-webkit-autofill::placeholder {
     color: #9ca3af;
   }

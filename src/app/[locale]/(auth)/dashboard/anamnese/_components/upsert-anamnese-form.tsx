@@ -111,6 +111,7 @@ export function UpsertAnamneseForm({
   const [examUpdatesToConfirm, setExamUpdatesToConfirm] = useState<any[]>([]);
   const [selectedExamsToUpdate, setSelectedExamsToUpdate] = useState<Set<number>>(new Set());
   const [pendingAnamneseItem, setPendingAnamneseItem] = useState<AnamneseItemForm | null>(null);
+  const [isDuplicateExamAlertOpen, setIsDuplicateExamAlertOpen] = useState(false);
 
   const form = useForm<z.infer<typeof upsertAnamneseSchema>>({
     resolver: zodResolver(upsertAnamneseSchema),
@@ -240,6 +241,15 @@ export function UpsertAnamneseForm({
   };
 
   const onSaveItem = async (itemData: AnamneseItemForm) => {
+    const isDuplicate = fields.some(
+      (field, index) => field.exameId === itemData.exameId && index !== editingItemIndex
+    );
+
+    if (isDuplicate) {
+      setIsDuplicateExamAlertOpen(true);
+      return;
+    }
+
     const currentClientId = form.getValues('clienteId'); // Get clientId from main form
 
     if (currentClientId && itemData.exameId && itemData.valor !== undefined && itemData.valor !== null) {
@@ -364,11 +374,22 @@ export function UpsertAnamneseForm({
 
   return (
     <>
+      <style>{`
+        @media (min-width: 768px) {
+          .hide-scrollbar-desktop::-webkit-scrollbar {
+            display: none;
+          }
+          .hide-scrollbar-desktop {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+          }
+        }
+      `}</style>
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent
           onEscapeKeyDown={(e) => e.preventDefault()}
           onPointerDownOutside={(e) => e.preventDefault()}
-          className="[&>button]:hidden w-full max-w-4xl md:max-w-6xl xl:max-w-[1400px] max-h-[90vh] overflow-y-auto focus:outline-none"
+          className="hide-scrollbar-desktop [&>button]:hidden w-full max-w-4xl md:max-w-6xl xl:max-w-[1400px] max-h-[90vh] overflow-y-auto focus:outline-none"
           initialFocus={datePickerRef}
         >
           <DialogHeader>
@@ -806,6 +827,21 @@ export function UpsertAnamneseForm({
           }}
         />
       )}
+
+      {/* Alerta de Exame Duplicado */}
+      <AlertDialog open={isDuplicateExamAlertOpen} onOpenChange={setIsDuplicateExamAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('duplicate_exam_title')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('duplicate_exam_description')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setIsDuplicateExamAlertOpen(false)}>{t('ok')}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

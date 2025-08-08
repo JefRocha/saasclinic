@@ -1,6 +1,4 @@
-'use server';
-
-import { and, eq, gte, lte, isNull } from 'drizzle-orm';
+import { and, eq, gte, lte, isNull, or, like } from 'drizzle-orm';
 import { db } from '@/libs/DB';
 import { protectedClient } from '@/libs/safe-action';
 import { z } from 'zod';
@@ -16,6 +14,7 @@ import {
 import dayjs from 'dayjs';
 
 const getExpiringExamsSchema = z.object({
+  search: z.string().optional(),
   startDate: z.date().optional(),
   endDate: z.date().optional(),
 });
@@ -23,22 +22,40 @@ const getExpiringExamsSchema = z.object({
 export const getExpiringExams = protectedClient.schema(
   getExpiringExamsSchema,
 ).action(
-  async (parsedInput, { orgId }) => {
-    const { startDate, endDate } = parsedInput;
+  async ({ parsedInput, ctx: { orgId } }) => {
+    const { search, startDate, endDate } = parsedInput;
 
     const start = startDate ?? dayjs().startOf('month').toDate();
     const end = endDate ?? dayjs().endOf('month').toDate();
+
+    const whereConditions = [eq(anamneseTable.organizationId, orgId)];
+
+    if (start && end) {
+      whereConditions.push(gte(anamneseItemsTable.vencto, start));
+      whereConditions.push(lte(anamneseItemsTable.vencto, end));
+    }
+
+    if (search) {
+      whereConditions.push(
+        or(
+          like(colaboradorTable.name, `%${search}%`),
+          like(clientsTable.fantasia, `%${search}%`),
+        ),
+      );
+    }
 
     const expiringExams = await db
       .select({
         id: anamneseItemsTable.id,
         vencimento: anamneseItemsTable.vencto,
+        dataRealizacao: anamneseTable.data, // Adicionado a data de realização
         colaboradorNome: colaboradorTable.name,
         clienteNome: clientsTable.fantasia,
         exameNome: examesTable.descricao,
         telefone: colaboradorTable.celular,
         clienteId: clientsTable.id,
         colaboradorId: colaboradorTable.id,
+        organizationId: anamneseTable.organizationId, // Adicionado para depuração
       })
       .from(anamneseItemsTable)
       .innerJoin(
@@ -51,7 +68,7 @@ export const getExpiringExams = protectedClient.schema(
       )
       .innerJoin(clientsTable, eq(anamneseTable.clienteId, clientsTable.id))
       .innerJoin(examesTable, eq(anamneseItemsTable.exameId, examesTable.id))
-      .innerJoin(
+      .leftJoin(
         employmentTable,
         and(
           eq(employmentTable.colaboradorId, colaboradorTable.id),
@@ -59,13 +76,7 @@ export const getExpiringExams = protectedClient.schema(
           isNull(employmentTable.dataDemissao),
         ),
       )
-      .where(
-        and(
-          eq(anamneseTable.organizationId, orgId),
-          gte(anamneseItemsTable.vencto, start),
-          lte(anamneseItemsTable.vencto, end),
-        ),
-      )
+      .where(and(...whereConditions))
       .orderBy(anamneseItemsTable.vencto);
 
     return { data: expiringExams };

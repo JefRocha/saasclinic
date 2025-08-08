@@ -13,7 +13,10 @@ import { DateRange } from "react-day-picker";
 import { DataTable as AnamneseDataTable } from "./anamnese-data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SearchInput } from "@/components/ui/search-input";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/libs/utils";
 
 import { getAnamneses, type SearchAnamnesesResult } from "@/actions/get-anamneses";
 import { getAnamnesesTableColumns } from "./table-columns";
@@ -131,11 +134,39 @@ export function AnamneseList() {
       <div className="mb-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-4 w-full">
           <SearchInput />
-          <DateRangePicker
-            dateRange={dateRange}
-            setDateRange={setDateRange}
-            className="w-full md:w-auto"
-          />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                id="date"
+                variant={"outline"}
+                className={cn(
+                  "w-[300px] justify-start text-left font-normal",
+                  !dateRange && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateRange?.from ? (
+                  dateRange.to ? (
+                    <>{format(dateRange.from, "LLL dd, y")} - {format(dateRange.to, "LLL dd, y")}</>
+                  ) : (
+                    format(dateRange.from, "LLL dd, y")
+                  )
+                ) : (
+                  <span>{t("select_date_range_placeholder")}</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={dateRange?.from}
+                selected={dateRange}
+                onSelect={setDateRange}
+                numberOfMonths={2}
+              />
+            </PopoverContent>
+          </Popover>
         </div>
         <UpsertAnamneseButton onAnamneseUpsertSuccess={handleSuccess} onOpenForm={handleOpenUpsertForm} />
       </div>

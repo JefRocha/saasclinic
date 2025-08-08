@@ -212,7 +212,10 @@
     "exam_value_update_confirm_description": "O valor do exame na anamnese é diferente do valor registrado para este cliente. Deseja atualizar o valor na tabela de exames por cliente?",
     "exam_value_update_item": "Exame: {exameName} (Valor Atual: {currentValue}, Novo Valor: {newValue})",
     "confirm_update": "Confirmar Atualização",
-    "exam_values_updated_success": "Valores dos exames atualizados com sucesso!"
+    "exam_values_updated_success": "Valores dos exames atualizados com sucesso!",
+    "duplicate_exam_title": "Exame Duplicado",
+    "duplicate_exam_description": "Este exame já foi adicionado a esta anamnese.",
+    "ok": "OK"
   },
   "AnamneseListPage": {
     "title": "Anamneses",
@@ -252,5 +255,18 @@
     "delete_confirm_description": "A anamnese com ID {id} será excluída permanentemente. Esta ação não pode ser desfeita.",
     "cancel": "Cancelar",
     "continue": "Continuar"
+  },
+  "DateRangePicker": {
+    "today": "Hoje",
+    "yesterday": "Ontem",
+    "this_week": "Esta Semana",
+    "this_month": "Este Mês",
+    "this_year": "Este Ano",
+    "pick_a_date": "Selecione um período",
+    "cancel": "Cancelar",
+    "apply": "Aplicar",
+    "days": "dias",
+    "last_7_days": "Últimos 7 dias",
+    "last_30_days": "Últimos 30 dias"
   }
 }

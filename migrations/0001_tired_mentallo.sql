@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS "uniq_anamnese_exame" ON "anamnese_items" USING btree ("id_anamnese","id_exame");

@@ -260,15 +260,15 @@ export function DateRangePicker({
             <span className="truncate">{displayText}</span>
             
             {showClearButton && hasValidRange && !disabled && (
-              <div
-                role="button"
-                aria-label="Clear"
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
                 onClick={handleClear}
                 tabIndex={-1}
-                className="absolute right-1 h-6 w-6 p-0 flex items-center justify-center rounded-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-accent"
               >
                 <X className="h-3 w-3" />
-              </div>
+              </Button>
             )}
           </Button>
         </PopoverTrigger>

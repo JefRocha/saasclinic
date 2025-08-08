@@ -8,16 +8,24 @@ import Link from 'next/link';
 
 export const columns: ColumnDef<ExpiringExam>[] = [
   {
-    accessorKey: 'colaboradorNome',
-    header: 'Colaborador',
-  },
-  {
     accessorKey: 'clienteNome',
     header: 'Cliente',
   },
   {
+    accessorKey: 'colaboradorNome',
+    header: 'Colaborador',
+  },
+  {
     accessorKey: 'exameNome',
     header: 'Exame',
+  },
+  {
+    accessorKey: 'dataRealizacao',
+    header: 'Data Realização',
+    cell: ({ row }) => {
+      const date = row.getValue('dataRealizacao') as Date;
+      return format(date, 'dd/MM/yyyy');
+    },
   },
   {
     accessorKey: 'vencimento',
