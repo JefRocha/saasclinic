@@ -33,8 +33,7 @@ export function ExamesPorClientePageContent() {
   const handleExportToExcel = async () => {
     try {
       const result = await exportExamesCli({ clientId: selectedClientId, search });
-      console.log("Result from exportExamesCli:", result);
-
+      
       const dataToExport = result.data; // Acessar a propriedade 'data' do resultado
 
       if (!dataToExport || dataToExport.length === 0) {

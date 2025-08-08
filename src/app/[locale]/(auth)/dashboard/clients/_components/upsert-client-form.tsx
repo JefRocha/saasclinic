@@ -363,7 +363,6 @@ const UpsertClientForm = ({
   const [debouncedCorrespCep] = useDebounce(correspCepValue, 500);
 
   useEffect(() => {
-    console.log('form errors →', form.formState.errors);
     
     const fetchAddress = async () => {
       // Condição: CEP preenchido (8 dígitos) E Endereço vazio
@@ -372,14 +371,12 @@ const UpsertClientForm = ({
         debouncedCep.replace(/\D/g, "").length === 8 &&
         !enderecoValue
       ) {
-        console.log("Searching CEP:", debouncedCep);
         try {
           const response = await fetch(
             `https://viacep.com.br/ws/${debouncedCep.replace(/\D/g, "")}/json/`,
           );
           const data = await response.json();
-          console.log("ViaCEP Response Data:", data);
-
+          
           if (!data.erro) {
             form.setValue("endereco", data.logradouro.toUpperCase());
             form.setValue("bairro", data.bairro.toUpperCase());
@@ -406,14 +403,12 @@ const UpsertClientForm = ({
         debouncedCorrespCep.replace(/\D/g, "").length === 8 &&
         !correspEnderecoValue
       ) {
-        console.log("Searching Corresp CEP:", debouncedCorrespCep);
         try {
           const response = await fetch(
             `https://viacep.com.br/ws/${debouncedCorrespCep.replace(/\D/g, "")}/json/`,
           );
           const data = await response.json();
-          console.log("ViaCEP Corresp Response Data:", data);
-
+          
           if (!data.erro) {
             form.setValue("correspEndereco", data.logradouro.toUpperCase());
             form.setValue("correspBairro", data.bairro.toUpperCase());
@@ -561,9 +556,7 @@ const UpsertClientForm = ({
   });
 
   const handleCnpjSearch = () => {
-    console.log("handleCnpjSearch - function called (BROWSER CONSOLE)");
     const currentCpfValue = form.getValues("cpf");
-    console.log("handleCnpjSearch - currentCpfValue from getValues (SERVER CONSOLE):", currentCpfValue);
     const cleanedCnpj = currentCpfValue ? currentCpfValue.replace(/\D/g, "") : "";
 
     if (pessoaValue === "J") {

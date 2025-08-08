@@ -13,7 +13,6 @@ export const upsertClientExam = protectedClient
   async (actionInput) => {
     const { id, clientId, exameId, valor } = actionInput.parsedInput;
     const { userId, orgId } = await auth();
-    console.log("upsertClientExam auth context:", { userId, orgId });
     if (!orgId) {
       throw new Error("Organization ID is required.");
     }

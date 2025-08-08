@@ -19,7 +19,6 @@ export const actionClient = createSafeActionClient({ handleServerError });
 
 // ✅ use() aceita callback assíncrona; aqui usamos await auth()
 export const protectedClient = actionClient.use(async ({ next }) => {
-  console.log("Executando protectedClient middleware...");
   const { userId, orgId } = await auth(); // <- necessário no seu setup
 
   if (!userId) {

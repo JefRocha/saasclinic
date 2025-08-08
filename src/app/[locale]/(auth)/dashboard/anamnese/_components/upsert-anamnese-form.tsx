@@ -417,7 +417,7 @@ export function UpsertAnamneseForm({
                           <FormControl>
                             <FormDatePickerHybrid
                               ref={datePickerRef}
-                              value={field.value instanceof Date ? field.value.toISOString().split('T')[0] : (typeof field.value === 'string' ? field.value : undefined)}
+                              value={field.value instanceof Date ? field.value.toISOString().split('T')[0] : (typeof field.value === 'string' ? field.value : '')}
                               onChange={(isoString) => field.onChange(isoString ? new Date(isoString) : undefined)}
                               placeholder={tFormFields('placeholder_date')}
                               required

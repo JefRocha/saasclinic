@@ -16,7 +16,6 @@ export const getColaboradoresForSelect = protectedClient
   .schema(GetColaboradoresForSelectSchema)
   .action(async ({ ctx }) => {
     const { orgId } = ctx;
-    console.log('DEBUG getColaboradoresForSelect: orgId', orgId);
     noStore(); // Impede o cache da requisição
 
     const t = (key: string) => {
@@ -43,8 +42,7 @@ export const getColaboradoresForSelect = protectedClient
         })
         .from(colaboradorTable)
         .where(eq(colaboradorTable.organizationId, orgId));
-      console.log('DEBUG getColaboradoresForSelect: colaboradores', colaboradores);
-
+      
       return { success: true, data: colaboradores };
     } catch (error) {
       console.error("Erro ao buscar colaboradores para select:", error);

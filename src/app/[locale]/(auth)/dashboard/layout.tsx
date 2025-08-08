@@ -1,7 +1,7 @@
 "use client"
 
 import { useTranslations } from "next-intl";
-import React from "react";
+import React, { useState, useEffect, useTransition, createContext, useContext } from "react";
 
 // ✅ novos componentes da Complex‑Sidebar
 import {
@@ -10,12 +10,12 @@ import {
   SidebarContent,
   SidebarMenu,
   SidebarEntry,
-  SidebarButton,
   SidebarSubmenu,
   SidebarCollapseButton,
 } from "@/components/ui/complex-sidebar";
 
 import { DashboardHeader } from "@/features/dashboard/DashboardHeader";
+import { FullScreenLoader } from "@/components/ui/full-screen-loader";
 
 import {
   Home,
@@ -25,15 +25,38 @@ import {
   Stethoscope,
 } from "lucide-react";
 
+// Create the context
+interface LoadingContextType {
+  isRoutePending: boolean;
+  startRouteTransition: (callback: () => void) => void;
+}
+export const LoadingContext = createContext<LoadingContextType | undefined>(undefined);
+
+// Custom hook to use the loading context
+export function useRouteLoading() {
+  const context = useContext(LoadingContext);
+  if (context === undefined) {
+    throw new Error('useRouteLoading must be used within a LoadingProvider');
+  }
+  return context;
+}
+
 export default function DashboardLayout({
   children,
-  params,
+  params: rawParams,
 }: {
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
 }) {
-  const { locale } = React.use(params);
+  const { locale } = React.use(rawParams);
   const t = useTranslations("DashboardLayout");
+  const [isPending, startTransition] = useTransition();
+
+  // Provide the context value
+  const loadingContextValue = React.useMemo(() => ({
+    isRoutePending: isPending,
+    startRouteTransition: startTransition,
+  }), [isPending, startTransition]);
 
   /* --------------------------- estrutura do menu --------------------------- */
   const menu: (
@@ -144,37 +167,40 @@ export default function DashboardLayout({
 
       {/* Layout principal */}
       <SidebarProvider>
-        <div className="flex flex-1 overflow-hidden  ">
-          <Sidebar variant="inset" collapsible>
-            <SidebarContent>
-              <div className="flex justify-end py-2 pr-1">
-                <SidebarCollapseButton />
-              </div>
+        <LoadingContext.Provider value={loadingContextValue}> {/* Wrap with provider */}
+          <div className="flex flex-1 overflow-hidden  ">
+            <Sidebar variant="inset" collapsible>
+              <SidebarContent>
+                <div className="flex justify-end py-2 pr-1">
+                  <SidebarCollapseButton />
+                </div>
 
-              <SidebarMenu>
-                {menu.map((item) =>
-                  "href" in item ? (
-                    <SidebarEntry key={item.href} href={item.href} icon={() => item.icon as any}>
-                      {item.label}
-                    </SidebarEntry>
-                  ) : (
-                    <SidebarSubmenu key={item.label} label={item.label} icon={() => item.icon as any}>
-                      {item.subItems.map((sub) => (
-                        <SidebarEntry key={sub.href} href={sub.href} icon={() => sub.icon as any}>
-                          {sub.label}
-                        </SidebarEntry>
-                      ))}
-                    </SidebarSubmenu>
-                  ),
-                )}
-              </SidebarMenu>
-            </SidebarContent>
-          </Sidebar>
+                <SidebarMenu>
+                  {menu.map((item) =>
+                    "href" in item ? (
+                      <SidebarEntry key={item.href} href={item.href} icon={() => item.icon as any}>
+                        {item.label}
+                      </SidebarEntry>
+                    ) : (
+                      <SidebarSubmenu key={item.label} id={item.label} label={item.label} icon={() => item.icon as any}>
+                        {item.subItems.map((sub) => (
+                          <SidebarEntry key={sub.href} href={sub.href} icon={() => sub.icon as any}>
+                            {sub.label}
+                          </SidebarEntry>
+                        ))}
+                      </SidebarSubmenu>
+                    ),
+                  )}
+                </SidebarMenu>
+              </SidebarContent>
+            </Sidebar>
 
-          {/* Conteúdo principal */}
-          <main className="flex-1 overflow-y-auto bg-muted flex flex-col px-6 py-6">{children}</main>
-        </div>
+            {/* Conteúdo principal */}
+            <main className="flex-1 overflow-y-auto bg-muted flex flex-col px-6 py-6">{children}</main>
+          </div>
+        </LoadingContext.Provider>
       </SidebarProvider>
+      <FullScreenLoader isLoading={isPending} /> {/* Still use local isPending here */}
     </div>
   );
 }

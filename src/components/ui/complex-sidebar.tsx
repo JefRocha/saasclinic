@@ -13,12 +13,9 @@
 
 import * as React from "react"
 import Link, { type LinkProps } from "next/link"
-import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react"
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useRouteLoading } from "@/app/[locale]/(auth)/dashboard/layout";
 
 // ajuste os caminhos conforme seu projeto
 import { cn } from "@/libs/utils"
@@ -212,6 +209,8 @@ export type SidebarEntryProps = SidebarEntryPropsBase &
 export function SidebarEntry(props: SidebarEntryProps) {
   const { state } = useSidebar()
   const { active, icon: Icon, children, className, ...rest } = props
+  const router = useRouter();
+  const { startRouteTransition } = useRouteLoading();
 
   const commonClasses = cn(
     "group flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm",
@@ -232,9 +231,18 @@ export function SidebarEntry(props: SidebarEntryProps) {
 
   // Renderiza como <Link> do Next se `href` for passado
   if ("href" in rest) {
+    const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+      if (rest.href) {
+        e.preventDefault();
+        startRouteTransition(() => {
+          router.push(rest.href.toString());
+        });
+      }
+    };
+
     return (
       <li>
-        <Link {...(rest as Omit<LinkProps, "children">)} className={commonClasses}>
+        <Link {...(rest as Omit<LinkProps, "children">)} className={commonClasses} onClick={handleClick}>
           {content}
         </Link>
       </li>

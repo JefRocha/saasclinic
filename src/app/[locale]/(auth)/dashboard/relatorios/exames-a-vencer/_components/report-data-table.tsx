@@ -9,6 +9,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { useTranslations } from 'next-intl';
+import { Loader2 } from 'lucide-react';
 
 import {
   Table,
@@ -71,7 +72,10 @@ export function ReportDataTable<TData, TValue>({
           {isLoading ? (
             <TableRow>
               <TableCell colSpan={columns.length} className="h-24 text-center">
-                Carregando...
+                <div className="flex items-center justify-center gap-2">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span>Carregando dados...</span>
+                </div>
               </TableCell>
             </TableRow>
           ) : table.getRowModel().rows?.length ? (

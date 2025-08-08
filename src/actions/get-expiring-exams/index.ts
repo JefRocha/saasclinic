@@ -45,7 +45,7 @@ export const getExpiringExams = protectedClient.schema(
     }
 
     const expiringExams = await db
-      .select({
+      .selectDistinct({
         id: anamneseItemsTable.id,
         vencimento: anamneseItemsTable.vencto,
         dataRealizacao: anamneseTable.data, // Adicionado a data de realização

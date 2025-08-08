@@ -12,7 +12,6 @@ export const getColaboradores = protectedClient.schema(
   searchColaboradoresSchema,
 ).action(async ({ parsedInput, ctx }) => {
     const { orgId } = ctx;
-    console.log('DEBUG getColaboradores: orgId', orgId);
     const user = await currentUser();
     const role = user?.publicMetadata?.role as string;
 
@@ -31,8 +30,7 @@ export const getColaboradores = protectedClient.schema(
       whereOrg,
       search ? ilike(colaboradorTable.name, `%${search}%`) : undefined
     );
-    console.log('DEBUG getColaboradores: where clause', where);
-
+    
     const validOrderByColumns = ['id', 'name', 'cpf', 'email', 'createdAt', 'updatedAt']; // Adicione outras colunas válidas aqui
     const finalOrderBy = (orderBy && validOrderByColumns.includes(orderBy)) ? orderBy : 'id';
 
@@ -57,9 +55,7 @@ export const getColaboradores = protectedClient.schema(
           .where(where),
       ]);
 
-      console.log('DEBUG getColaboradores: colaboradores', colaboradores);
-      console.log('DEBUG getColaboradores: count', count);
-
+      
       return {
         data: colaboradores,
         pagination: { page: page || 1, limit, total: count, totalPages: Math.ceil(count / limit) },
