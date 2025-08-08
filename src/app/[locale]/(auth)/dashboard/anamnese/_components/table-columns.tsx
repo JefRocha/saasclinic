@@ -4,9 +4,16 @@ import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { formatCurrency } from "@/helpers/format";
-import { format } from "date-fns";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+dayjs.extend(utc);
 import AnamneseTableActions from "./table-actions";
 import { Anamnese } from "@/actions/get-anamneses/schema"; // Importar o tipo Anamnese completo
 
@@ -40,7 +47,11 @@ export const getAnamnesesTableColumns = (
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
-    cell: ({ row }) => format(new Date(row.original.data), "dd/MM/yyyy"),
+    cell: ({ row }) => {
+      const d = row.original.data;
+      // Garantir que datas vindas como string ISO ou Date sejam exibidas no dia correto em local time
+      return d ? dayjs(d).utc().format("DD/MM/YYYY") : "";
+    },
   },
   {
     accessorKey: "clienteRazaoSocial",
@@ -58,7 +69,9 @@ export const getAnamnesesTableColumns = (
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="w-full truncate">{row.original.clienteRazaoSocial}</div>
+            <div className="w-full truncate">
+              {row.original.clienteRazaoSocial}
+            </div>
           </TooltipTrigger>
           <TooltipContent>
             <p>{row.original.clienteRazaoSocial}</p>
@@ -83,7 +96,9 @@ export const getAnamnesesTableColumns = (
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="w-full truncate">{row.original.colaboradorNome}</div>
+            <div className="w-full truncate">
+              {row.original.colaboradorNome}
+            </div>
           </TooltipTrigger>
           <TooltipContent>
             <p>{row.original.colaboradorNome}</p>
@@ -92,7 +107,7 @@ export const getAnamnesesTableColumns = (
       </TooltipProvider>
     ),
   },
-  
+
   {
     accessorKey: "tipo",
     header: ({ column }) => (

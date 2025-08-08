@@ -1,20 +1,23 @@
-'use client';
+"use client";
 
-import { useForm, useFieldArray } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useTranslations } from 'next-intl';
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as nextIntl from "next-intl";
 import { NumericFormat } from "react-number-format";
-import { useRouter } from 'next/navigation';
-import { useState, useEffect, useRef } from 'react';
-import { MoreHorizontal } from 'lucide-react';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
+// import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+dayjs.extend(utc);
+import { MoreHorizontal } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,16 +27,20 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Checkbox } from '@/components/ui/checkbox';
-import { useAction } from '@/hooks/use-action';
-import { useValidationErrorsModal, ValidationErrorsModalProvider } from "@/components/ui/validation-errors-modal";
+} from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useAction } from "@/hooks/use-action";
+import { useValidationErrorsModal } from "@/components/ui/validation-errors-modal";
 import { toast } from "sonner";
 
-import { upsertAnamneseSchema, anamneseItemSchema, AnamneseItemForm } from '@/actions/upsert-anamnese/schema';
-import { upsertAnamnese} from '@/actions/upsert-anamnese';
-import { deleteAnamneseItem } from '@/actions/delete-anamnese-item';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  upsertAnamneseSchema,
+  anamneseItemSchema,
+  AnamneseItemForm,
+} from "@/actions/upsert-anamnese/schema";
+import { upsertAnamnese } from "@/actions/upsert-anamnese";
+import { deleteAnamneseItem } from "@/actions/delete-anamnese-item";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Form,
   FormField,
@@ -41,38 +48,42 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
-} from '@/components/ui/form';
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Button } from '@/components/ui/button';
-import { FormInput } from '@/components/form-fields/form-input';
-import { FormDatePickerHybrid } from '@/components/form-fields/form-date-picker-hybrid';
-import { SearchableSelect } from '@/components/ui/searchable-select';
-import { FormNumberInput } from '@/components/form-fields/form-number-input';
-import { getClientsForSelect } from '@/actions/get-clients-for-select';
-import { getColaboradoresForSelect } from '@/actions/get-colaboradores-for-select';
-import { getExamesForSelect } from '@/actions/get-exames-for-select';
-import { getMedicosForSelect } from '@/actions/get-medicos-for-select';
-import { useAuth } from '@clerk/nextjs';
-import { FormSelect } from '@/components/form-fields/form-select';
-import { exametipo_enum, formapagto_enum } from '@/models/Schema';
-import { DataTable } from '@/components/ui/data-table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { formatCurrency } from '@/helpers/format';
-import { getExamValue } from '@/actions/get-exam-value';
-import { UpsertColaboradorForm } from '@/app/[locale]/(auth)/dashboard/colaboradores/_components/upsert-colaborador-form';
-import UpsertClientForm from '@/app/[locale]/(auth)/dashboard/clients/_components/upsert-client-form';
-import { GetExamValueInput } from '@/actions/get-exam-value/schema';
-import { upsertClientExam } from '@/actions/upsert-client-exam';
-import { checkAndSuggestClientExamValueUpdate, type CheckAndSuggestClientExamValueUpdateResult } from '@/actions/check-and-suggest-client-exam-value-update';
-
+import { Button } from "@/components/ui/button";
+import { FormInput } from "@/components/form-fields/form-input";
+import { FormDatePickerHybrid } from "@/components/form-fields/form-date-picker-hybrid";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+// import { FormNumberInput } from "@/components/form-fields/form-number-input";
+import { getClientsForSelect } from "@/actions/get-clients-for-select";
+import { getColaboradoresForSelect } from "@/actions/get-colaboradores-for-select";
+import { getExamesForSelect } from "@/actions/get-exames-for-select";
+import { getMedicosForSelect } from "@/actions/get-medicos-for-select";
+import { useAuth } from "@clerk/nextjs";
+import { FormSelect } from "@/components/form-fields/form-select";
+import { exametipo_enum, formapagto_enum } from "@/models/Schema";
+import { DataTable } from "@/components/ui/data-table";
 import {
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query'
-import { z } from 'zod';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { formatCurrency } from "@/helpers/format";
+import { getExamValue } from "@/actions/get-exam-value";
+import { UpsertColaboradorForm } from "@/app/[locale]/(auth)/dashboard/colaboradores/_components/upsert-colaborador-form";
+import UpsertClientForm from "@/app/[locale]/(auth)/dashboard/clients/_components/upsert-client-form";
+// import { GetExamValueInput } from "@/actions/get-exam-value/schema";
+import { upsertClientExam } from "@/actions/upsert-client-exam";
+import { checkAndSuggestClientExamValueUpdate } from "@/actions/check-and-suggest-client-exam-value-update";
 
-// Adicionar o tipo que estava faltando
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { z } from "zod";
+
+// Tipos do formulário
 type UpsertAnamneseForm = z.infer<typeof upsertAnamneseSchema>;
+type UpsertAnamneseFormUI = Omit<UpsertAnamneseForm, "data"> & { data: string };
 
 interface UpsertAnamneseFormProps {
   initialData?: z.infer<typeof upsertAnamneseSchema>;
@@ -87,18 +98,14 @@ export function UpsertAnamneseForm({
   onClose,
   onSuccess,
 }: UpsertAnamneseFormProps) {
-  const t = useTranslations('AnamneseForm');
-  const tFormFields = useTranslations('FormFields');
-  const router = useRouter();
+  const t = (nextIntl as any).useTranslations("AnamneseForm");
+  const tFormFields = (nextIntl as any).useTranslations("FormFields");
   const { orgId, userId } = useAuth();
   const queryClient = useQueryClient();
   const openValidationErrorsModal = useValidationErrorsModal();
 
   // ✅ Ref para o DatePicker híbrido (agora é um input)
   const datePickerRef = useRef<HTMLInputElement>(null);
-  const dialogRef = useRef<HTMLDivElement>(null);
-  const createColabRef = useRef<HTMLInputElement>(null);
-  const createClientRef = useRef<HTMLInputElement>(null);
 
   /* diálogo de cadastro do colaborador */
   const [openCreate, setOpenCreate] = useState(false);
@@ -107,28 +114,47 @@ export function UpsertAnamneseForm({
   const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
   // Adicionar a variável que estava faltando
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
-  const [showExamValueUpdateConfirmation, setShowExamValueUpdateConfirmation] = useState(false);
+  const [showExamValueUpdateConfirmation, setShowExamValueUpdateConfirmation] =
+    useState(false);
   const [examUpdatesToConfirm, setExamUpdatesToConfirm] = useState<any[]>([]);
-  const [selectedExamsToUpdate, setSelectedExamsToUpdate] = useState<Set<number>>(new Set());
-  const [pendingAnamneseItem, setPendingAnamneseItem] = useState<AnamneseItemForm | null>(null);
-  const [isDuplicateExamAlertOpen, setIsDuplicateExamAlertOpen] = useState(false);
+  const [selectedExamsToUpdate, setSelectedExamsToUpdate] = useState<
+    Set<number>
+  >(new Set());
+  const [pendingAnamneseItem, setPendingAnamneseItem] =
+    useState<AnamneseItemForm | null>(null);
+  const [isDuplicateExamAlertOpen, setIsDuplicateExamAlertOpen] =
+    useState(false);
 
-  const form = useForm<z.infer<typeof upsertAnamneseSchema>>({
+  const form = useForm<UpsertAnamneseFormUI>({
     resolver: zodResolver(upsertAnamneseSchema),
-    defaultValues: initialData || {
-      data: new Date(),
-      items: [],
-    },
+    defaultValues: initialData
+      ? {
+          ...(initialData as any),
+          data: dayjs(initialData.data).format("YYYY-MM-DD"),
+          atendenteId: (initialData as any)?.atendenteId ?? userId ?? "",
+        }
+      : {
+          data: dayjs().format("YYYY-MM-DD"),
+          items: [],
+          atendenteId: userId ?? "",
+        },
   });
 
   useEffect(() => {
     if (isOpen) {
-      form.reset(
-        initialData || {
-          data: new Date(),
+      if (initialData) {
+        form.reset({
+          ...(initialData as any),
+          data: dayjs(initialData.data).format("YYYY-MM-DD"),
+          atendenteId: (initialData as any)?.atendenteId ?? userId ?? "",
+        });
+      } else {
+        form.reset({
+          data: dayjs().format("YYYY-MM-DD"),
           items: [],
-        },
-      );
+          atendenteId: userId ?? "",
+        });
+      }
     }
   }, [isOpen, initialData, form]);
 
@@ -138,15 +164,15 @@ export function UpsertAnamneseForm({
 
   const { fields, append, remove, update } = useFieldArray({
     control: form.control,
-    name: 'items',
+    name: "items",
   });
 
   // Observar mudanças em exameId e clienteId para buscar o valor do exame
-  const watchedExameId = itemForm.watch('exameId');
-  const watchedClienteId = form.watch('clienteId');
+  const watchedExameId = itemForm.watch("exameId");
+  const watchedClienteId = form.watch("clienteId");
 
   const { data: examValueData } = useQuery({
-    queryKey: ['examValue', watchedExameId, watchedClienteId, orgId],
+    queryKey: ["examValue", watchedExameId, watchedClienteId, orgId],
     queryFn: () =>
       getExamValue({ exameId: watchedExameId!, clienteId: watchedClienteId! }),
     enabled: !!watchedExameId && !!orgId, // Habilitar a query apenas se exameId e orgId existirem
@@ -156,15 +182,18 @@ export function UpsertAnamneseForm({
   // ✅ Configurar atendenteId
   useEffect(() => {
     if (userId && !initialData) {
-      form.setValue('atendenteId', userId);
+      form.setValue("atendenteId", userId);
     }
   }, [userId, initialData, form]);
 
   // Atualizar o campo valor do itemForm quando o valor do exame for buscado
   useEffect(() => {
-    if (examValueData?.data?.data?.valor !== undefined && examValueData.data.data.valor !== null) {
+    if (
+      examValueData?.data?.data?.valor !== undefined &&
+      examValueData.data.data.valor !== null
+    ) {
       const newValue = Number(examValueData.data.data.valor);
-      itemForm.setValue('valor', newValue);
+      itemForm.setValue("valor", newValue);
     }
   }, [examValueData, itemForm]);
 
@@ -182,7 +211,7 @@ export function UpsertAnamneseForm({
     enabled: !!orgId,
     refetchOnWindowFocus: false,
   });
-  
+
   const { data: exames, isLoading: isLoadingExames } = useQuery({
     queryKey: ["examesForSelect", orgId],
     queryFn: () => getExamesForSelect({}),
@@ -199,11 +228,11 @@ export function UpsertAnamneseForm({
 
   // Funções auxiliares
   const getExameNameById = (id: number) => {
-    return exames?.data?.data?.find(exame => exame.id === id)?.name;
+    return exames?.data?.data?.find((exame) => exame.id === id)?.name;
   };
 
   const getMedicoNameById = (id: number) => {
-    return medicos?.data?.data?.find(medico => medico.id === id)?.name;
+    return medicos?.data?.data?.find((medico) => medico.id === id)?.name;
   };
 
   // Handlers para itens
@@ -223,18 +252,19 @@ export function UpsertAnamneseForm({
     setIsItemModalOpen(true);
   };
 
-  const { execute: executeDeleteItem, status: deleteItemStatus } = useAction(deleteAnamneseItem, {
+  const { execute: executeDeleteItem } = useAction(deleteAnamneseItem, {
     onSuccess: () => {
-      toast.success(t('delete_item_success'));
+      toast.success(t("delete_item_success"));
     },
     onError: (error) => {
-      toast.error(error);
+      toast.error(String(error));
     },
   });
 
   const handleRemoveItem = (index: number) => {
-    const item = fields[index];
-    if (initialData?.id && item.id) { // Verifica se a anamnese e o item já existem no banco
+    const item = fields[index]!;
+    if (initialData?.id && item?.id) {
+      // Verifica se a anamnese e o item já existem no banco
       executeDeleteItem({ anamneseId: initialData.id, itemId: item.id });
     }
     remove(index);
@@ -242,7 +272,8 @@ export function UpsertAnamneseForm({
 
   const onSaveItem = async (itemData: AnamneseItemForm) => {
     const isDuplicate = fields.some(
-      (field, index) => field.exameId === itemData.exameId && index !== editingItemIndex
+      (field, index) =>
+        field.exameId === itemData.exameId && index !== editingItemIndex
     );
 
     if (isDuplicate) {
@@ -250,9 +281,14 @@ export function UpsertAnamneseForm({
       return;
     }
 
-    const currentClientId = form.getValues('clienteId'); // Get clientId from main form
+    const currentClientId = form.getValues("clienteId"); // Get clientId from main form
 
-    if (currentClientId && itemData.exameId && itemData.valor !== undefined && itemData.valor !== null) {
+    if (
+      currentClientId &&
+      itemData.exameId &&
+      itemData.valor !== undefined &&
+      itemData.valor !== null
+    ) {
       const result = await checkAndSuggestClientExamValueUpdate({
         clientId: currentClientId,
         exameId: itemData.exameId,
@@ -278,19 +314,23 @@ export function UpsertAnamneseForm({
     setIsItemModalOpen(false);
   };
 
-  const { execute, status } = useAction(upsertAnamnese, {
+  const { execute } = useAction(upsertAnamnese, {
     onSuccess: (data) => {
-      toast.success(initialData ? 'Anamnese atualizada' : 'Anamnese criada');
+      toast.success(initialData ? "Anamnese atualizada" : "Anamnese criada");
       onSuccess(data.data.anamnese?.id);
       onClose();
     },
     onError: (error) => {
-      openValidationErrorsModal([error]);
+      openValidationErrorsModal([String(error)]);
     },
   });
 
-  const onSubmit = (data: UpsertAnamneseForm) => {
-    execute(data);
+  const onSubmit = (data: UpsertAnamneseFormUI) => {
+    const payload: UpsertAnamneseForm = {
+      ...(data as unknown as Omit<UpsertAnamneseForm, "data">),
+      data: dayjs(data.data, "YYYY-MM-DD").toDate(),
+    };
+    execute(payload);
   };
 
   const onInvalid = (errors: typeof form.formState.errors) => {
@@ -305,26 +345,37 @@ export function UpsertAnamneseForm({
   };
 
   // Transformar dados para os selects
-  const clientItems = clients?.data && Array.isArray(clients.data.data) 
-    ? clients.data.data.map(client => ({ id: client.id, name: client.name || '' })) 
-    : [];
-    
-  const colaboradorItems = colaboradores?.data && Array.isArray(colaboradores.data.data) 
-    ? colaboradores.data.data.map(colaborador => ({ 
-        id: colaborador.id, 
-        name: `${colaborador.name} - ${colaborador.cpf}` || '' 
-      })) 
-    : [];
-    
-  const exameItems = exames?.data && Array.isArray(exames.data.data) 
-    ? exames.data.data.map(exame => ({ id: exame.id, name: exame.name || '' })) 
-    : [];
-    
-  const medicoItems = medicos?.data && Array.isArray(medicos.data.data) 
-    ? medicos.data.data.map(medico => ({ id: medico.id, name: medico.name || '' })) 
-    : [];
+  const clientItems =
+    clients?.data && Array.isArray(clients.data.data)
+      ? clients.data.data.map((client) => ({
+          id: client.id,
+          name: client.name || "",
+        }))
+      : [];
 
-  
+  const colaboradorItems =
+    colaboradores?.data && Array.isArray(colaboradores.data.data)
+      ? colaboradores.data.data.map((colaborador) => ({
+          id: colaborador.id,
+          name: `${colaborador.name} - ${colaborador.cpf}` || "",
+        }))
+      : [];
+
+  const exameItems =
+    exames?.data && Array.isArray(exames.data.data)
+      ? exames.data.data.map((exame) => ({
+          id: exame.id,
+          name: exame.name || "",
+        }))
+      : [];
+
+  const medicoItems =
+    medicos?.data && Array.isArray(medicos.data.data)
+      ? medicos.data.data.map((medico) => ({
+          id: medico.id,
+          name: medico.name || "",
+        }))
+      : [];
 
   const { execute: executeUpsertClientExam } = useAction(upsertClientExam, {
     onSuccess: () => {
@@ -347,7 +398,7 @@ export function UpsertAnamneseForm({
         });
       }
     }
-    toast.success(t('exam_values_updated_success'));
+    toast.success(t("exam_values_updated_success"));
     setShowExamValueUpdateConfirmation(false);
     setExamUpdatesToConfirm([]);
     setSelectedExamsToUpdate(new Set()); // Clear selected exams
@@ -390,10 +441,9 @@ export function UpsertAnamneseForm({
           onEscapeKeyDown={(e) => e.preventDefault()}
           onPointerDownOutside={(e) => e.preventDefault()}
           className="hide-scrollbar-desktop [&>button]:hidden w-full max-w-4xl md:max-w-6xl xl:max-w-[1400px] max-h-[90vh] overflow-y-auto focus:outline-none"
-          initialFocus={datePickerRef}
         >
           <DialogHeader>
-            <DialogTitle>{t('form_title')}</DialogTitle>
+            <DialogTitle>{t("form_title")}</DialogTitle>
           </DialogHeader>
 
           <Form {...form}>
@@ -403,7 +453,7 @@ export function UpsertAnamneseForm({
             >
               <Card>
                 <CardHeader>
-                  <CardTitle>{t('master_section_title')}</CardTitle>
+                  <CardTitle>{t("master_section_title")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 px-4">
                   <div className="grid w-full grid-cols-1 gap-2 md:grid-cols-5">
@@ -417,9 +467,17 @@ export function UpsertAnamneseForm({
                           <FormControl>
                             <FormDatePickerHybrid
                               ref={datePickerRef}
-                              value={field.value instanceof Date ? field.value.toISOString().split('T')[0] : (typeof field.value === 'string' ? field.value : '')}
-                              onChange={(isoString) => field.onChange(isoString ? new Date(isoString) : undefined)}
-                              placeholder={tFormFields('placeholder_date')}
+                              value={
+                                typeof field.value === "string"
+                                  ? field.value
+                                  : dayjs(field.value as Date)
+                                      .utc()
+                                      .format("YYYY-MM-DD")
+                              }
+                              onChange={(isoString) =>
+                                field.onChange(isoString ?? "")
+                              }
+                              placeholder={tFormFields("placeholder_date")}
                               required
                             />
                           </FormControl>
@@ -482,7 +540,11 @@ export function UpsertAnamneseForm({
                       render={({ field }) => (
                         <FormItem className="hidden">
                           <FormControl>
-                            <input {...field} type="hidden" />
+                            <input
+                              {...field}
+                              type="hidden"
+                              value={field.value ?? ""}
+                            />
                           </FormControl>
                         </FormItem>
                       )}
@@ -536,63 +598,70 @@ export function UpsertAnamneseForm({
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle>{t('detail_section_title')}</CardTitle>
+                  <CardTitle>{t("detail_section_title")}</CardTitle>
                   <Button
                     type="button"
                     onClick={handleAddItem}
                     data-testid="add-item-button"
                   >
-                    {t('add_item_button')}
+                    {t("add_item_button")}
                   </Button>
                 </CardHeader>
                 <CardContent className="space-y-4 px-4 max-h-[400px] overflow-y-auto">
-                  <DataTable
+                  <DataTable<AnamneseItemForm, unknown>
                     columns={[
                       {
-                        accessorKey: 'exameId',
-                        header: t('item_exam_header'),
+                        accessorKey: "exameId",
+                        header: t("item_exam_header"),
                         cell: ({ row }) => {
-                          const exame = getExameNameById(
-                            row.original.exameId,
-                          );
-                          return exame || '';
+                          const exame = getExameNameById(row.original.exameId);
+                          return exame || "";
                         },
                       },
                       {
-                        accessorKey: 'medicoId',
-                        header: t('item_doctor_header'),
+                        accessorKey: "medicoId",
+                        header: t("item_doctor_header"),
                         cell: ({ row }) => {
                           const medico = getMedicoNameById(
-                            row.original.medicoId,
+                            row.original.medicoId
                           );
-                          return medico || '';
+                          return medico || "";
                         },
                       },
                       {
-                        accessorKey: 'valor',
-                        header: t('item_value_header'),
+                        accessorKey: "valor",
+                        header: t("item_value_header"),
                         cell: ({ row }) =>
                           formatCurrency(row.original.valor || 0),
                       },
                       {
-                        id: 'actions',
-                        header: t('item_actions_header'),
+                        id: "actions",
+                        header: t("item_actions_header"),
                         cell: ({ row }) => (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" className="h-8 w-8 p-0">
-                                <span className="sr-only">{t('open_menu')}</span>
+                                <span className="sr-only">
+                                  {t("open_menu")}
+                                </span>
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>{t('actions')}</DropdownMenuLabel>
+                              <DropdownMenuLabel>
+                                {t("actions")}
+                              </DropdownMenuLabel>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => handleEditItem(row.index)}>
-                                {t('edit_item_button')}
+                              <DropdownMenuItem
+                                onClick={() => handleEditItem(row.index)}
+                              >
+                                {t("edit_item_button")}
                               </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => setItemToDelete(row.index)} className="text-red-600">
-                                {t('remove_item_button')}
+                              <DropdownMenuItem
+                                onClick={() => setItemToDelete(row.index)}
+                                className="text-red-600"
+                              >
+                                {t("remove_item_button")}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -600,21 +669,25 @@ export function UpsertAnamneseForm({
                       },
                     ]}
                     data={fields}
-                    emptyMessage={t('no_items_found')}
+                    onSortingChange={() => {}}
+                    sorting={[]}
                   />
                 </CardContent>
                 <div className="flex justify-end pt-4 pr-4">
                   <span className="text-lg font-semibold">
-                    Valor Total dos Exames: {formatCurrency(fields.reduce((acc, item) => acc + (item.valor || 0), 0))}
+                    Valor Total dos Exames:{" "}
+                    {formatCurrency(
+                      fields.reduce((acc, item) => acc + (item.valor || 0), 0)
+                    )}
                   </span>
                 </div>
               </Card>
 
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={onClose}>
-                  {t('cancel_button')}
+                  {t("cancel_button")}
                 </Button>
-                <Button type="submit">{t('submit_button')}</Button>
+                <Button type="submit">{t("submit_button")}</Button>
               </div>
             </form>
           </Form>
@@ -631,8 +704,8 @@ export function UpsertAnamneseForm({
           <DialogHeader>
             <DialogTitle>
               {editingItemIndex !== null
-                ? t('edit_item_title')
-                : t('add_item_title')}
+                ? t("edit_item_title")
+                : t("add_item_title")}
             </DialogTitle>
           </DialogHeader>
 
@@ -655,7 +728,7 @@ export function UpsertAnamneseForm({
                       searchPlaceholder="Pesquisar exame..."
                       noResultsText="Nenhum exame encontrado."
                       isLoading={isLoadingExames}
-                      searchKeys={['name', 'id']}
+                      searchKeys={["name", "id"]}
                     />
                     <FormMessage />
                   </FormItem>
@@ -676,7 +749,7 @@ export function UpsertAnamneseForm({
                       searchPlaceholder="Pesquisar médico..."
                       noResultsText="Nenhum médico encontrado."
                       isLoading={isLoadingMedicos}
-                      searchKeys={['name', 'id']}
+                      searchKeys={["name", "id"]}
                     />
                     <FormMessage />
                   </FormItem>
@@ -709,19 +782,18 @@ export function UpsertAnamneseForm({
                 )}
               />
 
-              
               <DialogFooter>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setIsItemModalOpen(false)}
                 >
-                  {t('cancel_button')}
+                  {t("cancel_button")}
                 </Button>
                 <Button type="submit">
                   {editingItemIndex !== null
-                    ? t('save_changes_button')
-                    : t('add_item_button')}
+                    ? t("save_changes_button")
+                    : t("add_item_button")}
                 </Button>
               </DialogFooter>
             </form>
@@ -729,29 +801,47 @@ export function UpsertAnamneseForm({
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={itemToDelete !== null} onOpenChange={() => setItemToDelete(null)}>
+      <AlertDialog
+        open={itemToDelete !== null}
+        onOpenChange={() => setItemToDelete(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('delete_item_confirm_title')}</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t("delete_item_confirm_title")}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              {t('delete_item_confirm_description')}
+              {t("delete_item_confirm_description")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setItemToDelete(null)}>{t('cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { handleRemoveItem(itemToDelete!); setItemToDelete(null); }}>
-              {t('continue')}</AlertDialogAction>
+            <AlertDialogCancel onClick={() => setItemToDelete(null)}>
+              {t("cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (itemToDelete !== null) handleRemoveItem(itemToDelete);
+                setItemToDelete(null);
+              }}
+            >
+              {t("continue")}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       {/* Modal de Confirmação de Atualização de Valor de Exame */}
-      <AlertDialog open={showExamValueUpdateConfirmation} onOpenChange={setShowExamValueUpdateConfirmation}>
+      <AlertDialog
+        open={showExamValueUpdateConfirmation}
+        onOpenChange={setShowExamValueUpdateConfirmation}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('exam_value_update_confirm_title')}</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t("exam_value_update_confirm_title")}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              {t('exam_value_update_confirm_description')}
+              {t("exam_value_update_confirm_description")}
             </AlertDialogDescription>
             <ul className="list-disc pl-5 mt-2">
               {examUpdatesToConfirm.map((update, index) => {
@@ -773,11 +863,18 @@ export function UpsertAnamneseForm({
                         });
                       }}
                     />
-                    <label htmlFor={`exam-update-${index}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                      {t('exam_value_update_item', {
+                    <label
+                      htmlFor={`exam-update-${index}`}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      {t("exam_value_update_item", {
                         exameName: getExameNameById(update.data.exameId),
-                        currentValue: formatCurrency(Number(update.data.currentClientExamValue)),
-                        newValue: formatCurrency(Number(update.data.newAnamneseItemValue)),
+                        currentValue: formatCurrency(
+                          Number(update.data.currentClientExamValue)
+                        ),
+                        newValue: formatCurrency(
+                          Number(update.data.newAnamneseItemValue)
+                        ),
                       })}
                     </label>
                   </li>
@@ -786,28 +883,35 @@ export function UpsertAnamneseForm({
             </ul>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleCancelExamValueUpdate}>{t('cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmExamValueUpdate} disabled={selectedExamsToUpdate.size === 0}>{t('confirm_update')}</AlertDialogAction>
+            <AlertDialogCancel onClick={handleCancelExamValueUpdate}>
+              {t("cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmExamValueUpdate}
+              disabled={selectedExamsToUpdate.size === 0}
+            >
+              {t("confirm_update")}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       {openCreateClient && (
         <UpsertClientForm
-            isOpen={openCreateClient}
-            onClose={() => setOpenCreateClient(false)}
-            onSuccess={async (client) => {
-              await queryClient.invalidateQueries({
-                queryKey: ['clientsForSelect', orgId],
+          isOpen={openCreateClient}
+          onClose={() => setOpenCreateClient(false)}
+          onSuccess={async (client) => {
+            await queryClient.invalidateQueries({
+              queryKey: ["clientsForSelect", orgId],
+            });
+            if (client && (client as any).id) {
+              form.setValue("clienteId", (client as any).id, {
+                shouldValidate: true,
               });
-              if (client && client.id) {
-                form.setValue('clienteId', client.id, {
-                  shouldValidate: true,
-                });
-              }
-              setOpenCreateClient(false);
-            }}
-          />
+            }
+            setOpenCreateClient(false);
+          }}
+        />
       )}
 
       {openCreate && (
@@ -816,10 +920,10 @@ export function UpsertAnamneseForm({
           onClose={() => setOpenCreate(false)}
           onSuccess={async (colaborador) => {
             await queryClient.invalidateQueries({
-              queryKey: ['colaboradoresForSelect', orgId],
+              queryKey: ["colaboradoresForSelect", orgId],
             });
-            if (colaborador && colaborador.id) {
-              form.setValue('colaboradorId', colaborador.id, {
+            if (colaborador && (colaborador as any).id) {
+              form.setValue("colaboradorId", (colaborador as any).id, {
                 shouldValidate: true,
               });
             }
@@ -829,16 +933,23 @@ export function UpsertAnamneseForm({
       )}
 
       {/* Alerta de Exame Duplicado */}
-      <AlertDialog open={isDuplicateExamAlertOpen} onOpenChange={setIsDuplicateExamAlertOpen}>
+      <AlertDialog
+        open={isDuplicateExamAlertOpen}
+        onOpenChange={setIsDuplicateExamAlertOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t('duplicate_exam_title')}</AlertDialogTitle>
+            <AlertDialogTitle>{t("duplicate_exam_title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t('duplicate_exam_description')}
+              {t("duplicate_exam_description")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction onClick={() => setIsDuplicateExamAlertOpen(false)}>{t('ok')}</AlertDialogAction>
+            <AlertDialogAction
+              onClick={() => setIsDuplicateExamAlertOpen(false)}
+            >
+              {t("ok")}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

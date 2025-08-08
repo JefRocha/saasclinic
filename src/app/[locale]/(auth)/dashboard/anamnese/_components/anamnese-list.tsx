@@ -14,6 +14,8 @@ import { useAuth } from "@clerk/nextjs";
 import * as nextIntl from "next-intl";
 import { DateRange } from "react-day-picker";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+dayjs.extend(utc);
 
 import { DataTable as AnamneseDataTable } from "./anamnese-data-table";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -104,10 +106,10 @@ export function AnamneseList() {
   const derivedOrderBy = sorting[0]?.id ?? "id";
   const derivedOrder = sorting[0]?.desc ? "desc" : "asc";
   const derivedStartDateIso = dateRange?.from
-    ? dayjs(dateRange.from).startOf("day").toISOString()
+    ? dayjs(dateRange.from).utc(true).startOf("day").toISOString()
     : undefined;
   const derivedEndDateIso = dateRange?.to
-    ? dayjs(dateRange.to).endOf("day").toISOString()
+    ? dayjs(dateRange.to).utc(true).endOf("day").toISOString()
     : undefined;
 
   const { data, isLoading, isError, error, isFetching } = useQuery({
