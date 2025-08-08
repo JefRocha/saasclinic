@@ -241,18 +241,17 @@ export function UpsertAnamneseForm({
 
   const onSaveItem = async (itemData: AnamneseItemForm) => {
     const currentClientId = form.getValues('clienteId'); // Get clientId from main form
-    console.log("currentClientId in onSaveItem:", currentClientId);
 
     if (currentClientId && itemData.exameId && itemData.valor !== undefined && itemData.valor !== null) {
-      const suggestion = await checkAndSuggestClientExamValueUpdate({
+      const result = await checkAndSuggestClientExamValueUpdate({
         clientId: currentClientId,
         exameId: itemData.exameId,
         newAnamneseItemValue: itemData.valor,
       });
 
-      if (suggestion) {
-        setExamUpdatesToConfirm([suggestion]); // Only one suggestion at a time
-        setSelectedExamsToUpdate(new Set([suggestion.exameId])); // Pre-select the current exam
+      if (result.data) {
+        setExamUpdatesToConfirm([result]); // Only one suggestion at a time
+        setSelectedExamsToUpdate(new Set([result.data.exameId])); // Pre-select the current exam
         setPendingAnamneseItem(itemData); // Store itemData for later
         setShowExamValueUpdateConfirmation(true);
         // Do not close item modal yet, wait for user confirmation
@@ -525,7 +524,7 @@ export function UpsertAnamneseForm({
                     {t('add_item_button')}
                   </Button>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 px-4 max-h-[350px] overflow-y-auto">
                   <DataTable
                     columns={[
                       {
@@ -571,7 +570,7 @@ export function UpsertAnamneseForm({
                               <DropdownMenuItem onClick={() => handleEditItem(row.index)}>
                                 {t('edit_item_button')}
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => setItemToDelete(row.index)} className="text-red-600">
+                                <DropdownMenuItem onClick={() => setItemToDelete(row.index)} className="text-red-600">
                                 {t('remove_item_button')}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -582,13 +581,12 @@ export function UpsertAnamneseForm({
                     data={fields}
                     emptyMessage={t('no_items_found')}
                   />
-
-                  <div className="flex justify-end pt-4 pr-4">
-                    <span className="text-lg font-semibold">
-                      Valor Total dos Exames: {formatCurrency(fields.reduce((acc, item) => acc + (item.valor || 0), 0))}
-                    </span>
-                  </div>
                 </CardContent>
+                <div className="flex justify-end pt-4 pr-4">
+                  <span className="text-lg font-semibold">
+                    Valor Total dos Exames: {formatCurrency(fields.reduce((acc, item) => acc + (item.valor || 0), 0))}
+                  </span>
+                </div>
               </Card>
 
               <div className="flex justify-end gap-2">
@@ -735,32 +733,35 @@ export function UpsertAnamneseForm({
               {t('exam_value_update_confirm_description')}
             </AlertDialogDescription>
             <ul className="list-disc pl-5 mt-2">
-              {examUpdatesToConfirm.map((update, index) => (
-                <li key={index} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`exam-update-${index}`}
-                    checked={selectedExamsToUpdate.has(update.exameId)}
-                    onCheckedChange={(checked) => {
-                      setSelectedExamsToUpdate((prev) => {
-                        const newSet = new Set(prev);
-                        if (checked) {
-                          newSet.add(update.exameId);
-                        } else {
-                          newSet.delete(update.exameId);
-                        }
-                        return newSet;
-                      });
-                    }}
-                  />
-                  <label htmlFor={`exam-update-${index}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              {examUpdatesToConfirm.map((update, index) => {
+                if (!update.data) return null; // Adiciona uma verificação de segurança
+                return (
+                  <li key={index} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`exam-update-${index}`}
+                      checked={selectedExamsToUpdate.has(update.data.exameId)}
+                      onCheckedChange={(checked) => {
+                        setSelectedExamsToUpdate((prev) => {
+                          const newSet = new Set(prev);
+                          if (checked) {
+                            newSet.add(update.data.exameId);
+                          } else {
+                            newSet.delete(update.data.exameId);
+                          }
+                          return newSet;
+                        });
+                      }}
+                    />
+                    <label htmlFor={`exam-update-${index}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                       {t('exam_value_update_item', {
-                      exameName: getExameNameById(update.data.exameId),
-                      currentValue: formatCurrency(Number(update.data.currentClientExamValue)),
-                      newValue: formatCurrency(Number(update.data.newAnamneseItemValue)),
-                    })}
-                  </label>
-                </li>
-              ))}
+                        exameName: getExameNameById(update.data.exameId),
+                        currentValue: formatCurrency(Number(update.data.currentClientExamValue)),
+                        newValue: formatCurrency(Number(update.data.newAnamneseItemValue)),
+                      })}
+                    </label>
+                  </li>
+                );
+              })}
             </ul>
           </AlertDialogHeader>
           <AlertDialogFooter>
