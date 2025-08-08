@@ -368,7 +368,7 @@ export function UpsertAnamneseForm({
         <DialogContent
           onEscapeKeyDown={(e) => e.preventDefault()}
           onPointerDownOutside={(e) => e.preventDefault()}
-          className="[&>button]:hidden w-full max-w-[1400px] overflow-y-auto focus:outline-none"
+          className="[&>button]:hidden w-full max-w-4xl md:max-w-6xl xl:max-w-[1400px] max-h-[90vh] overflow-y-auto focus:outline-none"
           initialFocus={datePickerRef}
         >
           <DialogHeader>
@@ -524,7 +524,7 @@ export function UpsertAnamneseForm({
                     {t('add_item_button')}
                   </Button>
                 </CardHeader>
-                <CardContent className="space-y-4 px-4 max-h-[350px] overflow-y-auto">
+                <CardContent className="space-y-4 px-4 max-h-[400px] overflow-y-auto">
                   <DataTable
                     columns={[
                       {
