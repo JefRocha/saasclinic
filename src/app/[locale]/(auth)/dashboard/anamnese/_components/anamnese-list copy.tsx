@@ -2,45 +2,34 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  useState,
-  useEffect,
-  useTransition,
-  useMemo,
-  useCallback,
-} from "react";
-import type { SortingState, Updater } from "@tanstack/react-table";
+import { useState, useEffect, useTransition } from "react";
+import type { SortingState } from "@tanstack/react-table";
 import { useAuth } from "@clerk/nextjs";
-import * as nextIntl from "next-intl";
+import { useTranslations } from "next-intl";
+import { format, startOfMonth, endOfMonth } from "date-fns";
+import { CalendarIcon } from "lucide-react";
 import { DateRange } from "react-day-picker";
-import dayjs from "dayjs";
 
 import { DataTable as AnamneseDataTable } from "./anamnese-data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SearchInput } from "@/components/ui/search-input";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 
-import { getAnamneses } from "@/actions/get-anamneses";
+import { getAnamneses, type SearchAnamnesesResult } from "@/actions/get-anamneses";
 import { getAnamnesesTableColumns } from "./table-columns";
 import UpsertAnamneseButton from "./upsert-anamnese-button";
 import { UpsertAnamneseForm } from "./upsert-anamnese-form";
 import { Anamnese } from "@/actions/get-anamneses/schema";
-import type { UpsertAnamneseForm as UpsertAnamneseFormData } from "@/actions/upsert-anamnese/schema";
-import { exametipo_enum, formapagto_enum } from "@/models/Schema";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ValidationErrorsModalProvider } from "@/components/ui/validation-errors-modal";
 
 export function AnamneseList() {
-  const tForm = (nextIntl as any).useTranslations("AnamneseForm");
+  const t = useTranslations("AnamneseTable");
+  const tForm = useTranslations("AnamneseForm");
   const searchParams = useSearchParams();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const { orgId } = useAuth();
 
   const search = searchParams.get("search") || "";
@@ -52,47 +41,27 @@ export function AnamneseList() {
   ]);
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
-    const today = dayjs();
+    const today = new Date();
     return {
-      from: today.startOf("month").toDate(),
-      to: today.endOf("month").toDate(),
+      from: startOfMonth(today),
+      to: endOfMonth(today),
     };
   });
 
   const [isUpsertFormOpen, setIsUpsertFormOpen] = useState(false);
-  const [initialAnamneseData, setInitialAnamneseData] = useState<
-    UpsertAnamneseFormData | undefined
-  >(undefined);
-
-  const mapAnamneseToFormData = useCallback(
-    (anamnese: Anamnese): UpsertAnamneseFormData => ({
-      id: anamnese.id,
-      clienteId: anamnese.clienteId,
-      colaboradorId: anamnese.colaboradorId,
-      atendenteId: anamnese.atendenteId,
-      data: new Date(anamnese.data),
-      formapagto:
-        anamnese.formapagto as (typeof formapagto_enum.enumValues)[number],
-      tipo: anamnese.tipo as (typeof exametipo_enum.enumValues)[number],
-      cargo: anamnese.cargo,
-      setor: anamnese.setor ?? undefined,
-      solicitante: anamnese.solicitante ?? undefined,
-      items: anamnese.items,
-    }),
-    []
-  );
+  const [initialAnamneseData, setInitialAnamneseData] = useState<Anamnese | undefined>(undefined);
 
   // Update URL search params when dateRange changes
   useEffect(() => {
     startTransition(() => {
       const params = new URLSearchParams(searchParams.toString());
       if (dateRange?.from) {
-        params.set("startDate", dayjs(dateRange.from).format("YYYY-MM-DD"));
+        params.set("startDate", format(dateRange.from, "yyyy-MM-dd"));
       } else {
         params.delete("startDate");
       }
       if (dateRange?.to) {
-        params.set("endDate", dayjs(dateRange.to).format("YYYY-MM-DD"));
+        params.set("endDate", format(dateRange.to, "yyyy-MM-dd"));
       } else {
         params.delete("endDate");
       }
@@ -101,83 +70,53 @@ export function AnamneseList() {
     });
   }, [dateRange, router, searchParams, queryClient, orgId]);
 
-  const derivedOrderBy = sorting[0]?.id ?? "id";
-  const derivedOrder = sorting[0]?.desc ? "desc" : "asc";
-  const derivedStartDateIso = dateRange?.from
-    ? dayjs(dateRange.from).startOf("day").toISOString()
-    : undefined;
-  const derivedEndDateIso = dateRange?.to
-    ? dayjs(dateRange.to).endOf("day").toISOString()
-    : undefined;
-
-  const { data, isLoading, isError, error, isFetching } = useQuery({
-    queryKey: [
-      "anamneses",
-      orgId,
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+  } = useQuery<SearchAnamnesesResult, Error>({
+    queryKey: ["anamneses", orgId, search, sorting[0].id, (sorting[0].desc ? "desc" : "asc"), dateRange?.from?.toISOString(), dateRange?.to?.toISOString()],
+    queryFn: () => getAnamneses({
       search,
-      derivedOrderBy,
-      derivedOrder,
-      derivedStartDateIso,
-      derivedEndDateIso,
-    ],
-    queryFn: () =>
-      getAnamneses({
-        search,
-        orderBy: derivedOrderBy,
-        order: derivedOrder,
-        startDate: derivedStartDateIso,
-        endDate: derivedEndDateIso,
-      }),
+      orderBy: sorting[0].id,
+      order: sorting[0].desc ? "desc" : "asc",
+      startDate: dateRange?.from?.toISOString(),
+      endDate: dateRange?.to?.toISOString(),
+    }),
     refetchOnWindowFocus: false,
     enabled: !!orgId,
   });
 
   // Função para ser chamada em caso de sucesso (criação/edição/exclusão)
-  const handleSuccess = useCallback(
-    (anamneseId?: string | number) => {
-      void anamneseId;
-      queryClient.invalidateQueries({ queryKey: ["anamneses", orgId] });
-      // if (anamneseId) {
-      //   setHighlightedAnamneseId(anamneseId);
-      //   setSelectedAnamneseId(anamneseId);
-      // }
-    },
-    [orgId, queryClient]
-  );
+  const handleSuccess = (anamneseId?: string | number) => {
+    queryClient.invalidateQueries({ queryKey: ["anamneses", orgId] });
+    // if (anamneseId) {
+    //   setHighlightedAnamneseId(anamneseId);
+    //   setSelectedAnamneseId(anamneseId);
+    // }
+  };
 
   // Função para lidar com o clique na linha da tabela
-  const handleRowClick = useCallback((anamneseId: string | number) => {
-    void anamneseId;
+  const handleRowClick = (anamneseId: string | number) => {
     // setSelectedAnamneseId(anamneseId);
-  }, []);
+  };
 
-  const handleOpenUpsertForm = useCallback(
-    (anamnese?: Anamnese) => {
-      setInitialAnamneseData(
-        anamnese ? mapAnamneseToFormData(anamnese) : undefined
-      );
-      setIsUpsertFormOpen(true);
-    },
-    [mapAnamneseToFormData]
-  );
+  const handleOpenUpsertForm = (anamnese?: Anamnese) => {
+    setInitialAnamneseData(anamnese);
+    setIsUpsertFormOpen(true);
+  };
 
-  const handleCloseUpsertForm = useCallback(() => {
+  const handleCloseUpsertForm = () => {
     setIsUpsertFormOpen(false);
     setInitialAnamneseData(undefined);
-  }, []);
+  };
 
-  const columns = useMemo(
-    () =>
-      getAnamnesesTableColumns(
-        handleSuccess,
-        handleRowClick,
-        handleOpenUpsertForm
-      ),
-    [handleSuccess, handleRowClick, handleOpenUpsertForm]
-  );
+  const columns = getAnamnesesTableColumns(handleSuccess, handleRowClick, handleOpenUpsertForm);
 
   // Renderiza o Skeleton apenas no carregamento inicial
   if (isLoading && !data) return <Skeleton className="h-[300px] w-full" />;
+  
 
   if (isError) {
     return (
@@ -198,23 +137,19 @@ export function AnamneseList() {
             className="w-full md:w-auto"
           />
         </div>
-        <UpsertAnamneseButton
-          onAnamneseUpsertSuccess={handleSuccess}
-          onOpenForm={handleOpenUpsertForm}
-        />
+        <UpsertAnamneseButton onAnamneseUpsertSuccess={handleSuccess} onOpenForm={handleOpenUpsertForm} />
       </div>
       <AnamneseDataTable
         columns={columns}
-        data={(data as any)?.data?.data || []}
-        onSortingChange={(updater: Updater<SortingState>) => {
+        data={data?.data || []}
+        emptyMessage={t("no_results")}
+        onSortingChange={(updater) => {
           startTransition(() => {
-            const newSortingState =
-              typeof updater === "function" ? updater(sorting) : updater;
+            const newSortingState = typeof updater === 'function' ? updater(sorting) : updater;
             setSorting(newSortingState);
 
-            const first = newSortingState[0];
-            const newOrderBy = first?.id ?? "id";
-            const newOrder = first?.desc ? "desc" : "asc";
+            const newOrderBy = newSortingState.length > 0 ? newSortingState[0].id : "id";
+            const newOrder = newSortingState.length > 0 && newSortingState[0].desc ? "desc" : "asc";
 
             const params = new URLSearchParams(searchParams.toString());
             params.set("orderBy", newOrderBy);
@@ -225,7 +160,7 @@ export function AnamneseList() {
           });
         }}
         sorting={sorting}
-        isFetching={isFetching}
+        isFetching={isPending}
       />
       <Dialog open={isUpsertFormOpen} onOpenChange={handleCloseUpsertForm}>
         <DialogContent

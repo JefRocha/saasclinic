@@ -1,13 +1,17 @@
-'use client';
+"use client";
 
-import type { ColumnDef, SortingState } from '@tanstack/react-table';
+import type {
+  ColumnDef,
+  SortingState,
+  OnChangeFn,
+} from "@tanstack/react-table";
 import {
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { useTranslations } from 'next-intl';
+import { useTranslations } from "next-intl";
 import { cn } from "@/libs/utils";
 
 import {
@@ -28,7 +32,7 @@ type DataTableProps<TData, TValue> = {
     total: number;
     totalPages: number;
   };
-  onSortingChange: (sorting: SortingState) => void; // Adicionado
+  onSortingChange: OnChangeFn<SortingState>; // Adicionado
   sorting: SortingState; // Adicionado
   isFetching?: boolean; // Adicionado
   highlightedClientId?: string | number | null; // Adicionado
